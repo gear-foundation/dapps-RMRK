@@ -346,9 +346,7 @@ impl RMRKToken {
         match child_status {
             ChildStatus::Pending => {
                 if let Some(children) = self.pending_children.get_mut(&parent_token_id) {
-                    if children.contains(child_vec) {
-                        children.remove(child_vec);
-                    } else {
+                    if !children.remove(child_vec) {
                         panic!("RMRKCore: child does not exist in pending array or has already been accepted");
                     }
                 } else {
