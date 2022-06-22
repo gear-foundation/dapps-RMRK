@@ -15,7 +15,19 @@ pub mod mint;
 pub mod multiresource;
 use multiresource::*;
 
-#[derive(Debug)]
+gstd::metadata! {
+    title: "RMRK",
+    init:
+        input: InitRMRK,
+    handle:
+        input: RMRKAction,
+        output: RMRKEvent,
+    state:
+        input: RMRKState,
+        output: RMRKStateReply,
+}
+
+#[derive(Debug, Default)]
 pub struct RMRKOwner {
     pub token_id: Option<TokenId>,
     pub owner_id: ActorId,
@@ -25,12 +37,13 @@ pub struct RMRKOwner {
 pub struct RMRKToken {
     pub name: String,
     pub symbol: String,
-    pub token_approvals: BTreeMap<TokenId, Vec<ActorId>>,
+    pub admin: ActorId,
+    pub token_approvals: BTreeMap<TokenId, BTreeSet<ActorId>>,
     pub rmrk_owners: BTreeMap<TokenId, RMRKOwner>,
     pub pending_children: BTreeMap<TokenId, BTreeSet<Vec<u8>>>,
     pub accepted_children: BTreeMap<TokenId, BTreeSet<Vec<u8>>>,
     pub children_status: BTreeMap<Vec<u8>, ChildStatus>,
-    pub balances: BTreeMap<ActorId, u128>,
+    pub balances: BTreeMap<ActorId, U256>,
     pub multiresource: MultiResource,
     pub resource_hash: [u8; 32],
     pub resource_id: ActorId,
@@ -43,7 +56,8 @@ impl RMRKToken {
     // reply about root_owner
     async fn root_owner(&self, token_id: TokenId) {
         let root_owner = self.find_root_owner(token_id).await;
-        msg::reply(RMRKEvent::RootOwner { root_owner }, 0).unwrap();
+        msg::reply(RMRKEvent::RootOwner(root_owner), 0)
+            .expect("Error in reply [RMRKEvent::RootOwner]");
     }
 
     // internal search for root owner
@@ -59,31 +73,35 @@ impl RMRKToken {
         }
     }
 
-    fn get_pending_children(&self, token_id: TokenId) -> BTreeMap<ActorId, Vec<TokenId>> {
-        let mut pending_children: BTreeMap<ActorId, Vec<TokenId>> = BTreeMap::new();
+    fn get_pending_children(&self, token_id: TokenId) -> BTreeMap<ActorId, BTreeSet<TokenId>> {
+        let mut pending_children: BTreeMap<ActorId, BTreeSet<TokenId>> = BTreeMap::new();
         if let Some(children) = self.pending_children.get(&token_id) {
             for child_vec in children.iter() {
                 let child_contract_id = ActorId::new(child_vec[0..32].try_into().unwrap());
                 let child_token_id = U256::from(&child_vec[32..64]);
                 pending_children
                     .entry(child_contract_id)
-                    .and_modify(|c| c.push(child_token_id))
-                    .or_insert_with(|| vec![child_token_id]);
+                    .and_modify(|c| {
+                        c.insert(child_token_id);
+                    })
+                    .or_insert_with(|| BTreeSet::from([child_token_id]));
             }
         }
         pending_children
     }
 
-    fn get_accepted_children(&self, token_id: TokenId) -> BTreeMap<ActorId, Vec<TokenId>> {
-        let mut accepted_children: BTreeMap<ActorId, Vec<TokenId>> = BTreeMap::new();
+    fn get_accepted_children(&self, token_id: TokenId) -> BTreeMap<ActorId, BTreeSet<TokenId>> {
+        let mut accepted_children: BTreeMap<ActorId, BTreeSet<TokenId>> = BTreeMap::new();
         if let Some(children) = self.accepted_children.get(&token_id) {
             for child_vec in children.iter() {
                 let child_contract_id = ActorId::new(child_vec[0..32].try_into().unwrap());
                 let child_token_id = U256::from(&child_vec[32..64]);
                 accepted_children
                     .entry(child_contract_id)
-                    .and_modify(|c| c.push(child_token_id))
-                    .or_insert_with(|| vec![child_token_id]);
+                    .and_modify(|c| {
+                        c.insert(child_token_id);
+                    })
+                    .or_insert_with(|| BTreeSet::from([child_token_id]));
             }
         }
         accepted_children
@@ -98,6 +116,7 @@ pub unsafe extern "C" fn init() {
         name: config.name,
         symbol: config.symbol,
         resource_hash: config.resource_hash,
+        admin: msg::source(),
         ..RMRKToken::default()
     };
     if let Some(resource_name) = config.resource_name {
@@ -107,26 +126,32 @@ pub unsafe extern "C" fn init() {
             InitResource { resource_name }.encode(),
             1_000_000,
             0,
-        );
+        )
+        .expect("Error in creating program");
         rmrk.resource_id = resource_id;
         debug!("PROGRAM RESOURCE ID {:?}", resource_id);
         msg::reply(RMRKEvent::ResourceInited { resource_id }, 0).unwrap();
     }
-
     RMRK = Some(rmrk);
 }
 
 #[gstd::async_main]
 async unsafe fn main() {
     let action: RMRKAction = msg::load().expect("Could not load msg");
-    let rmrk = unsafe { RMRK.get_or_insert(RMRKToken::default()) };
+    let rmrk = unsafe { RMRK.get_or_insert(Default::default()) };
     match action {
         RMRKAction::MintToNft {
-            to,
+            parent_id,
+            parent_token_id,
             token_id,
-            destination_id,
-        } => rmrk.mint_to_nft(&to, token_id, destination_id).await,
-        RMRKAction::MintToRootOwner { to, token_id } => rmrk.mint_to_root_owner(&to, token_id),
+        } => {
+            rmrk.mint_to_nft(&parent_id, parent_token_id, token_id)
+                .await
+        }
+        RMRKAction::MintToRootOwner {
+            root_owner,
+            token_id,
+        } => rmrk.mint_to_root_owner(&root_owner, token_id),
         RMRKAction::Transfer { to, token_id } => rmrk.transfer(&to, token_id).await,
         RMRKAction::TransferToNft {
             to,
@@ -182,30 +207,8 @@ async unsafe fn main() {
             child_token_ids,
             root_owner,
         } => rmrk.burn_from_parent(child_token_ids, &root_owner).await,
-        RMRKAction::Burn { token_id } => rmrk.burn(token_id).await,
-        RMRKAction::RootOwner { token_id } => rmrk.root_owner(token_id).await,
-        RMRKAction::Owner { token_id } => {
-            let rmrk_owner = rmrk
-                .rmrk_owners
-                .get(&token_id)
-                .expect("RMRK: Token does not exist");
-            msg::reply(
-                RMRKEvent::Owner {
-                    token_id: rmrk_owner.token_id,
-                    owner_id: rmrk_owner.owner_id,
-                },
-                0,
-            )
-            .unwrap();
-        }
-        RMRKAction::PendingChildren { token_id } => {
-            let children = rmrk.get_pending_children(token_id);
-            msg::reply(RMRKEvent::PendingChildren { children }, 0).unwrap();
-        }
-        RMRKAction::AcceptedChildren { token_id } => {
-            let children = rmrk.get_accepted_children(token_id);
-            msg::reply(RMRKEvent::AcceptedChildren { children }, 0).unwrap();
-        }
+        RMRKAction::Burn(token_id) => rmrk.burn(token_id).await,
+        RMRKAction::RootOwner(token_id) => rmrk.root_owner(token_id).await,
         RMRKAction::AddResourceEntry {
             id,
             src,
@@ -229,23 +232,57 @@ async unsafe fn main() {
             token_id,
             priorities,
         } => rmrk.set_priority(token_id, priorities).await,
-        RMRKAction::GetPendingResources { token_id } => {
+    }
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn meta_state() -> *mut [i32; 2] {
+    let query: RMRKState = msg::load().expect("failed to decode RMRKState");
+    let rmrk = RMRK.get_or_insert(Default::default());
+
+    let encoded = match query {
+        RMRKState::Owner(token_id) => {
+            let rmrk_owner = rmrk
+                .rmrk_owners
+                .get(&token_id)
+                .expect("RMRK: Token does not exist");
+            RMRKStateReply::Owner {
+                token_id: rmrk_owner.token_id,
+                owner_id: rmrk_owner.owner_id,
+            }
+        }
+        RMRKState::Balance(account) => {
+            if let Some(balance) = rmrk.balances.get(&account) {
+                RMRKStateReply::Balance(*balance)
+            } else {
+                RMRKStateReply::Balance(0.into())
+            }
+        }
+        RMRKState::PendingChildren(token_id) => {
+            RMRKStateReply::PendingChildren(rmrk.get_pending_children(token_id))
+        }
+        RMRKState::AcceptedChildren(token_id) => {
+            RMRKStateReply::AcceptedChildren(rmrk.get_accepted_children(token_id))
+        }
+        RMRKState::PendingResources(token_id) => {
             let pending_resources = rmrk
                 .multiresource
                 .pending_resources
                 .get(&token_id)
                 .unwrap_or(&BTreeSet::new())
                 .clone();
-            msg::reply(RMRKEvent::PendingResources { pending_resources }, 0).unwrap();
+            RMRKStateReply::PendingResources(pending_resources)
         }
-        RMRKAction::GetActiveResources { token_id } => {
+        RMRKState::ActiveResources(token_id) => {
             let active_resources = rmrk
                 .multiresource
                 .active_resources
                 .get(&token_id)
                 .unwrap_or(&BTreeSet::new())
                 .clone();
-            msg::reply(RMRKEvent::ActiveResources { active_resources }, 0).unwrap();
+            RMRKStateReply::ActiveResources(active_resources)
         }
     }
+    .encode();
+    gstd::util::to_leak_ptr(encoded)
 }

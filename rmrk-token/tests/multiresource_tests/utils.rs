@@ -35,11 +35,11 @@ pub fn before_test(sys: &System) {
     assert!(!mint_to_root_owner(&rmrk, USERS[0], USERS[0], 11).main_failed());
 }
 
-pub fn mint_to_root_owner(rmrk: &Program, user: u64, to: u64, token_id: u64) -> RunResult {
+pub fn mint_to_root_owner(rmrk: &Program, user: u64, root_owner: u64, token_id: u64) -> RunResult {
     rmrk.send(
         user,
         RMRKAction::MintToRootOwner {
-            to: to.into(),
+            root_owner: root_owner.into(),
             token_id: token_id.into(),
         },
     )
@@ -103,23 +103,23 @@ pub fn reject_resource(rmrk: &Program, user: u64, token_id: u64, resource_id: u8
     )
 }
 
-pub fn get_pending_resources(rmrk: &Program, token_id: u64) -> RunResult {
-    rmrk.send(
-        10,
-        RMRKAction::GetPendingResources {
-            token_id: token_id.into(),
-        },
-    )
-}
+// pub fn get_pending_resources(rmrk: &Program, token_id: u64) -> RunResult {
+//     rmrk.send(
+//         10,
+//         RMRKAction::GetPendingResources {
+//             token_id: token_id.into(),
+//         },
+//     )
+// }
 
-pub fn get_active_resources(rmrk: &Program, token_id: u64) -> RunResult {
-    rmrk.send(
-        10,
-        RMRKAction::GetActiveResources {
-            token_id: token_id.into(),
-        },
-    )
-}
+// pub fn get_active_resources(rmrk: &Program, token_id: u64) -> RunResult {
+//     rmrk.send(
+//         10,
+//         RMRKAction::GetActiveResources {
+//             token_id: token_id.into(),
+//         },
+//     )
+// }
 
 pub fn set_priority(rmrk: &Program, user: u64, token_id: u64, priorities: Vec<u8>) -> RunResult {
     rmrk.send(

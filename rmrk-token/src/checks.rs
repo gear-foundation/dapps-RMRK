@@ -3,9 +3,7 @@ use gstd::{exec, msg, ActorId};
 
 impl RMRKToken {
     pub fn assert_zero_address(&self, account: &ActorId) {
-        if account == &ZERO_ID {
-            panic!("RMRK: Zero address");
-        }
+        assert!(account != &ZERO_ID, "RMRK: Zero address");
     }
 
     /// Checks that NFT with indicated ID already exists
@@ -37,7 +35,6 @@ impl RMRKToken {
             panic!("Wrong owner");
         }
     }
-
     pub fn assert_approved_or_owner(&self, token_id: TokenId, root_owner: &ActorId) {
         if let Some(approved_accounts) = self.token_approvals.get(&token_id) {
             if approved_accounts.contains(&msg::source()) {

@@ -4,21 +4,26 @@ pub const MAX_RESOURCE_LEN: u8 = 128;
 
 #[derive(Debug, Default)]
 pub struct MultiResource {
-    pub token_resources: BTreeMap<TokenId, BTreeSet<ResourceId>>,
     pub pending_resources: BTreeMap<TokenId, BTreeSet<ResourceId>>,
     pub active_resources: BTreeMap<TokenId, BTreeSet<ResourceId>>,
     pub resource_overwrites: BTreeMap<TokenId, BTreeMap<ResourceId, ResourceId>>,
     pub active_resources_priorities: BTreeMap<TokenId, Vec<u8>>,
 }
+
 impl RMRKToken {
-    /// Adds resource entry on resource storage contract
-    /// It sends a message to resource storage contract with information about new resource
+    /// Adds resource entry on resource storage contract.
+    /// It sends a message to resource storage contract with information about new resource.
+    ///
+    /// # Requirements:
+    /// * The `msg::source()` must be the contract admin.
     ///
     /// Arguments:
     /// * `id`: is a resource identifier
-    /// * `src`: a string pointing to the media associated with the resource
-    /// * `thumb`: a string pointing to thumbnail media associated with the resource
-    /// * `metadata_uri`:  a string pointing to a metadata file associated with the resource
+    /// * `src`: a string pointing to the media associated with the resource.
+    /// * `thumb`: a string pointing to thumbnail media associated with the resource.
+    /// * `metadata_uri`:  a string pointing to a metadata file associated with the resource.
+    ///
+    /// On success reply `[RMRKEvent::ResourceEntryAdded]`.
     pub async fn add_resource_entry(
         &mut self,
         id: u8,
@@ -26,29 +31,38 @@ impl RMRKToken {
         thumb: String,
         metadata_uri: String,
     ) {
+        assert!(
+            msg::source() == self.admin,
+            "Only admin can add resource to storage contract"
+        );
         // sends message to resource storage contract
         add_resource_entry(&self.resource_id, id, src, thumb, metadata_uri).await;
-        msg::reply(RMRKEvent::ResourceEntryAdded { id }, 0).unwrap();
+        msg::reply(RMRKEvent::ResourceEntryAdded { id }, 0)
+            .expect("Error in reply `[RMRKEvent::ResourceEntryAdded]`");
     }
 
-    /// Adds resource to an existing token
-    /// Proposed resource is placed in the "Pending" array
-    /// A pending resource can be also proposed to overwrite an existing resource
+    /// Adds resource to an existing token.
+    /// Checks that the resource woth indicated id exists in the resource storage contract.
+    /// Proposed resource is placed in the "Pending" array.
+    /// A pending resource can be also proposed to overwrite an existing resource.
     ///
-    /// Requirements
-    /// Token with indicated `token_id` must exist
-    /// The proposed resource must not already exist for the token
-    /// The resource that is proposed to be overwritten must exist for the token
+    /// # Requirements
+    /// Token with indicated `token_id` must exist.
+    /// The proposed resource must not already exist for the token.
+    /// The resource that is proposed to be overwritten must exist for the token.
+    /// The length of resources in pending status must be less or equal to `MAX_RESOURCE_LEN`.
     ///
-    /// Arguments:
-    /// * `token_id`: an id of the token
-    /// * `resource_id`: a proposed resource
-    /// * `overwrite_id`: a resource to be overwritten
+    /// # Arguments:
+    /// * `token_id`: an id of the token.
+    /// * `resource_id`: a proposed resource.
+    /// * `overwrite_id`: a resource to be overwritten.
+    ///
+    /// On success reply `[RMRKEvent::ResourceAdded]`.
     pub async fn add_resource(&mut self, token_id: TokenId, resource_id: u8, overwrite_id: u8) {
         self.assert_token_does_not_exist(token_id);
         assert_resource_exists(&self.resource_id, resource_id).await;
 
-        if let Some(token_resources) = self.multiresource.token_resources.get(&token_id) {
+        if let Some(token_resources) = self.multiresource.active_resources.get(&token_id) {
             assert!(
                 !token_resources.contains(&resource_id),
                 "Resource already exists on token"
@@ -70,41 +84,10 @@ impl RMRKToken {
             } else {
                 panic!("No resources to overwrite")
             }
-            self.multiresource
-                .resource_overwrites
-                .entry(token_id)
-                .and_modify(|r| {
-                    r.insert(resource_id, overwrite_id);
-                })
-                .or_insert_with(|| {
-                    let mut r = BTreeMap::new();
-                    r.insert(resource_id, overwrite_id);
-                    r
-                });
+            self.add_overwrite_resource(token_id, resource_id);
         }
 
-        self.multiresource
-            .token_resources
-            .entry(token_id)
-            .and_modify(|r| {
-                r.insert(resource_id);
-            })
-            .or_insert_with(|| {
-                let mut r = BTreeSet::new();
-                r.insert(resource_id);
-                r
-            });
-        self.multiresource
-            .pending_resources
-            .entry(token_id)
-            .and_modify(|r| {
-                r.insert(resource_id);
-            })
-            .or_insert_with(|| {
-                let mut r = BTreeSet::new();
-                r.insert(resource_id);
-                r
-            });
+        self.add_pending_resource(token_id, resource_id);
 
         msg::reply(
             RMRKEvent::ResourceAdded {
@@ -114,18 +97,21 @@ impl RMRKToken {
             },
             0,
         )
-        .unwrap();
+        .expect("Error in reply `[RMRKEvent::ResourceAdded]`");
     }
 
-    /// Accepts resource from pending
+    /// Accepts resource from pending list.
+    /// Moves the resource from the pending array to the accepted array.
     ///
-    /// Requirements
-    /// Only root owner or approved account can accept a resource
-    /// `resource_id` must exist for the token in the pending array
+    /// # Requirements
+    /// Only root owner or approved account can accept a resource.
+    /// `resource_id` must exist for the token in the pending array.
     ///
-    /// Arguments:
-    /// * `token_id`: an id of the token
-    /// * `resource_id`: a resource to be accepted
+    /// # Arguments:
+    /// * `token_id`: an id of the token.
+    /// * `resource_id`: a resource to be accepted.
+    ///
+    /// On success reply  `[RMRKEvent::ResourceAccepted]`.
     pub async fn accept_resource(&mut self, token_id: TokenId, resource_id: u8) {
         let root_owner = self.find_root_owner(token_id).await;
         self.assert_approved_or_owner(token_id, &root_owner);
@@ -146,17 +132,7 @@ impl RMRKToken {
                     });
             }
         }
-        self.multiresource
-            .active_resources
-            .entry(token_id)
-            .and_modify(|r| {
-                r.insert(resource_id);
-            })
-            .or_insert_with(|| {
-                let mut r = BTreeSet::new();
-                r.insert(resource_id);
-                r
-            });
+        self.add_active_resource(token_id, resource_id);
         self.multiresource
             .active_resources_priorities
             .remove(&token_id);
@@ -167,18 +143,20 @@ impl RMRKToken {
             },
             0,
         )
-        .unwrap();
+        .expect("Error in reply `[RMRKEvent::ResourceAccepted]`");
     }
 
     /// Rejects a resource, dropping it from the pending array.
     ///
-    /// Requirements
-    /// Only root owner or approved account can reject a resource
-    /// `resource_id` must exist for the token in the pending array
+    /// # Requirements
+    /// Only root owner or approved account can reject a resource.
+    /// `resource_id` must exist for the token in the pending array.
     ///
-    /// Arguments:
-    /// * `token_id`: an id of the token
-    /// * `resource_id`: a resource to be rejected
+    /// # Arguments:
+    /// * `token_id`: an id of the token.
+    /// * `resource_id`: a resource to be rejected.
+    ///
+    /// On success reply  `[RMRKEvent::ResourceRejected]`.
     pub async fn reject_resource(&mut self, token_id: TokenId, resource_id: u8) {
         let root_owner = self.find_root_owner(token_id).await;
         self.assert_approved_or_owner(token_id, &root_owner);
@@ -191,13 +169,6 @@ impl RMRKToken {
             panic!("Token does not have any pending resources");
         }
 
-        self.multiresource
-            .token_resources
-            .entry(token_id)
-            .and_modify(|r| {
-                r.remove(&resource_id);
-            });
-
         msg::reply(
             RMRKEvent::ResourceRejected {
                 token_id,
@@ -205,7 +176,7 @@ impl RMRKToken {
             },
             0,
         )
-        .unwrap();
+        .expect("Error in reply `[RMRKEvent::ResourceRejected]`");
     }
 
     /// Sets the priority of the active resources array
@@ -216,13 +187,15 @@ impl RMRKToken {
     ///  of 2. There is no validation on priority value input; out of order indexes
     ///  must be handled by the frontend.
     ///
-    /// Requirements
+    /// # Requirements
     /// Only root owner or approved account can set priority
     /// The length of the priorities array must be equal to the present length of the active resources array
     ///
-    /// Arguments:
-    /// * `token_id`: an id of the token
-    /// * `priorities`: An array of priorities to set
+    /// # Arguments:
+    /// * `token_id`: an id of the token.
+    /// * `priorities`: An array of priorities to set.
+    ///
+    /// On success reply `[RMRKEvent::PrioritySet]`.
     pub async fn set_priority(&mut self, token_id: TokenId, priorities: Vec<u8>) {
         let root_owner = self.find_root_owner(token_id).await;
         self.assert_approved_or_owner(token_id, &root_owner);
@@ -243,6 +216,36 @@ impl RMRKToken {
             },
             0,
         )
-        .unwrap();
+        .expect("Error in reply `[RMRKEvent::PrioritySet]`");
+    }
+
+    fn add_pending_resource(&mut self, token_id: TokenId, resource_id: ResourceId) {
+        self.multiresource
+            .pending_resources
+            .entry(token_id)
+            .and_modify(|r| {
+                r.insert(resource_id);
+            })
+            .or_insert_with(|| BTreeSet::from([resource_id]));
+    }
+
+    fn add_active_resource(&mut self, token_id: TokenId, resource_id: ResourceId) {
+        self.multiresource
+            .active_resources
+            .entry(token_id)
+            .and_modify(|r| {
+                r.insert(resource_id);
+            })
+            .or_insert_with(|| BTreeSet::from([resource_id]));
+    }
+
+    fn add_overwrite_resource(&mut self, token_id: TokenId, resource_id: ResourceId) {
+        self.multiresource
+                .resource_overwrites
+                .entry(token_id)
+                .and_modify(|r| {
+                    r.insert(resource_id, overwrite_id);
+                })
+                .or_insert_with(|| BTreeMap::from([(resource_id, overwrite_id)]));
     }
 }
