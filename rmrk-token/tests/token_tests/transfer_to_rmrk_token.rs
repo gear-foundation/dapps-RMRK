@@ -1,6 +1,6 @@
 use crate::token_tests::utils::*;
 use codec::Encode;
-use gstd::{ActorId, BTreeMap};
+use gstd::{ActorId, BTreeMap, BTreeSet};
 use gtest::{Program, System};
 use rmrk_io::*;
 
@@ -21,8 +21,8 @@ fn transfer_accepted_child_to_token_with_same_owner() {
         &rmrk_child,
         USERS[3],
         PARENT_NFT_CONTRACT,
-        child_token_id.into(),
-        parent_token_id.into()
+        parent_token_id.into(),
+        child_token_id.into()
     )
     .main_failed());
 
@@ -54,43 +54,39 @@ fn transfer_accepted_child_to_token_with_same_owner() {
         .encode()
     )));
 
-    // // check owner
-    // let res = owner(&rmrk_child, child_token_id.into());
-    // assert!(res.contains(&(
-    //     10,
-    //     RMRKEvent::Owner {
-    //         token_id: Some(new_parent_token_id.into()),
-    //         owner_id: PARENT_NFT_CONTRACT.into(),
-    //     }
-    //     .encode()
-    // )));
+    // check owner
+    let rmrk_owner = owner(&rmrk_child, child_token_id);
+    assert_eq!(
+        rmrk_owner,
+        RMRKStateReply::Owner {
+            token_id: Some(new_parent_token_id.into()),
+            owner_id: PARENT_NFT_CONTRACT.into(),
+        }
+    );
 
-    // // check accepted children of parent_token_id
-    // let res = get_accepted_children(&rmrk_parent, parent_token_id.into());
-    // assert!(res.contains(&(
-    //     10,
-    //     RMRKEvent::AcceptedChildren {
-    //         children: BTreeMap::new(),
-    //     }
-    //     .encode()
-    // )));
+    // check accepted children of parent_token_id
+    let accepted_children_reply = get_accepted_children(&rmrk_parent, parent_token_id.into());
+    assert_eq!(
+        accepted_children_reply,
+        RMRKStateReply::AcceptedChildren(BTreeMap::new())
+    );
 
-    // // check accepted children of new_parent_token_id
-    // let res = get_accepted_children(&rmrk_parent, new_parent_token_id.into());
-    // let mut accepted_children: BTreeMap<ActorId, Vec<TokenId>> = BTreeMap::new();
-    // accepted_children.insert(CHILD_NFT_CONTRACT.into(), vec![child_token_id.into()]);
-    // assert!(res.contains(&(
-    //     10,
-    //     RMRKEvent::AcceptedChildren {
-    //         children: accepted_children
-    //     }
-    //     .encode()
-    // )));
+    // check accepted children of new_parent_token_id
+    let accepted_children_reply = get_accepted_children(&rmrk_parent, new_parent_token_id.into());
+    let mut accepted_children: BTreeMap<ActorId, BTreeSet<TokenId>> = BTreeMap::new();
+    accepted_children.insert(
+        CHILD_NFT_CONTRACT.into(),
+        BTreeSet::from([child_token_id.into()]),
+    );
+    assert_eq!(
+        accepted_children_reply,
+        RMRKStateReply::AcceptedChildren(accepted_children)
+    );
 }
 
 // Root owner transfers pending child token to between his RMRK tokens inside one contract
 #[test]
-fn transfer_pendging_child_to_token_with_same_owner() {
+fn transfer_pending_child_to_token_with_same_owner() {
     let sys = System::new();
     before_test(&sys);
     let rmrk_child = sys.get_program(1);
@@ -105,8 +101,8 @@ fn transfer_pendging_child_to_token_with_same_owner() {
         &rmrk_child,
         USERS[3],
         PARENT_NFT_CONTRACT,
-        child_token_id.into(),
-        parent_token_id.into()
+        parent_token_id.into(),
+        child_token_id.into()
     )
     .main_failed());
 
@@ -128,41 +124,37 @@ fn transfer_pendging_child_to_token_with_same_owner() {
         .encode()
     )));
 
-    // // check owner
-    // let res = owner(&rmrk_child, child_token_id.into());
-    // assert!(res.contains(&(
-    //     10,
-    //     RMRKEvent::Owner {
-    //         token_id: Some(new_parent_token_id.into()),
-    //         owner_id: PARENT_NFT_CONTRACT.into(),
-    //     }
-    //     .encode()
-    // )));
+    // check owner
+    let rmrk_owner = owner(&rmrk_child, child_token_id);
+    assert_eq!(
+        rmrk_owner,
+        RMRKStateReply::Owner {
+            token_id: Some(new_parent_token_id.into()),
+            owner_id: PARENT_NFT_CONTRACT.into(),
+        }
+    );
 
-    // // check pending children of parent_token_id
-    // let res = get_pending_children(&rmrk_parent, parent_token_id.into());
-    // assert!(res.contains(&(
-    //     10,
-    //     RMRKEvent::PendingChildren {
-    //         children: BTreeMap::new(),
-    //     }
-    //     .encode()
-    // )));
 
-    // // check pending children of new_parent_token_id
-    // let res = get_pending_children(&rmrk_parent, new_parent_token_id.into());
-    // let mut pending_children: BTreeMap<ActorId, Vec<TokenId>> = BTreeMap::new();
-    // pending_children.insert(CHILD_NFT_CONTRACT.into(), vec![child_token_id.into()]);
-    // assert!(res.contains(&(
-    //     10,
-    //     RMRKEvent::PendingChildren {
-    //         children: pending_children
-    //     }
-    //     .encode()
-    // )));
+    // check pending children of parent_token_id
+    let pending_children_reply = get_pending_children(&rmrk_parent, parent_token_id.into());
+    assert_eq!(
+        pending_children_reply,
+        RMRKStateReply::PendingChildren(BTreeMap::new())
+    );
+    // check pending children of new_parent_token_id
+    let pending_children_reply = get_pending_children(&rmrk_parent, new_parent_token_id.into());
+    let mut pending_children: BTreeMap<ActorId, BTreeSet<TokenId>> = BTreeMap::new();
+    pending_children.insert(
+        CHILD_NFT_CONTRACT.into(),
+        BTreeSet::from([child_token_id.into()]),
+    );
+    assert_eq!(
+        pending_children_reply,
+        RMRKStateReply::PendingChildren(pending_children)
+    );
 }
 
-// Root owner transfers accepted child token to RMRK token that he does not owne inside one contract
+// Root owner transfers accepted child token to RMRK token that he does not own inside one contract
 #[test]
 fn transfer_accepted_child_to_token_with_different_owner() {
     let sys = System::new();
@@ -179,8 +171,8 @@ fn transfer_accepted_child_to_token_with_different_owner() {
         &rmrk_child,
         USERS[3],
         PARENT_NFT_CONTRACT,
-        child_token_id.into(),
-        parent_token_id.into()
+        parent_token_id.into(),
+        child_token_id.into()
     )
     .main_failed());
 
@@ -194,7 +186,7 @@ fn transfer_accepted_child_to_token_with_different_owner() {
     )
     .main_failed());
 
-    // USERS[0] transfer child to another his token
+    // USERS[0] transfer child to token that he does not own
     let res = transfer_to_nft(
         &rmrk_child,
         USERS[0],
@@ -212,38 +204,33 @@ fn transfer_accepted_child_to_token_with_different_owner() {
         .encode()
     )));
 
-    // // check owner
-    // let res = owner(&rmrk_child, child_token_id.into());
-    // assert!(res.contains(&(
-    //     10,
-    //     RMRKEvent::Owner {
-    //         token_id: Some(new_parent_token_id.into()),
-    //         owner_id: PARENT_NFT_CONTRACT.into(),
-    //     }
-    //     .encode()
-    // )));
+    let rmrk_owner = owner(&rmrk_child, child_token_id);
+    assert_eq!(
+        rmrk_owner,
+        RMRKStateReply::Owner {
+            token_id: Some(new_parent_token_id.into()),
+            owner_id: PARENT_NFT_CONTRACT.into(),
+        }
+    );
 
-    // // check accepted children of parent_token_id
-    // let res = get_accepted_children(&rmrk_parent, parent_token_id.into());
-    // assert!(res.contains(&(
-    //     10,
-    //     RMRKEvent::AcceptedChildren {
-    //         children: BTreeMap::new(),
-    //     }
-    //     .encode()
-    // )));
+    // check accepted children of parent_token_id
+    let accepted_children_reply = get_accepted_children(&rmrk_parent, parent_token_id.into());
+    assert_eq!(
+        accepted_children_reply,
+        RMRKStateReply::AcceptedChildren(BTreeMap::new())
+    );
 
-    // // check pending children of new_parent_token_id
-    // let res = get_pending_children(&rmrk_parent, new_parent_token_id.into());
-    // let mut pending_children: BTreeMap<ActorId, Vec<TokenId>> = BTreeMap::new();
-    // pending_children.insert(CHILD_NFT_CONTRACT.into(), vec![child_token_id.into()]);
-    // assert!(res.contains(&(
-    //     10,
-    //     RMRKEvent::PendingChildren {
-    //         children: pending_children
-    //     }
-    //     .encode()
-    // )));
+    // check pending children of new_parent_token_id
+    let pending_children_reply = get_pending_children(&rmrk_parent, new_parent_token_id.into());
+    let mut pending_children: BTreeMap<ActorId, BTreeSet<TokenId>> = BTreeMap::new();
+    pending_children.insert(
+        CHILD_NFT_CONTRACT.into(),
+        BTreeSet::from([child_token_id.into()]),
+    );
+    assert_eq!(
+        pending_children_reply,
+        RMRKStateReply::PendingChildren(pending_children)
+    );
 }
 
 // Root owner transfers pending child token to  RMRK token that he does not own inside one contract
@@ -263,8 +250,8 @@ fn transfer_pending_child_to_token_with_different_owner() {
         &rmrk_child,
         USERS[3],
         PARENT_NFT_CONTRACT,
-        child_token_id.into(),
-        parent_token_id.into()
+        parent_token_id.into(),
+        child_token_id.into()
     )
     .main_failed());
 
@@ -286,38 +273,34 @@ fn transfer_pending_child_to_token_with_different_owner() {
         .encode()
     )));
 
-    // // check owner
-    // let res = owner(&rmrk_child, child_token_id.into());
-    // assert!(res.contains(&(
-    //     10,
-    //     RMRKEvent::Owner {
-    //         token_id: Some(new_parent_token_id.into()),
-    //         owner_id: PARENT_NFT_CONTRACT.into(),
-    //     }
-    //     .encode()
-    // )));
+    // check owner
+    let rmrk_owner = owner(&rmrk_child, child_token_id);
+    assert_eq!(
+        rmrk_owner,
+        RMRKStateReply::Owner {
+            token_id: Some(new_parent_token_id.into()),
+            owner_id: PARENT_NFT_CONTRACT.into(),
+        }
+    );
 
-    // // check accepted children of parent_token_id
-    // let res = get_pending_children(&rmrk_parent, parent_token_id.into());
-    // assert!(res.contains(&(
-    //     10,
-    //     RMRKEvent::PendingChildren {
-    //         children: BTreeMap::new(),
-    //     }
-    //     .encode()
-    // )));
+    // check accepted children of parent_token_id
+    let accepted_children_reply = get_accepted_children(&rmrk_parent, parent_token_id.into());
+    assert_eq!(
+        accepted_children_reply,
+        RMRKStateReply::AcceptedChildren(BTreeMap::new())
+    );
 
-    // // check pending children of new_parent_token_id
-    // let res = get_pending_children(&rmrk_parent, new_parent_token_id.into());
-    // let mut pending_children: BTreeMap<ActorId, Vec<TokenId>> = BTreeMap::new();
-    // pending_children.insert(CHILD_NFT_CONTRACT.into(), vec![child_token_id.into()]);
-    // assert!(res.contains(&(
-    //     10,
-    //     RMRKEvent::PendingChildren {
-    //         children: pending_children
-    //     }
-    //     .encode()
-    // )));
+    // check pending children of new_parent_token_id
+    let pending_children_reply = get_pending_children(&rmrk_parent, new_parent_token_id.into());
+    let mut pending_children: BTreeMap<ActorId, BTreeSet<TokenId>> = BTreeMap::new();
+    pending_children.insert(
+        CHILD_NFT_CONTRACT.into(),
+        BTreeSet::from([child_token_id.into()]),
+    );
+    assert_eq!(
+        pending_children_reply,
+        RMRKStateReply::PendingChildren(pending_children)
+    );
 }
 
 // Root owner transfers accepted child token to his RMRK token in another RMRK contract
@@ -340,8 +323,8 @@ fn transfer_accepted_child_to_token_with_same_owner_another_contract() {
         &rmrk_child,
         USERS[3],
         PARENT_NFT_CONTRACT,
-        child_token_id.into(),
-        parent_token_id.into()
+        parent_token_id.into(),
+        child_token_id.into()
     )
     .main_failed());
 
@@ -382,38 +365,34 @@ fn transfer_accepted_child_to_token_with_same_owner_another_contract() {
         .encode()
     )));
 
-    // // check owner
-    // let res = owner(&rmrk_child, child_token_id.into());
-    // assert!(res.contains(&(
-    //     10,
-    //     RMRKEvent::Owner {
-    //         token_id: Some(new_parent_token_id.into()),
-    //         owner_id: new_parent_contract_id.into(),
-    //     }
-    //     .encode()
-    // )));
+    // check owner
+    let rmrk_owner = owner(&rmrk_child, child_token_id);
+    assert_eq!(
+        rmrk_owner,
+        RMRKStateReply::Owner {
+            token_id: Some(new_parent_token_id.into()),
+            owner_id: new_parent_contract_id.into(),
+        }
+    );
 
-    // // check accepted children of parent_token_id
-    // let res = get_accepted_children(&rmrk_parent, parent_token_id.into());
-    // assert!(res.contains(&(
-    //     10,
-    //     RMRKEvent::AcceptedChildren {
-    //         children: BTreeMap::new(),
-    //     }
-    //     .encode()
-    // )));
-
-    // // check accepted children of new_parent_token_id
-    // let res = get_accepted_children(&new_rmrk_parent, new_parent_token_id.into());
-    // let mut accepted_children: BTreeMap<ActorId, Vec<TokenId>> = BTreeMap::new();
-    // accepted_children.insert(CHILD_NFT_CONTRACT.into(), vec![child_token_id.into()]);
-    // assert!(res.contains(&(
-    //     10,
-    //     RMRKEvent::AcceptedChildren {
-    //         children: accepted_children
-    //     }
-    //     .encode()
-    // )));
+    // check accepted children of parent_token_id
+    let accepted_children_reply = get_accepted_children(&rmrk_parent, parent_token_id.into());
+    assert_eq!(
+        accepted_children_reply,
+        RMRKStateReply::AcceptedChildren(BTreeMap::new())
+    );
+    // check accepted children of new_parent_token_id
+    let accepted_children_reply =
+        get_accepted_children(&new_rmrk_parent, new_parent_token_id.into());
+    let mut accepted_children: BTreeMap<ActorId, BTreeSet<TokenId>> = BTreeMap::new();
+    accepted_children.insert(
+        CHILD_NFT_CONTRACT.into(),
+        BTreeSet::from([child_token_id.into()]),
+    );
+    assert_eq!(
+        accepted_children_reply,
+        RMRKStateReply::AcceptedChildren(accepted_children)
+    );
 }
 
 // Root owner transfers accepted child token to  RMRK token with different owner in another RMRK contract
@@ -436,8 +415,8 @@ fn transfer_accepted_child_to_token_with_different_owner_another_contract() {
         &rmrk_child,
         USERS[3],
         PARENT_NFT_CONTRACT,
-        child_token_id.into(),
-        parent_token_id.into()
+        parent_token_id.into(),
+        child_token_id.into()
     )
     .main_failed());
 
@@ -478,38 +457,34 @@ fn transfer_accepted_child_to_token_with_different_owner_another_contract() {
         .encode()
     )));
 
-    // // check owner
-    // let res = owner(&rmrk_child, child_token_id.into());
-    // assert!(res.contains(&(
-    //     10,
-    //     RMRKEvent::Owner {
-    //         token_id: Some(new_parent_token_id.into()),
-    //         owner_id: new_parent_contract_id.into(),
-    //     }
-    //     .encode()
-    // )));
+    // check owner
+    let rmrk_owner = owner(&rmrk_child, child_token_id);
+    assert_eq!(
+        rmrk_owner,
+        RMRKStateReply::Owner {
+            token_id: Some(new_parent_token_id.into()),
+            owner_id: new_parent_contract_id.into(),
+        }
+    );
 
-    // // check accepted children of parent_token_id
-    // let res = get_accepted_children(&rmrk_parent, parent_token_id.into());
-    // assert!(res.contains(&(
-    //     10,
-    //     RMRKEvent::AcceptedChildren {
-    //         children: BTreeMap::new(),
-    //     }
-    //     .encode()
-    // )));
+    // check accepted children of parent_token_id
+    let accepted_children_reply = get_accepted_children(&rmrk_parent, parent_token_id.into());
+    assert_eq!(
+        accepted_children_reply,
+        RMRKStateReply::AcceptedChildren(BTreeMap::new())
+    );
 
-    // // check accepted children of new_parent_token_id
-    // let res = get_pending_children(&new_rmrk_parent, new_parent_token_id.into());
-    // let mut pending_children: BTreeMap<ActorId, Vec<TokenId>> = BTreeMap::new();
-    // pending_children.insert(CHILD_NFT_CONTRACT.into(), vec![child_token_id.into()]);
-    // assert!(res.contains(&(
-    //     10,
-    //     RMRKEvent::PendingChildren {
-    //         children: pending_children
-    //     }
-    //     .encode()
-    // )));
+    // check pending children of new_parent_token_id
+    let pending_children_reply = get_pending_children(&new_rmrk_parent, new_parent_token_id.into());
+    let mut pending_children: BTreeMap<ActorId, BTreeSet<TokenId>> = BTreeMap::new();
+    pending_children.insert(
+        CHILD_NFT_CONTRACT.into(),
+        BTreeSet::from([child_token_id.into()]),
+    );
+    assert_eq!(
+        pending_children_reply,
+        RMRKStateReply::PendingChildren(pending_children)
+    );
 }
 
 // Root owner transfers usual token to his RMRK token
@@ -547,28 +522,27 @@ fn transfer_token_to_token_with_same_owner() {
         .encode()
     )));
 
-    // // check owner
-    // let res = owner(&rmrk_child, child_token_id.into());
-    // assert!(res.contains(&(
-    //     10,
-    //     RMRKEvent::Owner {
-    //         token_id: Some(parent_token_id.into()),
-    //         owner_id: PARENT_NFT_CONTRACT.into(),
-    //     }
-    //     .encode()
-    // )));
+    // check owner
+    let rmrk_owner = owner(&rmrk_child, child_token_id);
+    assert_eq!(
+        rmrk_owner,
+        RMRKStateReply::Owner {
+            token_id: Some(parent_token_id.into()),
+            owner_id: PARENT_NFT_CONTRACT.into(),
+        }
+    );
 
-    // // check accepted children of new_parent_token_id
-    // let res = get_accepted_children(&rmrk_parent, parent_token_id.into());
-    // let mut accepted_children: BTreeMap<ActorId, Vec<TokenId>> = BTreeMap::new();
-    // accepted_children.insert(CHILD_NFT_CONTRACT.into(), vec![child_token_id.into()]);
-    // assert!(res.contains(&(
-    //     10,
-    //     RMRKEvent::AcceptedChildren {
-    //         children: accepted_children
-    //     }
-    //     .encode()
-    // )));
+    // check accepted children
+    let accepted_children_reply = get_accepted_children(&rmrk_parent, parent_token_id.into());
+    let mut accepted_children: BTreeMap<ActorId, BTreeSet<TokenId>> = BTreeMap::new();
+    accepted_children.insert(
+        CHILD_NFT_CONTRACT.into(),
+        BTreeSet::from([child_token_id.into()]),
+    );
+    assert_eq!(
+        accepted_children_reply,
+        RMRKStateReply::AcceptedChildren(accepted_children)
+    );
 }
 
 // Root owner transfers usual token to  RMRK token with different owner
@@ -607,27 +581,26 @@ fn transfer_usual_token_to_token_with_different_owner() {
     )));
 
     // check owner
-    // let res = owner(&rmrk_child, child_token_id.into());
-    // assert!(res.contains(&(
-    //     10,
-    //     RMRKEvent::Owner {
-    //         token_id: Some(parent_token_id.into()),
-    //         owner_id: PARENT_NFT_CONTRACT.into(),
-    //     }
-    //     .encode()
-    // )));
+    let rmrk_owner = owner(&rmrk_child, child_token_id);
+    assert_eq!(
+        rmrk_owner,
+        RMRKStateReply::Owner {
+            token_id: Some(parent_token_id.into()),
+            owner_id: PARENT_NFT_CONTRACT.into(),
+        }
+    );
 
-    // // check accepted children of new_parent_token_id
-    // let res = get_pending_children(&rmrk_parent, parent_token_id.into());
-    // let mut pending_children: BTreeMap<ActorId, Vec<TokenId>> = BTreeMap::new();
-    // pending_children.insert(CHILD_NFT_CONTRACT.into(), vec![child_token_id.into()]);
-    // assert!(res.contains(&(
-    //     10,
-    //     RMRKEvent::PendingChildren {
-    //         children: pending_children
-    //     }
-    //     .encode()
-    // )));
+    // check pending children of new_parent_token_id
+    let pending_children_reply = get_pending_children(&rmrk_parent, parent_token_id.into());
+    let mut pending_children: BTreeMap<ActorId, BTreeSet<TokenId>> = BTreeMap::new();
+    pending_children.insert(
+        CHILD_NFT_CONTRACT.into(),
+        BTreeSet::from([child_token_id.into()]),
+    );
+    assert_eq!(
+        pending_children_reply,
+        RMRKStateReply::PendingChildren(pending_children)
+    );
 }
 
 #[test]
@@ -646,8 +619,8 @@ fn transfer_to_token_failures() {
         &rmrk_child,
         USERS[3],
         PARENT_NFT_CONTRACT,
-        child_token_id.into(),
-        parent_token_id.into()
+        parent_token_id.into(),
+        child_token_id.into()
     )
     .main_failed());
 
@@ -666,8 +639,8 @@ fn transfer_to_token_failures() {
         &rmrk_child,
         USERS[1],
         PARENT_NFT_CONTRACT,
-        child_token_id,
         new_parent_token_id,
+        child_token_id,
     )
     .main_failed());
 
@@ -676,8 +649,8 @@ fn transfer_to_token_failures() {
         &rmrk_child,
         USERS[0],
         PARENT_NFT_CONTRACT,
-        child_token_id + 1,
         new_parent_token_id,
+        child_token_id + 1
     )
     .main_failed());
 
@@ -686,8 +659,8 @@ fn transfer_to_token_failures() {
         &rmrk_child,
         USERS[0],
         PARENT_NFT_CONTRACT,
-        child_token_id,
         new_parent_token_id + 100,
+        child_token_id,
     )
     .main_failed());
 }

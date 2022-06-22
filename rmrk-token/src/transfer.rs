@@ -93,9 +93,8 @@ impl RMRKToken {
                 self.increase_balance(&new_root_owner);
                 self.decrease_balance(&root_owner);
             }
-            new_rmrk_owner.owner_id = *to;
         }
-
+        new_rmrk_owner.owner_id = *to;
         new_rmrk_owner.token_id = Some(destination_id);
         self.rmrk_owners.insert(token_id, new_rmrk_owner);
         msg::reply(

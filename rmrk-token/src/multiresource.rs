@@ -84,7 +84,7 @@ impl RMRKToken {
             } else {
                 panic!("No resources to overwrite")
             }
-            self.add_overwrite_resource(token_id, resource_id);
+            self.add_overwrite_resource(token_id, resource_id, overwrite_id);
         }
 
         self.add_pending_resource(token_id, resource_id);
@@ -239,13 +239,18 @@ impl RMRKToken {
             .or_insert_with(|| BTreeSet::from([resource_id]));
     }
 
-    fn add_overwrite_resource(&mut self, token_id: TokenId, resource_id: ResourceId) {
+    fn add_overwrite_resource(
+        &mut self,
+        token_id: TokenId,
+        resource_id: ResourceId,
+        overwrite_id: ResourceId,
+    ) {
         self.multiresource
-                .resource_overwrites
-                .entry(token_id)
-                .and_modify(|r| {
-                    r.insert(resource_id, overwrite_id);
-                })
-                .or_insert_with(|| BTreeMap::from([(resource_id, overwrite_id)]));
+            .resource_overwrites
+            .entry(token_id)
+            .and_modify(|r| {
+                r.insert(resource_id, overwrite_id);
+            })
+            .or_insert_with(|| BTreeMap::from([(resource_id, overwrite_id)]));
     }
 }

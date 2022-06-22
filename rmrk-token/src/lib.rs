@@ -242,13 +242,16 @@ pub unsafe extern "C" fn meta_state() -> *mut [i32; 2] {
 
     let encoded = match query {
         RMRKState::Owner(token_id) => {
-            let rmrk_owner = rmrk
-                .rmrk_owners
-                .get(&token_id)
-                .expect("RMRK: Token does not exist");
-            RMRKStateReply::Owner {
-                token_id: rmrk_owner.token_id,
-                owner_id: rmrk_owner.owner_id,
+            if let Some(rmrk_owner) = rmrk.rmrk_owners.get(&token_id) {
+                RMRKStateReply::Owner {
+                    token_id: rmrk_owner.token_id,
+                    owner_id: rmrk_owner.owner_id,
+                }
+            } else {
+                RMRKStateReply::Owner {
+                    token_id: None,
+                    owner_id: ZERO_ID,
+                }
             }
         }
         RMRKState::Balance(account) => {

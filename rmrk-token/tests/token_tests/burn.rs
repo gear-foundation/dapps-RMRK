@@ -1,6 +1,6 @@
 use crate::token_tests::utils::*;
 use codec::Encode;
-use gstd::{ActorId, BTreeMap};
+use gstd::{ActorId, BTreeMap, BTreeSet};
 use gtest::{Program, System};
 use rmrk_io::*;
 
@@ -8,19 +8,27 @@ use rmrk_io::*;
 fn burn_simple() {
     let sys = System::new();
     before_test(&sys);
-    let rmrk = sys.get_program(2);
-    let res = burn(&rmrk, USERS[0], 5);
+    let rmrk = sys.get_program(PARENT_NFT_CONTRACT);
+    let token_id: u64 = 5;
+    let res = burn(&rmrk, USERS[0], token_id);
     assert!(res.contains(&(
         USERS[0],
         RMRKEvent::Transfer {
             to: ZERO_ID.into(),
-            token_id: 5.into(),
+            token_id: token_id.into(),
         }
         .encode()
     )));
 
     // check that token does not exist (must fail)
-    //  assert!(owner(&rmrk, 5.into()).main_failed());
+    let owner = owner(&rmrk, token_id.into());
+    assert_eq!(
+        owner,
+        RMRKStateReply::Owner {
+            token_id: None,
+            owner_id: ZERO_ID.into()
+        }
+    );
 }
 
 #[test]
@@ -31,28 +39,6 @@ fn burn_simple_failures() {
     // must fail since caller is not owner and not approved
     assert!(burn(&rmrk, USERS[3], 5).main_failed());
 }
-
-// #[test]
-// fn burn_simple_from_approved_account() {
-//     let sys = System::new();
-//     before_test(&sys);
-//     let rmrk = sys.get_program(2);
-
-//      assert!(!approve(&rmrk, USERS[0], USERS[3], 5.into()).main_failed());
-
-//      let res = burn(&rmrk, USERS[3], 5.into());
-//      assert!(res.contains(&(
-//          USERS[3],
-//          RMRKEvent::Transfer {
-//              to: ZERO_ID.into(),
-//              token_id: 5.into(),
-//          }
-//          .encode()
-//      )));
-
-//      // check that token does not exist (must fail)
-//      assert!(owner(&rmrk, 5.into()).main_failed());
-// }
 
 #[test]
 fn burn_nested_token() {
@@ -69,8 +55,8 @@ fn burn_nested_token() {
         &rmrk_child,
         USERS[1],
         PARENT_NFT_CONTRACT,
-        child_pending_token_id.into(),
         parent_token_id.into(),
+        child_pending_token_id.into(),
     )
     .main_failed());
 
@@ -79,13 +65,12 @@ fn burn_nested_token() {
         &rmrk_child,
         USERS[1],
         PARENT_NFT_CONTRACT,
-        child_accepted_token_id.into(),
         parent_token_id.into(),
+        child_accepted_token_id.into(),
     )
     .main_failed());
 
     // accept one child
-
     assert!(!accept_child(
         &rmrk_parent,
         USERS[0],
@@ -114,24 +99,18 @@ fn burn_nested_token() {
     )));
 
     // check that parent contract has no pending children
-    // let res = get_pending_children(&rmrk_parent, parent_token_id.into());
-    // assert!(res.contains(&(
-    //     10,
-    //     RMRKEvent::PendingChildren {
-    //         children: BTreeMap::new()
-    //     }
-    //     .encode()
-    // )));
+    let pending_children_reply = get_pending_children(&rmrk_parent, parent_token_id.into());
+    assert_eq!(
+        pending_children_reply,
+        RMRKStateReply::PendingChildren(BTreeMap::new())
+    );
 
     // check that parent contract has no accepted children
-    // let res = get_accepted_children(&rmrk_parent, parent_token_id.into());
-    // assert!(res.contains(&(
-    //     10,
-    //     RMRKEvent::AcceptedChildren {
-    //         children: BTreeMap::new()
-    //     }
-    //     .encode()
-    // )));
+    let accepted_children_reply = get_accepted_children(&rmrk_parent, parent_token_id.into());
+    assert_eq!(
+        accepted_children_reply,
+        RMRKStateReply::AcceptedChildren(BTreeMap::new())
+    );
 }
 
 #[test]
@@ -183,44 +162,54 @@ fn recursive_burn_nested_token() {
     );
 
     // check accepted children of parent_token_id
-    // let res = get_accepted_children(&rmrk_parent, parent_token_id.into());
-    // let mut accepted_children: BTreeMap<ActorId, Vec<TokenId>> = BTreeMap::new();
-    // accepted_children.insert(CHILD_NFT_CONTRACT.into(), vec![child_token_id.into()]);
-    // assert!(res.contains(&(
-    //     10,
-    //     RMRKEvent::AcceptedChildren {
-    //         children: accepted_children
-    //     }
-    //     .encode()
-    // )));
+    let accepted_children_reply = get_accepted_children(&rmrk_parent, parent_token_id.into());
+    let mut accepted_children: BTreeMap<ActorId, BTreeSet<TokenId>> = BTreeMap::new();
+    accepted_children.insert(
+        CHILD_NFT_CONTRACT.into(),
+        BTreeSet::from([child_token_id.into()]),
+    );
+    assert_eq!(
+        accepted_children_reply,
+        RMRKStateReply::AcceptedChildren(accepted_children)
+    );
 
     // check accepted children of child_token_id
-    // let res = get_accepted_children(&rmrk_child, child_token_id.into());
-    // let mut accepted_children: BTreeMap<ActorId, Vec<TokenId>> = BTreeMap::new();
-    // accepted_children.insert(3.into(), vec![grand_token_id.into()]);
-    // assert!(res.contains(&(
-    //     10,
-    //     RMRKEvent::AcceptedChildren {
-    //         children: accepted_children
-    //     }
-    //     .encode()
-    // )));
+    let accepted_children_reply = get_accepted_children(&rmrk_child, child_token_id.into());
+    let res = get_accepted_children(&rmrk_child, child_token_id.into());
+    let mut accepted_children: BTreeMap<ActorId, BTreeSet<TokenId>> = BTreeMap::new();
+    accepted_children.insert(3.into(), BTreeSet::from([grand_token_id.into()]));
+    assert_eq!(
+        accepted_children_reply,
+        RMRKStateReply::AcceptedChildren(accepted_children)
+    );
+
+    // burn child
     assert!(!burn(&rmrk_child, USERS[0], child_token_id.into()).main_failed());
-    // check accepted children of parent_token_id
-    // let res = get_accepted_children(&rmrk_parent, parent_token_id.into());
-    // assert!(res.contains(&(
-    //     10,
-    //     RMRKEvent::AcceptedChildren {
-    //         children: BTreeMap::new()
-    //     }
-    //     .encode()
-    // )));
+    // check that parent_token_id has no accepted children
+    let accepted_children_reply = get_accepted_children(&rmrk_parent, parent_token_id.into());
+    assert_eq!(
+        accepted_children_reply,
+        RMRKStateReply::AcceptedChildren(BTreeMap::new())
+    );
 
-    // // check that child_token_id does not exist (must fail)
-    // assert!(owner(&rmrk_child, child_token_id.into()).main_failed());
-
-    // // check that grand_token_id does not exist (must fail)
-    // assert!(owner(&rmrk_grand, grand_token_id.into()).main_failed());
+    // check that child_token_id does not exist
+    let rmrk_owner = owner(&rmrk_child, child_token_id);
+    assert_eq!(
+        rmrk_owner,
+        RMRKStateReply::Owner {
+            token_id: None,
+            owner_id: ZERO_ID.into()
+        }
+    );
+    // check that grand_token_id does not exist
+    let rmrk_owner = owner(&rmrk_grand, grand_token_id);
+    assert_eq!(
+        rmrk_owner,
+        RMRKStateReply::Owner {
+            token_id: None,
+            owner_id: ZERO_ID.into()
+        }
+    );
 }
 
 // ownership chain is now USERS[0] > parent_token_id > child_token_id > grand_token_id
@@ -252,9 +241,22 @@ fn recursive_burn_parent_token() {
     // burn parent_token_id
     assert!(!burn(&rmrk_parent, USERS[0], parent_token_id.into()).main_failed());
 
-    // // check that child_token_id does not exist (must fail)
-    // assert!(owner(&rmrk_child, child_token_id.into()).main_failed());
-
-    // // check that grand_token_id does not exist (must fail)
-    // assert!(owner(&rmrk_grand, grand_token_id.into()).main_failed());
+    // check that child_token_id does not exist
+    let rmrk_owner = owner(&rmrk_child, child_token_id);
+    assert_eq!(
+        rmrk_owner,
+        RMRKStateReply::Owner {
+            token_id: None,
+            owner_id: ZERO_ID.into()
+        }
+    );
+    // check that grand_token_id does not exist
+    let rmrk_owner = owner(&rmrk_grand, grand_token_id);
+    assert_eq!(
+        rmrk_owner,
+        RMRKStateReply::Owner {
+            token_id: None,
+            owner_id: ZERO_ID.into()
+        }
+    );
 }

@@ -78,7 +78,6 @@ impl RMRKToken {
         parent_token_id: Option<TokenId>,
     ) {
         self.increase_balance(root_owner);
-
         self.rmrk_owners.insert(
             token_id,
             RMRKOwner {
@@ -91,7 +90,8 @@ impl RMRKToken {
     pub fn increase_balance(&mut self, account: &ActorId) {
         self.balances
             .entry(*account)
-            .and_modify(|balance| *balance += 1.into());
+            .and_modify(|balance| *balance += 1.into())
+            .or_insert_with(|| 1.into());
     }
 
     pub fn decrease_balance(&mut self, account: &ActorId) {

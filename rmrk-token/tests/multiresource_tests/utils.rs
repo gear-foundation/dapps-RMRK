@@ -103,23 +103,15 @@ pub fn reject_resource(rmrk: &Program, user: u64, token_id: u64, resource_id: u8
     )
 }
 
-// pub fn get_pending_resources(rmrk: &Program, token_id: u64) -> RunResult {
-//     rmrk.send(
-//         10,
-//         RMRKAction::GetPendingResources {
-//             token_id: token_id.into(),
-//         },
-//     )
-// }
+// reading the pending resources of token
+pub fn get_pending_resources(rmrk: &Program, token_id: u64) -> RMRKStateReply {
+    rmrk.meta_state(RMRKState::PendingResources(token_id.into()))
+}
 
-// pub fn get_active_resources(rmrk: &Program, token_id: u64) -> RunResult {
-//     rmrk.send(
-//         10,
-//         RMRKAction::GetActiveResources {
-//             token_id: token_id.into(),
-//         },
-//     )
-// }
+// reading the active resource of token
+pub fn get_active_resources(rmrk: &Program, token_id: u64) -> RMRKStateReply {
+    rmrk.meta_state(RMRKState::ActiveResources(token_id.into()))
+}
 
 pub fn set_priority(rmrk: &Program, user: u64, token_id: u64, priorities: Vec<u8>) -> RunResult {
     rmrk.send(

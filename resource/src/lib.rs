@@ -11,7 +11,7 @@ pub struct ResourceStorage {
     // the admin is the rmrk contract that initializes the storage contract
     pub admin: ActorId,
     pub resources: BTreeMap<u8, Resource>,
-    pub all_resources: BTreeSet<Resource>,
+    pub all_resources: Vec<Resource>,
 }
 
 static mut RESOURCE_STORAGE: Option<ResourceStorage> = None;
@@ -45,7 +45,7 @@ impl ResourceStorage {
             self.resources.insert(id, resource.clone()).is_none(),
             "resource already exists"
         );
-        self.all_resources.insert(resource);
+        self.all_resources.push(resource);
         msg::reply(ResourceEvent::ResourceEntryAdded { id }, 0)
             .expect("Error in reply `[ResourceEvent::ResourceEntryAdded]`");
     }

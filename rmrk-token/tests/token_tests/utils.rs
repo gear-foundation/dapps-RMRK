@@ -175,8 +175,8 @@ pub fn rmrk_chain(
         &rmrk_child,
         USERS[1],
         PARENT_NFT_CONTRACT,
-        child_token_id.into(),
         parent_token_id.into(),
+        child_token_id.into(),
     )
     .main_failed());
 
@@ -195,8 +195,8 @@ pub fn rmrk_chain(
         &rmrk_grand,
         USERS[1],
         CHILD_NFT_CONTRACT,
-        grand_token_id.into(),
         child_token_id.into(),
+        grand_token_id.into(),
     )
     .main_failed());
 
@@ -211,12 +211,25 @@ pub fn owner(rmrk: &Program, token_id: u64) -> RMRKStateReply {
 
 // reading the account balance
 pub fn balance(rmrk: &Program, account: u64) -> RMRKStateReply {
-    rmrk.meta_state(&RMRKState::Balance(account.into()))
+    rmrk.meta_state(RMRKState::Balance(account.into()))
 }
-// pub fn get_pending_children(rmrk: &Program, token_id: TokenId) -> RMRKStateReply {
-//     rmrk.send(10, RMRKAction::PendingChildren { token_id })
-// }
 
-// pub fn get_accepted_children(rmrk: &Program, token_id: TokenId) -> RMRKStateReply {
-//     rmrk.send(10, RMRKAction::AcceptedChildren { token_id })
-// }
+// reading the pending children of token
+pub fn get_pending_children(rmrk: &Program, token_id: u64) -> RMRKStateReply {
+    rmrk.meta_state(RMRKState::PendingChildren(token_id.into()))
+}
+
+// reading the accepted children of token
+pub fn get_accepted_children(rmrk: &Program, token_id: TokenId) -> RMRKStateReply {
+    rmrk.meta_state(RMRKState::AcceptedChildren(token_id.into()))
+}
+
+// reading the pending resources of token
+pub fn get_pending_resource(rmrk: &Program, token_id: u64) -> RMRKStateReply {
+    rmrk.meta_state(RMRKState::PendingResources(token_id.into()))
+}
+
+// reading the accepted resource of token
+pub fn get_accepted_resource(rmrk: &Program, token_id: TokenId) -> RMRKStateReply {
+    rmrk.meta_state(RMRKState::ActiveResources(token_id.into()))
+}

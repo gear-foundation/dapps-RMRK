@@ -162,7 +162,7 @@ impl RMRKToken {
         let child_vec = get_child_vec(child_contract_id, child_token_id);
 
         // remove child from accepted children array
-        self.internal_remove_child(parent_token_id, &child_vec, ChildStatus::Pending);
+        self.internal_remove_child(parent_token_id, &child_vec, ChildStatus::Accepted);
 
         // send message to child contract to burn RMRK token from it
         burn_from_parent(
