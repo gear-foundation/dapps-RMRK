@@ -13,7 +13,7 @@ pub fn init_rmrk(sys: &System) {
         InitRMRK {
             name: "RMRKToken".to_string(),
             symbol: "RMRKSymbol".to_string(),
-            resource_hash: Some([0; 32]),
+            resource_hash: None,
             resource_name: "ResourceName".to_string(),
         },
     );
