@@ -2,7 +2,7 @@
 
 use codec::Encode;
 use gstd::{debug, msg, prelude::*, prog, ActorId};
-use primitive_types::{H256, U256};
+use primitive_types::{U256};
 use resource_io::{InitResource, ResourceAction, ResourceEvent};
 use rmrk_io::*;
 pub mod burn;
@@ -115,15 +115,17 @@ pub unsafe extern "C" fn init() {
     let mut rmrk = RMRKToken {
         name: config.name,
         symbol: config.symbol,
-        resource_hash: config.resource_hash,
         admin: msg::source(),
         ..RMRKToken::default()
     };
-    if let Some(resource_name) = config.resource_name {
+    if let Some(resource_hash) = config.resource_hash {
         let resource_id = prog::create_program_with_gas(
-            config.resource_hash.into(),
+            resource_hash.into(),
             &0i32.to_le_bytes(),
-            InitResource { resource_name }.encode(),
+            InitResource {
+                resource_name: config.resource_name,
+            }
+            .encode(),
             1_000_000,
             0,
         )

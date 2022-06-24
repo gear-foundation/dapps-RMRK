@@ -2,7 +2,7 @@ use crate::*;
 use gstd::{msg, ActorId};
 
 pub async fn get_root_owner(to: &ActorId, token_id: TokenId) -> ActorId {
-    let response: RMRKEvent = msg::send_and_wait_for_reply(*to, RMRKAction::RootOwner(token_id), 0)
+    let response: RMRKEvent = msg::send_for_reply_as(*to, RMRKAction::RootOwner(token_id), 0)
         .expect("Error in sending message [RMRKAction::RootOwner]")
         .await
         .expect("Error in message [RMRKAction::RootOwner]");
@@ -19,7 +19,7 @@ pub async fn add_child(
     parent_token_id: TokenId,
     child_token_id: TokenId,
 ) {
-    msg::send_and_wait_for_reply::<RMRKEvent, _>(
+    msg::send_for_reply_as::<_, RMRKEvent>(
         *parent_contract_id,
         RMRKAction::AddChild {
             parent_token_id,
@@ -37,7 +37,7 @@ pub async fn burn_from_parent(
     child_token_ids: BTreeSet<TokenId>,
     root_owner: &ActorId,
 ) {
-    msg::send_and_wait_for_reply::<RMRKEvent, _>(
+    msg::send_for_reply_as::<_, RMRKEvent>(
         *child_contract_id,
         RMRKAction::BurnFromParent {
             child_token_ids,
@@ -55,7 +55,7 @@ pub async fn burn_child(
     parent_token_id: TokenId,
     child_token_id: TokenId,
 ) {
-    msg::send_and_wait_for_reply::<RMRKEvent, _>(
+    msg::send_for_reply_as::<_, RMRKEvent>(
         *parent_contract_id,
         RMRKAction::BurnChild {
             parent_token_id,
@@ -74,7 +74,7 @@ pub async fn transfer_child(
     to: TokenId,
     child_token_id: TokenId,
 ) {
-    msg::send_and_wait_for_reply::<RMRKEvent, _>(
+    msg::send_for_reply_as::<_, RMRKEvent>(
         *parent_contract_id,
         RMRKAction::TransferChild {
             from,
@@ -93,7 +93,7 @@ pub async fn add_accepted_child(
     parent_token_id: TokenId,
     child_token_id: TokenId,
 ) {
-    msg::send_and_wait_for_reply::<RMRKEvent, _>(
+    msg::send_for_reply_as::<_, RMRKEvent>(
         *parent_contract_id,
         RMRKAction::AddAcceptedChild {
             parent_token_id,
@@ -113,7 +113,7 @@ pub async fn add_resource_entry(
     thumb: String,
     metadata_uri: String,
 ) {
-    msg::send_and_wait_for_reply::<ResourceEvent, _>(
+    msg::send_for_reply_as::<_, ResourceEvent>(
         *to,
         ResourceAction::AddResourceEntry {
             id,
@@ -131,7 +131,7 @@ pub async fn add_resource_entry(
 }
 
 pub async fn assert_resource_exists(resource_address: &ActorId, id: u8) {
-    msg::send_and_wait_for_reply::<ResourceEvent, _>(
+    msg::send_for_reply_as::<_, ResourceEvent>(
         *resource_address,
         ResourceAction::GetResource { id },
         0,

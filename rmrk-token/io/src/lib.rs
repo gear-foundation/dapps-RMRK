@@ -2,7 +2,7 @@
 
 use codec::{Decode, Encode};
 use gstd::{prelude::*, ActorId};
-use primitive_types::{H256, U256};
+use primitive_types::{U256};
 use scale_info::TypeInfo;
 pub type TokenId = U256;
 pub type ResourceId = u8;
@@ -11,8 +11,8 @@ pub type ResourceId = u8;
 pub struct InitRMRK {
     pub name: String,
     pub symbol: String,
-    pub resource_name: Option<String>,
-    pub resource_hash: [u8; 32],
+    pub resource_name: String,
+    pub resource_hash: Option<[u8; 32]>,
 }
 
 #[derive(Debug, Clone, Encode)]
@@ -21,7 +21,7 @@ pub struct Child {
     pub status: ChildStatus,
 }
 
-#[derive(Debug, Clone, Encode, Decode, TypeInfo, Copy, PartialEq)]
+#[derive(Debug, Clone, Encode, Decode, TypeInfo, Copy, Eq, PartialEq)]
 pub enum ChildStatus {
     Pending,
     Accepted,
@@ -302,11 +302,42 @@ pub enum RMRKAction {
         thumb: String,
         metadata_uri: String,
     },
+
+    /// Adds resource to an existing token.
+    /// Checks that the resource woth indicated id exists in the resource storage contract.
+    /// Proposed resource is placed in the "Pending" array.
+    /// A pending resource can be also proposed to overwrite an existing resource.
+    ///
+    /// # Requirements
+    /// Token with indicated `token_id` must exist.
+    /// The proposed resource must not already exist for the token.
+    /// The resource that is proposed to be overwritten must exist for the token.
+    /// The length of resources in pending status must be less or equal to `MAX_RESOURCE_LEN`.
+    ///
+    /// # Arguments:
+    /// * `token_id`: an id of the token.
+    /// * `resource_id`: a proposed resource.
+    /// * `overwrite_id`: a resource to be overwritten.
+    ///
+    /// On success reply `[RMRKEvent::ResourceAdded]`.
     AddResource {
         token_id: TokenId,
         resource_id: u8,
         overwrite_id: u8,
     },
+
+    /// Accepts resource from pending list.
+    /// Moves the resource from the pending array to the accepted array.
+    ///
+    /// # Requirements
+    /// Only root owner or approved account can accept a resource.
+    /// `resource_id` must exist for the token in the pending array.
+    ///
+    /// # Arguments:
+    /// * `token_id`: an id of the token.
+    /// * `resource_id`: a resource to be accepted.
+    ///
+    /// On success reply  `[RMRKEvent::ResourceAccepted]`.
     AcceptResource {
         token_id: TokenId,
         resource_id: u8,

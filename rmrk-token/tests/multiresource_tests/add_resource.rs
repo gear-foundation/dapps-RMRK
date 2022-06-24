@@ -1,8 +1,7 @@
 use crate::multiresource_tests::utils::*;
 use codec::Encode;
-use gstd::{ActorId, BTreeMap, BTreeSet};
-use gtest::{Program, System};
-use primitive_types::H256;
+use gstd::{BTreeSet};
+use gtest::{System};
 use resource_io::Resource;
 use rmrk_io::*;
 
@@ -16,7 +15,7 @@ fn add_resource_entry_simple() {
         id: 1,
         ..Default::default()
     };
-    add_resource_entry(&rmrk, USERS[0], resource.clone());
+    add_resource_entry(&rmrk, USERS[0], resource);
 }
 
 #[test]
@@ -38,7 +37,7 @@ fn add_resource_entry_failures() {
         .send(
             USERS[0],
             RMRKAction::AddResourceEntry {
-                id: resource.id.clone(),
+                id: resource.id,
                 src: resource.src.clone(),
                 thumb: resource.thumb.clone(),
                 metadata_uri: resource.metadata_uri.clone(),
@@ -71,7 +70,7 @@ fn add_resource_to_token() {
         ..Default::default()
     };
     // add resource entry to the storage contract
-    add_resource_entry(&rmrk, USERS[0], resource.clone());
+    add_resource_entry(&rmrk, USERS[0], resource);
 
     let token_id: u64 = 10;
     let resource_id: u8 = 1;
@@ -134,7 +133,7 @@ fn add_resource_to_token_failures() {
 
     // must fail since too many resources have already been added
     resource.id = 129;
-    add_resource_entry(&rmrk, USERS[0], resource.clone());
+    add_resource_entry(&rmrk, USERS[0], resource);
     assert!(add_resource(&rmrk, USERS[0], token_id, 129, 0).main_failed());
 
     // // check pending resources
@@ -157,7 +156,7 @@ fn add_resource_to_different_tokens() {
         id: 1,
         ..Default::default()
     };
-    add_resource_entry(&rmrk, USERS[0], resource.clone());
+    add_resource_entry(&rmrk, USERS[0], resource);
 
     let token_id_0: u64 = 10;
     let token_id_1: u64 = 11;

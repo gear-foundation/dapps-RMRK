@@ -1,8 +1,6 @@
 #![no_std]
 
-use codec::Encode;
-use gstd::{debug, exec, msg, prelude::*, ActorId};
-use primitive_types::{H256, U256};
+use gstd::{msg, prelude::*, ActorId};
 use resource_io::*;
 
 #[derive(Debug, Default)]

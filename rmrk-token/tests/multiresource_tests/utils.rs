@@ -1,22 +1,20 @@
 use codec::Encode;
-use gstd::ActorId;
 use gtest::{Program, RunResult, System};
-use primitive_types::H256;
-use resource_io::{Resource, ResourceAction, ResourceEvent};
+use resource_io::{Resource};
 use rmrk_io::*;
-pub const USERS: &'static [u64] = &[5, 6, 7, 8];
-pub const ZERO_ID: u64 = 0;
+pub const USERS: &[u64] = &[5, 6, 7, 8];
+//pub const ZERO_ID: u64 = 0;
 
 pub fn init_rmrk(sys: &System, code_hash: [u8; 32]) {
     sys.init_logger();
-    let rmrk = Program::current(&sys);
+    let rmrk = Program::current(sys);
     let res = rmrk.send(
         USERS[0],
         InitRMRK {
             name: "RMRKToken".to_string(),
             symbol: "RMRKSymbol".to_string(),
-            resource_name: Some("ResourceName".to_string()),
-            resource_hash: code_hash,
+            resource_name: "ResourceName".to_string(),
+            resource_hash: Some(code_hash),
         },
     );
     //println!("{:?}", res.decoded_log::<RMRKEvent>());
@@ -28,7 +26,7 @@ pub fn before_test(sys: &System) {
     let code_hash_stored =
         sys.submit_code("../target/wasm32-unknown-unknown/release/rmrk_resource.wasm");
     // rmrk contract
-    init_rmrk(&sys, code_hash_stored.into());
+    init_rmrk(sys, code_hash_stored.into());
     let rmrk = sys.get_program(1);
     // mint parents tokens
     assert!(!mint_to_root_owner(&rmrk, USERS[0], USERS[0], 10).main_failed());
@@ -62,9 +60,9 @@ pub fn add_resource_entry(rmrk: &Program, user: u64, resource: Resource) {
     )));
 }
 
-pub fn get_resource(storage: &Program, id: u8) -> RunResult {
-    storage.send(10, ResourceAction::GetResource { id })
-}
+// pub fn get_resource(storage: &Program, id: u8) -> RunResult {
+//     storage.send(10, ResourceAction::GetResource { id })
+// }
 
 pub fn add_resource(
     rmrk: &Program,

@@ -1,10 +1,6 @@
 use crate::multiresource_tests::utils::*;
-use codec::Encode;
-use gstd::{ActorId, BTreeMap, BTreeSet};
-use gtest::{Program, System};
-use primitive_types::H256;
-use resource_io::{Resource, ResourceAction, ResourceEvent};
-use rmrk_io::*;
+use gtest::{System};
+use resource_io::{Resource};
 
 #[test]
 fn overwrite_resource() {
@@ -21,9 +17,9 @@ fn overwrite_resource() {
         ..Default::default()
     };
     // add resource entry to storage contract
-    add_resource_entry(&rmrk, USERS[0], resource.clone());
+    add_resource_entry(&rmrk, USERS[0], resource);
     // add overwrite resource to storage contract
-    add_resource_entry(&rmrk, USERS[0], new_resource.clone());
+    add_resource_entry(&rmrk, USERS[0], new_resource);
 
     let token_id: u64 = 10;
     let resource_id: u8 = 1;
@@ -79,9 +75,9 @@ fn overwrite_resource_failures() {
         ..Default::default()
     };
     // add resources entry to storage contract
-    add_resource_entry(&rmrk, USERS[0], resource_1.clone());
-    add_resource_entry(&rmrk, USERS[0], resource_2.clone());
-    add_resource_entry(&rmrk, USERS[0], resource_3.clone());
+    add_resource_entry(&rmrk, USERS[0], resource_1);
+    add_resource_entry(&rmrk, USERS[0], resource_2);
+    add_resource_entry(&rmrk, USERS[0], resource_3);
 
     let token_id: u64 = 10;
     let resource_id_1: u8 = 1;

@@ -1,21 +1,20 @@
-use codec::Encode;
 use gtest::{Program, RunResult, System};
 use rmrk_io::*;
-pub const USERS: &'static [u64] = &[5, 6, 7, 8];
+pub const USERS: &[u64] = &[5, 6, 7, 8];
 pub const ZERO_ID: u64 = 0;
 pub const PARENT_NFT_CONTRACT: u64 = 2;
 pub const CHILD_NFT_CONTRACT: u64 = 1;
 
 pub fn init_rmrk(sys: &System) {
     sys.init_logger();
-    let rmrk = Program::from_file(&sys, "../target/wasm32-unknown-unknown/release/rmrk.wasm");
+    let rmrk = Program::from_file(sys, "../target/wasm32-unknown-unknown/release/rmrk.wasm");
     let res = rmrk.send(
         USERS[0],
         InitRMRK {
             name: "RMRKToken".to_string(),
             symbol: "RMRKSymbol".to_string(),
-            resource_hash: [0; 32],
-            resource_name: None,
+            resource_hash: Some([0; 32]),
+            resource_name: "ResourceName".to_string(),
         },
     );
     assert!(res.log().is_empty());
@@ -23,9 +22,9 @@ pub fn init_rmrk(sys: &System) {
 
 pub fn before_test(sys: &System) {
     // child contract
-    init_rmrk(&sys);
+    init_rmrk(sys);
     // parent contract
-    init_rmrk(&sys);
+    init_rmrk(sys);
     let rmrk_parent = sys.get_program(2);
     // mint parents tokens
     for i in 1..11 {
@@ -126,10 +125,6 @@ pub fn burn(rmrk: &Program, user: u64, token_id: u64) -> RunResult {
     rmrk.send(user, RMRKAction::Burn(token_id.into()))
 }
 
-pub fn root_owner(rmrk: &Program, user: u64, token_id: TokenId) -> RunResult {
-    rmrk.send(user, RMRKAction::RootOwner(token_id))
-}
-
 pub fn transfer(rmrk: &Program, from: u64, to: u64, token_id: TokenId) -> RunResult {
     rmrk.send(
         from,
@@ -172,17 +167,17 @@ pub fn rmrk_chain(
 ) {
     // mint child_token_id to parent_token_id
     assert!(!mint_to_nft(
-        &rmrk_child,
+        rmrk_child,
         USERS[1],
         PARENT_NFT_CONTRACT,
-        parent_token_id.into(),
-        child_token_id.into(),
+        parent_token_id,
+        child_token_id,
     )
     .main_failed());
 
     // accept child
     assert!(!accept_child(
-        &rmrk_parent,
+        rmrk_parent,
         USERS[0],
         parent_token_id,
         CHILD_NFT_CONTRACT,
@@ -192,16 +187,16 @@ pub fn rmrk_chain(
 
     // mint grand_token_id to child_token_id
     assert!(!mint_to_nft(
-        &rmrk_grand,
+        rmrk_grand,
         USERS[1],
         CHILD_NFT_CONTRACT,
-        child_token_id.into(),
-        grand_token_id.into(),
+        child_token_id,
+        grand_token_id,
     )
     .main_failed());
 
     // accept child
-    assert!(!accept_child(&rmrk_child, USERS[0], child_token_id, 3, grand_token_id,).main_failed());
+    assert!(!accept_child(rmrk_child, USERS[0], child_token_id, 3, grand_token_id,).main_failed());
 }
 
 // reading the token owner
@@ -220,16 +215,7 @@ pub fn get_pending_children(rmrk: &Program, token_id: u64) -> RMRKStateReply {
 }
 
 // reading the accepted children of token
-pub fn get_accepted_children(rmrk: &Program, token_id: TokenId) -> RMRKStateReply {
+pub fn get_accepted_children(rmrk: &Program, token_id: u64) -> RMRKStateReply {
     rmrk.meta_state(RMRKState::AcceptedChildren(token_id.into()))
 }
 
-// reading the pending resources of token
-pub fn get_pending_resource(rmrk: &Program, token_id: u64) -> RMRKStateReply {
-    rmrk.meta_state(RMRKState::PendingResources(token_id.into()))
-}
-
-// reading the accepted resource of token
-pub fn get_accepted_resource(rmrk: &Program, token_id: TokenId) -> RMRKStateReply {
-    rmrk.meta_state(RMRKState::ActiveResources(token_id.into()))
-}

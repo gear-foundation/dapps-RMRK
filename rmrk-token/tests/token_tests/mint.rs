@@ -1,8 +1,7 @@
 use crate::token_tests::utils::*;
 use codec::Encode;
 use gstd::{ActorId, BTreeMap, BTreeSet};
-use gtest::{Program, System};
-use primitive_types::U256;
+use gtest::{System};
 use rmrk_io::*;
 
 #[test]
@@ -52,7 +51,6 @@ fn mint_to_nft_failures() {
     let sys = System::new();
     before_test(&sys);
     let rmrk_child = sys.get_program(CHILD_NFT_CONTRACT);
-    let rmrk_parent = sys.get_program(PARENT_NFT_CONTRACT);
 
     let child_token_id: u64 = 1;
     let parent_token_id: u64 = 10;
@@ -108,13 +106,13 @@ fn mint_to_nft_success() {
 
     let mut pending_children: BTreeMap<ActorId, BTreeSet<TokenId>> = BTreeMap::new();
     // mint  RMRK children
-    for child_token_id in 0..10 as u64 {
+    for child_token_id in 0..10_u64 {
         let res = mint_to_nft(
             &rmrk_child,
             USERS[1],
             PARENT_NFT_CONTRACT,
-            parent_token_id.into(),
-            child_token_id.into(),
+            parent_token_id,
+            child_token_id,
         );
         assert!(res.contains(&(
             USERS[1],
@@ -148,13 +146,13 @@ fn mint_to_nft_success() {
     init_rmrk(&sys);
     let rmrk_child_2_id: u64 = 3;
     let rmrk_child_2 = sys.get_program(rmrk_child_2_id);
-    for child_token_id in 0..20 as u64 {
+    for child_token_id in 0..20_u64 {
         let res = mint_to_nft(
             &rmrk_child_2,
             USERS[1],
             PARENT_NFT_CONTRACT,
-            parent_token_id.into(),
-            child_token_id.into(),
+            parent_token_id,
+            child_token_id,
         );
         assert!(res.contains(&(
             USERS[1],
@@ -184,7 +182,7 @@ fn mint_to_nft_success() {
             .or_insert_with(|| BTreeSet::from([child_token_id.into()]));
     }
     // check pending children
-    let pending_children_reply = get_pending_children(&rmrk_parent, parent_token_id.into());
+    let pending_children_reply = get_pending_children(&rmrk_parent, parent_token_id);
     assert_eq!(
         pending_children_reply,
         RMRKStateReply::PendingChildren(pending_children)
@@ -196,7 +194,6 @@ fn mint_child_to_child() {
     let sys = System::new();
     before_test(&sys);
     let rmrk_child = sys.get_program(CHILD_NFT_CONTRACT);
-    let rmrk_parent = sys.get_program(PARENT_NFT_CONTRACT);
     // grand child contract
     init_rmrk(&sys);
     let rmrk_grand_child = sys.get_program(3);
@@ -208,8 +205,8 @@ fn mint_child_to_child() {
         &rmrk_child,
         USERS[1],
         PARENT_NFT_CONTRACT,
-        parent_token_id.into(),
-        child_token_id.into(),
+        parent_token_id,
+        child_token_id,
     );
     assert!(res.contains(&(
         USERS[1],
@@ -226,8 +223,8 @@ fn mint_child_to_child() {
         &rmrk_grand_child,
         USERS[1],
         CHILD_NFT_CONTRACT,
-        child_token_id.into(),
-        grand_child_id.into(),
+        child_token_id,
+        grand_child_id,
     );
     assert!(res.contains(&(
         USERS[1],

@@ -1,6 +1,6 @@
 use crate::token_tests::utils::*;
 use codec::Encode;
-use gtest::{Program, System};
+use gtest::{System};
 use rmrk_io::*;
 
 #[test]
@@ -42,7 +42,6 @@ fn transfer_parent_with_child() {
     let child_token_id: u64 = 9;
     let parent_token_id: u64 = 10;
     let grand_token_id: u64 = 11;
-    let grand_grand_token_id: u64 = 12;
 
     // ownership chain is  USERS[0] > parent_token_id > child_token_id > grand_token_id
     rmrk_chain(
