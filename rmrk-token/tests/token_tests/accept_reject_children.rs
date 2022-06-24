@@ -1,7 +1,7 @@
 use crate::token_tests::utils::*;
 use codec::Encode;
 use gstd::{ActorId, BTreeMap, BTreeSet};
-use gtest::{System};
+use gtest::System;
 use rmrk_io::*;
 
 #[test]

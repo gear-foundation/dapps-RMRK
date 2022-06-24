@@ -1,7 +1,7 @@
 use crate::token_tests::utils::*;
 use codec::Encode;
 use gstd::{ActorId, BTreeMap, BTreeSet};
-use gtest::{System};
+use gtest::System;
 use rmrk_io::*;
 
 // Root owner transfers accepted child token to between his RMRK tokens inside one contract
@@ -338,13 +338,10 @@ fn transfer_accepted_child_to_token_with_same_owner_another_contract() {
     .main_failed());
 
     // mint new parent rmrk token
-    assert!(!mint_to_root_owner(
-        &new_rmrk_parent,
-        USERS[0],
-        USERS[0],
-        new_parent_token_id,
-    )
-    .main_failed());
+    assert!(
+        !mint_to_root_owner(&new_rmrk_parent, USERS[0], USERS[0], new_parent_token_id,)
+            .main_failed()
+    );
 
     // USERS[0] transfer child to another his token in another rmrk contract
     let res = transfer_to_nft(
@@ -381,8 +378,7 @@ fn transfer_accepted_child_to_token_with_same_owner_another_contract() {
         RMRKStateReply::AcceptedChildren(BTreeMap::new())
     );
     // check accepted children of new_parent_token_id
-    let accepted_children_reply =
-        get_accepted_children(&new_rmrk_parent, new_parent_token_id);
+    let accepted_children_reply = get_accepted_children(&new_rmrk_parent, new_parent_token_id);
     let mut accepted_children: BTreeMap<ActorId, BTreeSet<TokenId>> = BTreeMap::new();
     accepted_children.insert(
         CHILD_NFT_CONTRACT.into(),
@@ -430,13 +426,10 @@ fn transfer_accepted_child_to_token_with_different_owner_another_contract() {
     .main_failed());
 
     // mint new parent rmrk token
-    assert!(!mint_to_root_owner(
-        &new_rmrk_parent,
-        USERS[1],
-        USERS[1],
-        new_parent_token_id,
-    )
-    .main_failed());
+    assert!(
+        !mint_to_root_owner(&new_rmrk_parent, USERS[1], USERS[1], new_parent_token_id,)
+            .main_failed()
+    );
 
     // USERS[0] transfer child to another his token in another rmrk contract
     let res = transfer_to_nft(
@@ -499,9 +492,7 @@ fn transfer_token_to_token_with_same_owner() {
     let parent_token_id: u64 = 10;
 
     // mint future child token
-    assert!(
-        !mint_to_root_owner(&rmrk_child, USERS[0], USERS[0], child_token_id).main_failed()
-    );
+    assert!(!mint_to_root_owner(&rmrk_child, USERS[0], USERS[0], child_token_id).main_failed());
 
     // USERS[0] transfer child to another his token in another rmrk contract
     let res = transfer_to_nft(
@@ -557,9 +548,7 @@ fn transfer_usual_token_to_token_with_different_owner() {
     let parent_token_id: u64 = 12;
 
     // mint future child token
-    assert!(
-        !mint_to_root_owner(&rmrk_child, USERS[0], USERS[0], child_token_id).main_failed()
-    );
+    assert!(!mint_to_root_owner(&rmrk_child, USERS[0], USERS[0], child_token_id).main_failed());
 
     // USERS[0] transfer child to another his token in another rmrk contract
     let res = transfer_to_nft(

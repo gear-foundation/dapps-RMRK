@@ -1,6 +1,6 @@
 use crate::token_tests::utils::*;
 use codec::Encode;
-use gtest::{System};
+use gtest::System;
 use rmrk_io::*;
 
 #[test]

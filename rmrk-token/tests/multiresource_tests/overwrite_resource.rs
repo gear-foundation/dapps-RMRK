@@ -1,6 +1,6 @@
 use crate::multiresource_tests::utils::*;
-use gtest::{System};
-use resource_io::{Resource};
+use gtest::System;
+use resource_io::Resource;
 
 #[test]
 fn overwrite_resource() {

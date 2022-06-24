@@ -1,6 +1,6 @@
 use codec::Encode;
 use gtest::{Program, RunResult, System};
-use resource_io::{Resource};
+use resource_io::Resource;
 use rmrk_io::*;
 pub const USERS: &[u64] = &[5, 6, 7, 8];
 //pub const ZERO_ID: u64 = 0;

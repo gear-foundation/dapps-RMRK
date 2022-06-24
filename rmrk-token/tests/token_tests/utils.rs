@@ -218,4 +218,3 @@ pub fn get_pending_children(rmrk: &Program, token_id: u64) -> RMRKStateReply {
 pub fn get_accepted_children(rmrk: &Program, token_id: u64) -> RMRKStateReply {
     rmrk.meta_state(RMRKState::AcceptedChildren(token_id.into()))
 }
-

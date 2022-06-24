@@ -2,7 +2,7 @@
 
 use codec::Encode;
 use gstd::{debug, msg, prelude::*, prog, ActorId};
-use primitive_types::{U256};
+use primitive_types::U256;
 use resource_io::{InitResource, ResourceAction, ResourceEvent};
 use rmrk_io::*;
 pub mod burn;

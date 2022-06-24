@@ -1,7 +1,7 @@
 use crate::multiresource_tests::utils::*;
 use codec::Encode;
-use gstd::{BTreeSet};
-use gtest::{System};
+use gstd::BTreeSet;
+use gtest::System;
 use resource_io::Resource;
 use rmrk_io::*;
 
