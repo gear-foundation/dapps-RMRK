@@ -20,7 +20,7 @@ fn burn_simple() {
         .encode()
     )));
 
-    // check that token does not exist 
+    // check that token does not exist
     check_rmrk_owner(&rmrk, token_id, None, ZERO_ID);
 }
 
@@ -160,7 +160,7 @@ fn recursive_burn_nested_token() {
 
     // burn child
     assert!(!burn(&rmrk_child, USERS[0], child_token_id).main_failed());
-    
+
     // check that parent_token_id has no accepted children
     check_accepted_children(&rmrk_parent, parent_token_id, BTreeMap::new());
 
@@ -169,7 +169,6 @@ fn recursive_burn_nested_token() {
 
     // check that grand_token_id does not exist
     check_rmrk_owner(&rmrk_grand, grand_token_id, None, ZERO_ID);
-
 }
 
 // ownership chain is now USERS[0] > parent_token_id > child_token_id > grand_token_id
@@ -205,5 +204,4 @@ fn recursive_burn_parent_token() {
 
     // check that grand_token_id does not exist
     check_rmrk_owner(&rmrk_grand, grand_token_id, None, ZERO_ID);
-
 }

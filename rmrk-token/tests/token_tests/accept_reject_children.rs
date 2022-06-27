@@ -196,7 +196,6 @@ fn reject_child_simple() {
 
     // check that child token in rmrk_child does not exist
     check_rmrk_owner(&rmrk_child, child_token_id, None, ZERO_ID);
-
 }
 
 #[test]
@@ -335,7 +334,6 @@ fn remove_child_simple() {
 
     // check that child token in rmrk_child does not exist
     check_rmrk_owner(&rmrk_child, child_token_id, None, ZERO_ID);
-
 }
 
 #[test]

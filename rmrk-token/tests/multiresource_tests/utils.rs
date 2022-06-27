@@ -1,8 +1,8 @@
 use codec::Encode;
+use gstd::BTreeSet;
 use gtest::{Program, RunResult, System};
 use resource_io::{Resource, ResourceId};
 use rmrk_io::*;
-use gstd::BTreeSet;
 pub const USERS: &[u64] = &[5, 6, 7, 8];
 
 pub fn init_rmrk(sys: &System, code_hash: [u8; 32]) {
@@ -131,7 +131,11 @@ pub fn approve(rmrk: &Program, user: u64, to: u64, token_id: TokenId) -> RunResu
     )
 }
 
-pub fn check_pending_resources(rmrk: &Program, token_id: u64, expected_pending_resources: BTreeSet<ResourceId>) {
+pub fn check_pending_resources(
+    rmrk: &Program,
+    token_id: u64,
+    expected_pending_resources: BTreeSet<ResourceId>,
+) {
     let pending_resources = get_pending_resources(rmrk, token_id);
     assert_eq!(
         pending_resources,
@@ -139,11 +143,14 @@ pub fn check_pending_resources(rmrk: &Program, token_id: u64, expected_pending_r
     );
 }
 
-pub fn check_active_resources(rmrk: &Program, token_id: u64, expected_active_resources: BTreeSet<ResourceId>) {
+pub fn check_active_resources(
+    rmrk: &Program,
+    token_id: u64,
+    expected_active_resources: BTreeSet<ResourceId>,
+) {
     let active_resources = get_active_resources(rmrk, token_id);
     assert_eq!(
         active_resources,
         RMRKStateReply::ActiveResources(expected_active_resources)
     );
 }
-

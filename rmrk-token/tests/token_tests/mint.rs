@@ -118,7 +118,12 @@ fn mint_to_nft_success() {
         )));
 
         // check that owner is another NFT in parent token contract
-        check_rmrk_owner(&rmrk_child, child_token_id, Some(parent_token_id.into()), PARENT_NFT_CONTRACT);
+        check_rmrk_owner(
+            &rmrk_child,
+            child_token_id,
+            Some(parent_token_id.into()),
+            PARENT_NFT_CONTRACT,
+        );
 
         // add to pending children
         pending_children
@@ -152,7 +157,12 @@ fn mint_to_nft_success() {
         )));
 
         // check that owner is NFT in parent contract
-        check_rmrk_owner(&rmrk_child_2, child_token_id, Some(parent_token_id.into()), PARENT_NFT_CONTRACT);
+        check_rmrk_owner(
+            &rmrk_child_2,
+            child_token_id,
+            Some(parent_token_id.into()),
+            PARENT_NFT_CONTRACT,
+        );
 
         //insert pending children
         pending_children

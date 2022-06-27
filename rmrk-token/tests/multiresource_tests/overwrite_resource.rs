@@ -1,6 +1,6 @@
 use crate::multiresource_tests::utils::*;
-use gtest::System;
 use gstd::BTreeSet;
+use gtest::System;
 use resource_io::{Resource, ResourceId};
 
 #[test]

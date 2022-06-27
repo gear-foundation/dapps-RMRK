@@ -2,7 +2,7 @@
 
 use codec::{Decode, Encode};
 use gstd::prelude::*;
-use primitive_types::{U256};
+use primitive_types::U256;
 use scale_info::TypeInfo;
 pub type TokenId = U256;
 pub type ResourceId = u8;
