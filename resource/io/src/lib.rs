@@ -2,10 +2,10 @@
 
 use codec::{Decode, Encode};
 use gstd::prelude::*;
-use primitive_types::{H256, U256};
+use primitive_types::{U256};
 use scale_info::TypeInfo;
 pub type TokenId = U256;
-pub type ResourceId = H256;
+pub type ResourceId = u8;
 
 #[derive(Debug, Default, Clone, Encode, Decode, TypeInfo)]
 pub struct Resource {

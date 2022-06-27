@@ -1,6 +1,7 @@
 use crate::multiresource_tests::utils::*;
 use gtest::System;
-use resource_io::Resource;
+use gstd::BTreeSet;
+use resource_io::{Resource, ResourceId};
 
 #[test]
 fn overwrite_resource() {
@@ -31,29 +32,15 @@ fn overwrite_resource() {
 
     // add resource to overwrite
     assert!(!add_resource(&rmrk, USERS[0], token_id, new_resource_id, resource_id).main_failed());
-    // // check pending resources
-    // let res = get_pending_resources(&rmrk, token_id);
-    // let mut resources: BTreeSet<ResourceId> = BTreeSet::new();
-    // resources.insert(new_resource_id);
-    // assert!(res.contains(&(
-    //     10,
-    //     RMRKEvent::PendingResources {
-    //         pending_resources: resources.clone()
-    //     }
-    //     .encode()
-    // )));
+    // check pending resources
+    let mut resources: BTreeSet<ResourceId> = BTreeSet::new();
+    resources.insert(new_resource_id);
+    check_pending_resources(&rmrk, token_id, resources.clone());
 
     // accept new resource instead of previous one
     assert!(!accept_resource(&rmrk, USERS[0], token_id, new_resource_id).main_failed());
-    // // check active resources
-    // let res = get_active_resources(&rmrk, token_id);
-    // assert!(res.contains(&(
-    //     10,
-    //     RMRKEvent::ActiveResources {
-    //         active_resources: resources
-    //     }
-    //     .encode()
-    // )));
+    // check active resources
+    check_active_resources(&rmrk, token_id, resources);
 }
 
 #[test]

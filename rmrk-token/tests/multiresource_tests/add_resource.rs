@@ -86,24 +86,13 @@ fn add_resource_to_token() {
         .encode()
     )));
 
-    // // check pending resources
-    // let res = get_pending_resources(&rmrk, token_id);
-    // let mut pending_resources: BTreeSet<ResourceId> = BTreeSet::new();
-    // pending_resources.insert(resource_id);
-    // assert!(res.contains(&(
-    //     10,
-    //     RMRKEvent::PendingResources { pending_resources }.encode()
-    // )));
+    // check pending resources
+    let mut pending_resources: BTreeSet<ResourceId> = BTreeSet::new();
+    pending_resources.insert(resource_id);
+    check_pending_resources(&rmrk, token_id, pending_resources);
 
-    // // check active resources
-    // let res = get_active_resources(&rmrk, token_id);
-    // assert!(res.contains(&(
-    //     10,
-    //     RMRKEvent::ActiveResources {
-    //         active_resources: BTreeSet::new()
-    //     }
-    //     .encode()
-    // )));
+    // check active resources
+    check_active_resources(&rmrk, token_id, BTreeSet::new());
 }
 
 #[test]
@@ -136,12 +125,8 @@ fn add_resource_to_token_failures() {
     add_resource_entry(&rmrk, USERS[0], resource);
     assert!(add_resource(&rmrk, USERS[0], token_id, 129, 0).main_failed());
 
-    // // check pending resources
-    // let res = get_pending_resources(&rmrk, token_id);
-    // assert!(res.contains(&(
-    //     10,
-    //     RMRKEvent::PendingResources { pending_resources }.encode()
-    // )));
+    // check pending resources
+    check_pending_resources(&rmrk, token_id, pending_resources);
 
     // must fail since that resource has already been added
     assert!(add_resource(&rmrk, USERS[0], token_id, 100, 0).main_failed());
@@ -170,20 +155,9 @@ fn add_resource_to_different_tokens() {
     let mut pending_resources: BTreeSet<ResourceId> = BTreeSet::new();
     pending_resources.insert(resource_id);
 
-    // // check pending resources of token_id_0
-    // let res = get_pending_resources(&rmrk, token_id_0);
-    // assert!(res.contains(&(
-    //     10,
-    //     RMRKEvent::PendingResources {
-    //         pending_resources: pending_resources.clone()
-    //     }
-    //     .encode()
-    // )));
+    // check pending resources of token_id_0
+    check_pending_resources(&rmrk, token_id_0, pending_resources.clone());
 
-    // // check pending resources of token_id_1
-    // let res = get_pending_resources(&rmrk, token_id_1);
-    // assert!(res.contains(&(
-    //     10,
-    //     RMRKEvent::PendingResources { pending_resources }.encode()
-    // )));
+    // check pending resources of token_id_1
+    check_pending_resources(&rmrk, token_id_1, pending_resources);
 }

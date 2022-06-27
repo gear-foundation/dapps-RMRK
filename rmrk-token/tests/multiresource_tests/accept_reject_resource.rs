@@ -32,19 +32,12 @@ fn accept_resource_simple() {
     )));
 
     // check pending resources
-    let pending_resources_reply = get_pending_resources(&rmrk, token_id);
-    assert_eq!(
-        pending_resources_reply,
-        RMRKStateReply::PendingResources(BTreeSet::new())
-    );
+    check_pending_resources(&rmrk, token_id, BTreeSet::new());
+
     // check active resources
-    let active_resources_reply = get_active_resources(&rmrk, token_id);
     let mut active_resources: BTreeSet<ResourceId> = BTreeSet::new();
     active_resources.insert(resource_id);
-    assert_eq!(
-        active_resources_reply,
-        RMRKStateReply::ActiveResources(active_resources)
-    );
+    check_active_resources(&rmrk, token_id, active_resources);
 }
 
 #[test]
@@ -76,20 +69,12 @@ fn accept_resource_from_approved_address() {
     )));
 
     // check pending resources
-    let pending_resources_reply = get_pending_resources(&rmrk, token_id);
-    assert_eq!(
-        pending_resources_reply,
-        RMRKStateReply::PendingResources(BTreeSet::new())
-    );
+    check_pending_resources(&rmrk, token_id, BTreeSet::new());
 
     // check active resources
-    let active_resources_reply = get_active_resources(&rmrk, token_id);
     let mut active_resources: BTreeSet<ResourceId> = BTreeSet::new();
     active_resources.insert(resource_id);
-    assert_eq!(
-        active_resources_reply,
-        RMRKStateReply::ActiveResources(active_resources)
-    );
+    check_active_resources(&rmrk, token_id, active_resources);
 }
 
 #[test]
@@ -140,21 +125,13 @@ fn accept_multiple_resources() {
     assert!(!accept_resource(&rmrk, USERS[0], token_id, resource_id_2).main_failed());
 
     // check pending resources
-    let pending_resources_reply = get_pending_resources(&rmrk, token_id);
-    assert_eq!(
-        pending_resources_reply,
-        RMRKStateReply::PendingResources(BTreeSet::new())
-    );
+    check_pending_resources(&rmrk, token_id, BTreeSet::new());
 
     // check active resources
-    let active_resources_reply = get_active_resources(&rmrk, token_id);
     let mut active_resources: BTreeSet<ResourceId> = BTreeSet::new();
     active_resources.insert(resource_id_1);
     active_resources.insert(resource_id_2);
-    assert_eq!(
-        active_resources_reply,
-        RMRKStateReply::ActiveResources(active_resources)
-    );
+    check_active_resources(&rmrk, token_id, active_resources);
 }
 
 #[test]
@@ -268,18 +245,10 @@ fn reject_resource_simple() {
     )));
 
     // check pending resources
-    let pending_resources_reply = get_pending_resources(&rmrk, token_id);
-    assert_eq!(
-        pending_resources_reply,
-        RMRKStateReply::PendingResources(BTreeSet::new())
-    );
+    check_pending_resources(&rmrk, token_id, BTreeSet::new());
 
     // check active resources
-    let active_resources_reply = get_active_resources(&rmrk, token_id);
-    assert_eq!(
-        active_resources_reply,
-        RMRKStateReply::ActiveResources(BTreeSet::new())
-    );
+    check_active_resources(&rmrk, token_id, BTreeSet::new());
 }
 
 #[test]
@@ -325,17 +294,10 @@ fn reject_resource_from_approved_address() {
     assert!(!approve(&rmrk, USERS[0], USERS[3], token_id.into()).main_failed());
 
     assert!(!reject_resource(&rmrk, USERS[3], token_id, resource.id).main_failed());
+
     // check pending resources
-    let pending_resources_reply = get_pending_resources(&rmrk, token_id);
-    assert_eq!(
-        pending_resources_reply,
-        RMRKStateReply::PendingResources(BTreeSet::new())
-    );
+    check_pending_resources(&rmrk, token_id, BTreeSet::new());
 
     // check active resources
-    let active_resources_reply = get_active_resources(&rmrk, token_id);
-    assert_eq!(
-        active_resources_reply,
-        RMRKStateReply::ActiveResources(BTreeSet::new())
-    );
+    check_active_resources(&rmrk, token_id, BTreeSet::new());
 }

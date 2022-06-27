@@ -20,15 +20,8 @@ fn mint_to_root_owner_success() {
         .encode()
     )));
 
-    // check the token owner
-    let rmrk_owner = owner(&rmrk, token_id);
-    assert_eq!(
-        rmrk_owner,
-        RMRKStateReply::Owner {
-            token_id: None,
-            owner_id: USERS[2].into(),
-        }
-    );
+    // check the rmrk owner
+    check_rmrk_owner(&rmrk, token_id, None, USERS[2]);
 
     // check the owner balance
     let balance = balance(&rmrk, USERS[2]);
@@ -125,14 +118,8 @@ fn mint_to_nft_success() {
         )));
 
         // check that owner is another NFT in parent token contract
-        let rmrk_owner = owner(&rmrk_child, child_token_id);
-        assert_eq!(
-            rmrk_owner,
-            RMRKStateReply::Owner {
-                token_id: Some(parent_token_id.into()),
-                owner_id: PARENT_NFT_CONTRACT.into(),
-            }
-        );
+        check_rmrk_owner(&rmrk_child, child_token_id, Some(parent_token_id.into()), PARENT_NFT_CONTRACT);
+
         // add to pending children
         pending_children
             .entry(CHILD_NFT_CONTRACT.into())
@@ -165,14 +152,8 @@ fn mint_to_nft_success() {
         )));
 
         // check that owner is NFT in parent contract
-        let rmrk_owner = owner(&rmrk_child_2, child_token_id);
-        assert_eq!(
-            rmrk_owner,
-            RMRKStateReply::Owner {
-                token_id: Some(parent_token_id.into()),
-                owner_id: PARENT_NFT_CONTRACT.into(),
-            }
-        );
+        check_rmrk_owner(&rmrk_child_2, child_token_id, Some(parent_token_id.into()), PARENT_NFT_CONTRACT);
+
         //insert pending children
         pending_children
             .entry(rmrk_child_2_id.into())

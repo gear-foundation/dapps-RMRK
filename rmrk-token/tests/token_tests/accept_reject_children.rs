@@ -42,23 +42,15 @@ fn accept_child_simple() {
     )));
 
     // check that parent_token_id has no pending children
-    let pending_children_reply = get_pending_children(&rmrk_parent, parent_token_id);
-    assert_eq!(
-        pending_children_reply,
-        RMRKStateReply::PendingChildren(BTreeMap::new())
-    );
+    check_pending_children(&rmrk_parent, parent_token_id, BTreeMap::new());
 
     // check accepted children
-    let accepted_children_reply = get_accepted_children(&rmrk_parent, parent_token_id);
     let mut accepted_children: BTreeMap<ActorId, BTreeSet<TokenId>> = BTreeMap::new();
     accepted_children.insert(
         CHILD_NFT_CONTRACT.into(),
         BTreeSet::from([child_token_id.into()]),
     );
-    assert_eq!(
-        accepted_children_reply,
-        RMRKStateReply::AcceptedChildren(accepted_children)
-    );
+    check_accepted_children(&rmrk_parent, parent_token_id, accepted_children);
 }
 
 #[test]
@@ -200,21 +192,11 @@ fn reject_child_simple() {
     )));
 
     // check that parent_token_id has no pending children
-    let pending_children_reply = get_pending_children(&rmrk_parent, parent_token_id);
-    assert_eq!(
-        pending_children_reply,
-        RMRKStateReply::PendingChildren(BTreeMap::new())
-    );
+    check_pending_children(&rmrk_parent, parent_token_id, BTreeMap::new());
 
     // check that child token in rmrk_child does not exist
-    let owner = owner(&rmrk_child, child_token_id);
-    assert_eq!(
-        owner,
-        RMRKStateReply::Owner {
-            token_id: None,
-            owner_id: ZERO_ID.into()
-        }
-    );
+    check_rmrk_owner(&rmrk_child, child_token_id, None, ZERO_ID);
+
 }
 
 #[test]
@@ -349,21 +331,11 @@ fn remove_child_simple() {
     )));
 
     // check that parent_token_id has no accepted children
-    let accepted_children_reply = get_accepted_children(&rmrk_parent, parent_token_id);
-    assert_eq!(
-        accepted_children_reply,
-        RMRKStateReply::AcceptedChildren(BTreeMap::new())
-    );
+    check_accepted_children(&rmrk_parent, parent_token_id, BTreeMap::new());
 
     // check that child token in rmrk_child does not exist
-    let owner = owner(&rmrk_child, child_token_id);
-    assert_eq!(
-        owner,
-        RMRKStateReply::Owner {
-            token_id: None,
-            owner_id: ZERO_ID.into()
-        }
-    );
+    check_rmrk_owner(&rmrk_child, child_token_id, None, ZERO_ID);
+
 }
 
 #[test]
@@ -416,11 +388,7 @@ fn remove_child_from_approved_account() {
         .encode()
     )));
     // check that parent_token_id has no accepted children
-    let accepted_children_reply = get_accepted_children(&rmrk_parent, parent_token_id);
-    assert_eq!(
-        accepted_children_reply,
-        RMRKStateReply::AcceptedChildren(BTreeMap::new())
-    );
+    check_accepted_children(&rmrk_parent, parent_token_id, BTreeMap::new());
 }
 
 #[test]

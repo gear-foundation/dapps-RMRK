@@ -1,5 +1,6 @@
 use gtest::{Program, RunResult, System};
 use rmrk_io::*;
+use gstd::{BTreeSet, ActorId, BTreeMap};
 pub const USERS: &[u64] = &[5, 6, 7, 8];
 pub const ZERO_ID: u64 = 0;
 pub const PARENT_NFT_CONTRACT: u64 = 2;
@@ -217,4 +218,31 @@ pub fn get_pending_children(rmrk: &Program, token_id: u64) -> RMRKStateReply {
 // reading the accepted children of token
 pub fn get_accepted_children(rmrk: &Program, token_id: u64) -> RMRKStateReply {
     rmrk.meta_state(RMRKState::AcceptedChildren(token_id.into()))
+}
+
+pub fn check_rmrk_owner(rmrk: &Program, token_id: u64, expected_token_id: Option<TokenId>, owner_id: u64) {
+    let rmrk_owner = owner(&rmrk, token_id);
+    assert_eq!(
+        rmrk_owner,
+        RMRKStateReply::Owner {
+            token_id: expected_token_id,
+            owner_id:owner_id.into(),
+        }
+    );
+}
+
+pub fn check_pending_children(rmrk: &Program, token_id: u64, expected_pending_children: BTreeMap<ActorId, BTreeSet<TokenId>>) {
+    let pending_children = get_pending_children(&rmrk, token_id);
+    assert_eq!(
+        pending_children,
+        RMRKStateReply::PendingChildren(expected_pending_children),
+    );
+}
+
+pub fn check_accepted_children(rmrk: &Program, token_id: u64, expected_accepted_children: BTreeMap<ActorId, BTreeSet<TokenId>>) {
+    let accepted_children = get_accepted_children(&rmrk, token_id);
+    assert_eq!(
+        accepted_children,
+        RMRKStateReply::AcceptedChildren(expected_accepted_children),
+    );
 }

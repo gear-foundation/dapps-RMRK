@@ -21,14 +21,7 @@ fn transfer_simple() {
     )));
 
     // check that RMRK owner
-    let rmrk_owner = owner(&rmrk, token_id);
-    assert_eq!(
-        rmrk_owner,
-        RMRKStateReply::Owner {
-            token_id: None,
-            owner_id: USERS[3].into(),
-        }
-    );
+    check_rmrk_owner(&rmrk, token_id, None, USERS[3]);
 }
 
 #[test]

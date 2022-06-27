@@ -20,15 +20,8 @@ fn burn_simple() {
         .encode()
     )));
 
-    // check that token does not exist (must fail)
-    let owner = owner(&rmrk, token_id);
-    assert_eq!(
-        owner,
-        RMRKStateReply::Owner {
-            token_id: None,
-            owner_id: ZERO_ID.into()
-        }
-    );
+    // check that token does not exist 
+    check_rmrk_owner(&rmrk, token_id, None, ZERO_ID);
 }
 
 #[test]
@@ -99,18 +92,10 @@ fn burn_nested_token() {
     )));
 
     // check that parent contract has no pending children
-    let pending_children_reply = get_pending_children(&rmrk_parent, parent_token_id);
-    assert_eq!(
-        pending_children_reply,
-        RMRKStateReply::PendingChildren(BTreeMap::new())
-    );
+    check_pending_children(&rmrk_parent, parent_token_id, BTreeMap::new());
 
     // check that parent contract has no accepted children
-    let accepted_children_reply = get_accepted_children(&rmrk_parent, parent_token_id);
-    assert_eq!(
-        accepted_children_reply,
-        RMRKStateReply::AcceptedChildren(BTreeMap::new())
-    );
+    check_accepted_children(&rmrk_parent, parent_token_id, BTreeMap::new());
 }
 
 #[test]
@@ -161,53 +146,30 @@ fn recursive_burn_nested_token() {
     );
 
     // check accepted children of parent_token_id
-    let accepted_children_reply = get_accepted_children(&rmrk_parent, parent_token_id);
     let mut accepted_children: BTreeMap<ActorId, BTreeSet<TokenId>> = BTreeMap::new();
     accepted_children.insert(
         CHILD_NFT_CONTRACT.into(),
         BTreeSet::from([child_token_id.into()]),
     );
-    assert_eq!(
-        accepted_children_reply,
-        RMRKStateReply::AcceptedChildren(accepted_children)
-    );
+    check_accepted_children(&rmrk_parent, parent_token_id, accepted_children);
 
     // check accepted children of child_token_id
-    let accepted_children_reply = get_accepted_children(&rmrk_child, child_token_id);
     let mut accepted_children: BTreeMap<ActorId, BTreeSet<TokenId>> = BTreeMap::new();
     accepted_children.insert(3.into(), BTreeSet::from([grand_token_id.into()]));
-    assert_eq!(
-        accepted_children_reply,
-        RMRKStateReply::AcceptedChildren(accepted_children)
-    );
+    check_accepted_children(&rmrk_child, child_token_id, accepted_children);
 
     // burn child
     assert!(!burn(&rmrk_child, USERS[0], child_token_id).main_failed());
+    
     // check that parent_token_id has no accepted children
-    let accepted_children_reply = get_accepted_children(&rmrk_parent, parent_token_id);
-    assert_eq!(
-        accepted_children_reply,
-        RMRKStateReply::AcceptedChildren(BTreeMap::new())
-    );
+    check_accepted_children(&rmrk_parent, parent_token_id, BTreeMap::new());
 
     // check that child_token_id does not exist
-    let rmrk_owner = owner(&rmrk_child, child_token_id);
-    assert_eq!(
-        rmrk_owner,
-        RMRKStateReply::Owner {
-            token_id: None,
-            owner_id: ZERO_ID.into()
-        }
-    );
+    check_rmrk_owner(&rmrk_child, child_token_id, None, ZERO_ID);
+
     // check that grand_token_id does not exist
-    let rmrk_owner = owner(&rmrk_grand, grand_token_id);
-    assert_eq!(
-        rmrk_owner,
-        RMRKStateReply::Owner {
-            token_id: None,
-            owner_id: ZERO_ID.into()
-        }
-    );
+    check_rmrk_owner(&rmrk_grand, grand_token_id, None, ZERO_ID);
+
 }
 
 // ownership chain is now USERS[0] > parent_token_id > child_token_id > grand_token_id
@@ -239,21 +201,9 @@ fn recursive_burn_parent_token() {
     assert!(!burn(&rmrk_parent, USERS[0], parent_token_id).main_failed());
 
     // check that child_token_id does not exist
-    let rmrk_owner = owner(&rmrk_child, child_token_id);
-    assert_eq!(
-        rmrk_owner,
-        RMRKStateReply::Owner {
-            token_id: None,
-            owner_id: ZERO_ID.into()
-        }
-    );
+    check_rmrk_owner(&rmrk_child, child_token_id, None, ZERO_ID);
+
     // check that grand_token_id does not exist
-    let rmrk_owner = owner(&rmrk_grand, grand_token_id);
-    assert_eq!(
-        rmrk_owner,
-        RMRKStateReply::Owner {
-            token_id: None,
-            owner_id: ZERO_ID.into()
-        }
-    );
+    check_rmrk_owner(&rmrk_grand, grand_token_id, None, ZERO_ID);
+
 }
