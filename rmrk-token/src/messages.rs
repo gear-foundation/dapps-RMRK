@@ -1,5 +1,8 @@
 use crate::*;
-use gstd::{msg, ActorId};
+use base_io::*;
+use gstd::{exec, msg, ActorId};
+use resource_io::Resource;
+use types::primitives::{CollectionId, PartId, ResourceId, TokenId};
 
 pub async fn get_root_owner(to: &ActorId, token_id: TokenId) -> ActorId {
     let response: RMRKEvent = msg::send_for_reply_as(*to, RMRKAction::RootOwner(token_id), 0)
@@ -34,13 +37,13 @@ pub async fn add_child(
 
 pub async fn burn_from_parent(
     child_contract_id: &ActorId,
-    child_token_ids: BTreeSet<TokenId>,
+    child_token_id: TokenId,
     root_owner: &ActorId,
 ) {
     msg::send_for_reply_as::<_, RMRKEvent>(
         *child_contract_id,
         RMRKAction::BurnFromParent {
-            child_token_ids,
+            child_token_id,
             root_owner: *root_owner,
         },
         0,
@@ -106,20 +109,12 @@ pub async fn add_accepted_child(
     .expect("Error in  async message `[RMRKAction::AddAcceptedChild]");
 }
 
-pub async fn add_resource_entry(
-    to: &ActorId,
-    id: u8,
-    src: String,
-    thumb: String,
-    metadata_uri: String,
-) {
+pub async fn add_resource_entry(to: &ActorId, resource_id: ResourceId, resource: Resource) {
     msg::send_for_reply_as::<_, ResourceEvent>(
         *to,
         ResourceAction::AddResourceEntry {
-            id,
-            src,
-            thumb,
-            metadata_uri,
+            resource_id,
+            resource,
         },
         0,
     )
@@ -139,4 +134,79 @@ pub async fn assert_resource_exists(resource_address: &ActorId, id: u8) {
     .expect("Error in sending async message `[ResourceAction::GetResource]` to resource contract")
     .await
     .expect("Error in async message `[ResourceAction::GetResource]`");
+}
+
+pub async fn get_resource(resource_address: &ActorId, id: ResourceId) -> Resource {
+    let response: ResourceEvent = msg::send_for_reply_as(
+        *resource_address,
+        ResourceAction::GetResource { id },
+        0,
+    )
+    .expect("Error in sending async message `[ResourceAction::GetResource]` to resource contract")
+    .await
+    .expect("Error in async message `[ResourceAction::GetResource]`");
+    if let ResourceEvent::Resource(resource) = response {
+        resource
+    } else {
+        panic!("Wrong received message from resource contract");
+    }
+}
+
+pub async fn check_slot_resource(
+    child_contract_id: ActorId,
+    token_id: TokenId,
+    resource_id: ResourceId,
+    base_id: BaseId,
+    slot_id: SlotId,
+) {
+    msg::send_for_reply_as::<_, RMRKEvent>(
+        child_contract_id,
+        RMRKAction::CheckSlotResource {
+            token_id,
+            resource_id,
+            base_id,
+            slot_id,
+        },
+        0,
+    )
+    .expect("Error in sending async message `[RMRKAction::CheckSlotResource]` to rmrk contract")
+    .await
+    .expect("Error in async message `[RMRKAction::CheckSlotResource]`");
+}
+
+pub async fn check_is_in_equippable_list(base_id: BaseId, part_id: PartId, token_id: TokenId) {
+    msg::send_for_reply_as::<_, BaseEvent>(
+        base_id,
+        BaseAction::CheckEquippable {
+            part_id,
+            collection_id: exec::program_id(),
+            token_id,
+        },
+        0,
+    )
+    .expect("Error in sending async message `[BaseAction::CheckEquippable]` to base contract")
+    .await
+    .expect("Error in async message `[BaseAction::CheckEquippable]`");
+}
+
+pub async fn check_equippable(
+    parent_contract_id: CollectionId,
+    parent_token_id: TokenId,
+    child_token_id: TokenId,
+    resource_id: ResourceId,
+    slot_id: SlotId,
+) {
+    msg::send_for_reply_as::<_, RMRKEvent>(
+        parent_contract_id,
+        RMRKAction::CheckEquippable {
+            parent_token_id,
+            child_token_id,
+            resource_id,
+            slot_id,
+        },
+        0,
+    )
+    .expect("Error in sending async message `[RMRKAction::CheckEquippable]` to rmrk contract")
+    .await
+    .expect("Error in async message `[RMRKAction::CheckEquippable]`");
 }

@@ -1,13 +1,14 @@
 #![no_std]
 
 use codec::Encode;
-use gstd::{debug, msg, prelude::*, prog, ActorId};
-use primitive_types::U256;
+use gstd::{debug, msg, prelude::*, prog::ProgramGenerator, ActorId};
 use resource_io::{InitResource, ResourceAction, ResourceEvent};
 use rmrk_io::*;
+use types::primitives::{BaseId, CollectionAndToken, SlotId, TokenId};
 pub mod burn;
 pub mod checks;
 pub mod children;
+pub mod equippable;
 pub mod messages;
 pub mod transfer;
 use messages::*;
@@ -27,7 +28,7 @@ gstd::metadata! {
         output: RMRKStateReply,
 }
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, PartialEq, Eq)]
 pub struct RMRKOwner {
     pub token_id: Option<TokenId>,
     pub owner_id: ActorId,
@@ -40,13 +41,14 @@ pub struct RMRKToken {
     pub admin: ActorId,
     pub token_approvals: BTreeMap<TokenId, BTreeSet<ActorId>>,
     pub rmrk_owners: BTreeMap<TokenId, RMRKOwner>,
-    pub pending_children: BTreeMap<TokenId, BTreeSet<Vec<u8>>>,
-    pub accepted_children: BTreeMap<TokenId, BTreeSet<Vec<u8>>>,
-    pub children_status: BTreeMap<Vec<u8>, ChildStatus>,
-    pub balances: BTreeMap<ActorId, U256>,
+    pub pending_children: BTreeMap<TokenId, BTreeSet<CollectionAndToken>>,
+    pub accepted_children: BTreeMap<TokenId, BTreeSet<CollectionAndToken>>,
+    pub children_status: BTreeMap<CollectionAndToken, ChildStatus>,
+    pub balances: BTreeMap<ActorId, TokenId>,
     pub multiresource: MultiResource,
     pub resource_hash: [u8; 32],
     pub resource_id: ActorId,
+    pub equipped_tokens: BTreeSet<TokenId>,
 }
 
 static mut RMRK: Option<RMRKToken> = None;
@@ -72,40 +74,6 @@ impl RMRKToken {
             rmrk_owner.owner_id
         }
     }
-
-    fn get_pending_children(&self, token_id: TokenId) -> BTreeMap<ActorId, BTreeSet<TokenId>> {
-        let mut pending_children: BTreeMap<ActorId, BTreeSet<TokenId>> = BTreeMap::new();
-        if let Some(children) = self.pending_children.get(&token_id) {
-            for child_vec in children.iter() {
-                let child_contract_id = ActorId::new(child_vec[0..32].try_into().unwrap());
-                let child_token_id = U256::from(&child_vec[32..64]);
-                pending_children
-                    .entry(child_contract_id)
-                    .and_modify(|c| {
-                        c.insert(child_token_id);
-                    })
-                    .or_insert_with(|| BTreeSet::from([child_token_id]));
-            }
-        }
-        pending_children
-    }
-
-    fn get_accepted_children(&self, token_id: TokenId) -> BTreeMap<ActorId, BTreeSet<TokenId>> {
-        let mut accepted_children: BTreeMap<ActorId, BTreeSet<TokenId>> = BTreeMap::new();
-        if let Some(children) = self.accepted_children.get(&token_id) {
-            for child_vec in children.iter() {
-                let child_contract_id = ActorId::new(child_vec[0..32].try_into().unwrap());
-                let child_token_id = U256::from(&child_vec[32..64]);
-                accepted_children
-                    .entry(child_contract_id)
-                    .and_modify(|c| {
-                        c.insert(child_token_id);
-                    })
-                    .or_insert_with(|| BTreeSet::from([child_token_id]));
-            }
-        }
-        accepted_children
-    }
 }
 
 #[no_mangle]
@@ -119,14 +87,12 @@ pub unsafe extern "C" fn init() {
         ..RMRKToken::default()
     };
     if let Some(resource_hash) = config.resource_hash {
-        let resource_id = prog::create_program_with_gas(
+        let resource_id = ProgramGenerator::create_program(
             resource_hash.into(),
-            &0i32.to_le_bytes(),
             InitResource {
                 resource_name: config.resource_name,
             }
             .encode(),
-            1_000_000,
             0,
         )
         .expect("Error in creating program");
@@ -170,7 +136,7 @@ async unsafe fn main() {
             child_contract_id,
             child_token_id,
         } => {
-            rmrk.accept_child(parent_token_id, &child_contract_id, child_token_id)
+            rmrk.accept_child(parent_token_id, child_contract_id, child_token_id)
                 .await
         }
         RMRKAction::AddAcceptedChild {
@@ -190,7 +156,7 @@ async unsafe fn main() {
             child_contract_id,
             child_token_id,
         } => {
-            rmrk.reject_child(parent_token_id, &child_contract_id, child_token_id)
+            rmrk.reject_child(parent_token_id, child_contract_id, child_token_id)
                 .await
         }
         RMRKAction::RemoveChild {
@@ -198,7 +164,7 @@ async unsafe fn main() {
             child_contract_id,
             child_token_id,
         } => {
-            rmrk.remove_child(parent_token_id, &child_contract_id, child_token_id)
+            rmrk.remove_child(parent_token_id, child_contract_id, child_token_id)
                 .await
         }
         RMRKAction::BurnChild {
@@ -206,17 +172,15 @@ async unsafe fn main() {
             child_token_id,
         } => rmrk.burn_child(parent_token_id, child_token_id),
         RMRKAction::BurnFromParent {
-            child_token_ids,
+            child_token_id,
             root_owner,
-        } => rmrk.burn_from_parent(child_token_ids, &root_owner).await,
+        } => rmrk.burn_from_parent(child_token_id, &root_owner).await,
         RMRKAction::Burn(token_id) => rmrk.burn(token_id).await,
         RMRKAction::RootOwner(token_id) => rmrk.root_owner(token_id).await,
         RMRKAction::AddResourceEntry {
-            id,
-            src,
-            thumb,
-            metadata_uri,
-        } => rmrk.add_resource_entry(id, src, thumb, metadata_uri).await,
+            resource_id,
+            resource,
+        } => rmrk.add_resource_entry(resource_id, resource).await,
         RMRKAction::AddResource {
             token_id,
             resource_id,
@@ -234,6 +198,33 @@ async unsafe fn main() {
             token_id,
             priorities,
         } => rmrk.set_priority(token_id, priorities).await,
+        RMRKAction::Equip {
+            token_id,
+            resource_id,
+            equippable,
+            equippable_resource_id,
+        } => {
+            rmrk.equip(token_id, resource_id, equippable, equippable_resource_id)
+                .await
+        }
+        RMRKAction::CheckEquippable {
+            parent_token_id,
+            child_token_id,
+            resource_id,
+            slot_id,
+        } => {
+            rmrk.check_equippable(parent_token_id, child_token_id, resource_id, slot_id)
+                .await
+        }
+        RMRKAction::CheckSlotResource {
+            token_id,
+            resource_id,
+            base_id,
+            slot_id,
+        } => {
+            rmrk.check_slot_resource(token_id, resource_id, base_id, slot_id)
+                .await
+        }
     }
 }
 
@@ -264,10 +255,18 @@ pub unsafe extern "C" fn meta_state() -> *mut [i32; 2] {
             }
         }
         RMRKState::PendingChildren(token_id) => {
-            RMRKStateReply::PendingChildren(rmrk.get_pending_children(token_id))
+            if let Some(children) = rmrk.pending_children.get(&token_id) {
+                RMRKStateReply::PendingChildren(children.clone())
+            } else {
+                RMRKStateReply::PendingChildren(BTreeSet::new())
+            }
         }
         RMRKState::AcceptedChildren(token_id) => {
-            RMRKStateReply::AcceptedChildren(rmrk.get_accepted_children(token_id))
+            if let Some(children) = rmrk.accepted_children.get(&token_id) {
+                RMRKStateReply::AcceptedChildren(children.clone())
+            } else {
+                RMRKStateReply::AcceptedChildren(BTreeSet::new())
+            }
         }
         RMRKState::PendingResources(token_id) => {
             let pending_resources = rmrk

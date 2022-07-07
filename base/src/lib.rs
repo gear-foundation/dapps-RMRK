@@ -1,7 +1,8 @@
 #![no_std]
 
 use base_io::*;
-use gstd::{debug, msg, prelude::*, ActorId};
+use gstd::{msg, prelude::*, ActorId};
+use types::primitives::*;
 
 #[derive(Debug, Default)]
 pub struct Base {
@@ -105,13 +106,10 @@ impl Base {
             .get(&part_id)
             .expect("Part with that id does not exist");
         if let Part::Slot(SlotPart { equippable, .. }) = part {
-            match equippable {
-                EquippableList::Custom(collection_and_token) => {
-                    if !collection_and_token.contains(&(collection_id, token_id)) {
-                        panic!("Token is not in equippable list")
-                    }
+            if let EquippableList::Custom(collection_and_token) = equippable {
+                if !collection_and_token.contains(&(collection_id, token_id)) {
+                    panic!("Token is not in equippable list")
                 }
-                _ => (),
             }
         } else {
             panic!("The part must be slot");
@@ -183,20 +181,16 @@ pub unsafe extern "C" fn meta_state() -> *mut [i32; 2] {
             collection_id,
             token_id,
         } => {
-            if let Some(part) = base.parts.get(&part_id) {
-                if let Part::Slot(SlotPart { equippable, .. }) = part {
-                    match equippable {
-                        EquippableList::Custom(collection_and_token) => {
-                            if collection_and_token.contains(&(collection_id, token_id)) {
-                                BaseStateReply::IsEquippable(true)
-                            } else {
-                                BaseStateReply::IsEquippable(false)
-                            }
+            if let Some(Part::Slot(SlotPart { equippable, .. })) = base.parts.get(&part_id) {
+                match equippable {
+                    EquippableList::Custom(collection_and_token) => {
+                        if collection_and_token.contains(&(collection_id, token_id)) {
+                            BaseStateReply::IsEquippable(true)
+                        } else {
+                            BaseStateReply::IsEquippable(false)
                         }
-                        _ => BaseStateReply::IsEquippable(true),
                     }
-                } else {
-                    BaseStateReply::IsEquippable(false)
+                    _ => BaseStateReply::IsEquippable(true),
                 }
             } else {
                 BaseStateReply::IsEquippable(false)

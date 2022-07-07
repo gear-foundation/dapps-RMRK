@@ -1,13 +1,14 @@
-use crate::token_tests::utils::*;
+use crate::utils::*;
 use codec::Encode;
-use gstd::{ActorId, BTreeMap, BTreeSet};
+use gstd::BTreeSet;
 use gtest::System;
 use rmrk_io::*;
+use types::primitives::{CollectionId, TokenId};
 
 #[test]
 fn accept_child_simple() {
     let sys = System::new();
-    before_test(&sys);
+    before_token_test(&sys);
     let rmrk_child = sys.get_program(CHILD_NFT_CONTRACT);
     let rmrk_parent = sys.get_program(PARENT_NFT_CONTRACT);
 
@@ -34,7 +35,7 @@ fn accept_child_simple() {
     assert!(res.contains(&(
         USERS[0],
         RMRKEvent::AcceptedChild {
-            child_token_address: CHILD_NFT_CONTRACT.into(),
+            child_contract_id: CHILD_NFT_CONTRACT.into(),
             child_token_id: child_token_id.into(),
             parent_token_id: parent_token_id.into(),
         }
@@ -42,21 +43,18 @@ fn accept_child_simple() {
     )));
 
     // check that parent_token_id has no pending children
-    check_pending_children(&rmrk_parent, parent_token_id, BTreeMap::new());
+    check_pending_children(&rmrk_parent, parent_token_id, BTreeSet::new());
 
     // check accepted children
-    let mut accepted_children: BTreeMap<ActorId, BTreeSet<TokenId>> = BTreeMap::new();
-    accepted_children.insert(
-        CHILD_NFT_CONTRACT.into(),
-        BTreeSet::from([child_token_id.into()]),
-    );
+    let mut accepted_children: BTreeSet<(CollectionId, TokenId)> = BTreeSet::new();
+    accepted_children.insert((CHILD_NFT_CONTRACT.into(), child_token_id.into()));
     check_accepted_children(&rmrk_parent, parent_token_id, accepted_children);
 }
 
 #[test]
 fn accept_child_from_approved_address() {
     let sys = System::new();
-    before_test(&sys);
+    before_token_test(&sys);
     let rmrk_child = sys.get_program(CHILD_NFT_CONTRACT);
     let rmrk_parent = sys.get_program(PARENT_NFT_CONTRACT);
 
@@ -84,7 +82,7 @@ fn accept_child_from_approved_address() {
     assert!(res.contains(&(
         USERS[0],
         RMRKEvent::AcceptedChild {
-            child_token_address: CHILD_NFT_CONTRACT.into(),
+            child_contract_id: CHILD_NFT_CONTRACT.into(),
             child_token_id: child_token_id.into(),
             parent_token_id: parent_token_id.into(),
         }
@@ -95,7 +93,7 @@ fn accept_child_from_approved_address() {
 #[test]
 fn accept_child_failures() {
     let sys = System::new();
-    before_test(&sys);
+    before_token_test(&sys);
     let rmrk_child = sys.get_program(CHILD_NFT_CONTRACT);
     let rmrk_parent = sys.get_program(PARENT_NFT_CONTRACT);
 
@@ -156,7 +154,7 @@ fn accept_child_failures() {
 #[test]
 fn reject_child_simple() {
     let sys = System::new();
-    before_test(&sys);
+    before_token_test(&sys);
     let rmrk_child = sys.get_program(1);
     let rmrk_parent = sys.get_program(2);
 
@@ -184,7 +182,7 @@ fn reject_child_simple() {
     assert!(res.contains(&(
         USERS[0],
         RMRKEvent::RejectedChild {
-            child_token_address: CHILD_NFT_CONTRACT.into(),
+            child_contract_id: CHILD_NFT_CONTRACT.into(),
             child_token_id: child_token_id.into(),
             parent_token_id: parent_token_id.into(),
         }
@@ -192,7 +190,7 @@ fn reject_child_simple() {
     )));
 
     // check that parent_token_id has no pending children
-    check_pending_children(&rmrk_parent, parent_token_id, BTreeMap::new());
+    check_pending_children(&rmrk_parent, parent_token_id, BTreeSet::new());
 
     // check that child token in rmrk_child does not exist
     check_rmrk_owner(&rmrk_child, child_token_id, None, ZERO_ID);
@@ -201,7 +199,7 @@ fn reject_child_simple() {
 #[test]
 fn reject_child_from_approved_address() {
     let sys = System::new();
-    before_test(&sys);
+    before_token_test(&sys);
     let rmrk_child = sys.get_program(1);
     let rmrk_parent = sys.get_program(2);
 
@@ -231,7 +229,7 @@ fn reject_child_from_approved_address() {
     assert!(res.contains(&(
         USERS[0],
         RMRKEvent::RejectedChild {
-            child_token_address: CHILD_NFT_CONTRACT.into(),
+            child_contract_id: CHILD_NFT_CONTRACT.into(),
             child_token_id: child_token_id.into(),
             parent_token_id: parent_token_id.into(),
         }
@@ -242,7 +240,7 @@ fn reject_child_from_approved_address() {
 #[test]
 fn reject_child_failures() {
     let sys = System::new();
-    before_test(&sys);
+    before_token_test(&sys);
     let rmrk_child = sys.get_program(1);
     let rmrk_parent = sys.get_program(2);
 
@@ -283,7 +281,7 @@ fn reject_child_failures() {
 #[test]
 fn remove_child_simple() {
     let sys = System::new();
-    before_test(&sys);
+    before_token_test(&sys);
     let rmrk_child = sys.get_program(CHILD_NFT_CONTRACT);
     let rmrk_parent = sys.get_program(PARENT_NFT_CONTRACT);
 
@@ -322,7 +320,7 @@ fn remove_child_simple() {
     assert!(res.contains(&(
         USERS[0],
         RMRKEvent::RemovedChild {
-            child_token_address: CHILD_NFT_CONTRACT.into(),
+            child_contract_id: CHILD_NFT_CONTRACT.into(),
             child_token_id: child_token_id.into(),
             parent_token_id: parent_token_id.into(),
         }
@@ -330,7 +328,7 @@ fn remove_child_simple() {
     )));
 
     // check that parent_token_id has no accepted children
-    check_accepted_children(&rmrk_parent, parent_token_id, BTreeMap::new());
+    check_accepted_children(&rmrk_parent, parent_token_id, BTreeSet::new());
 
     // check that child token in rmrk_child does not exist
     check_rmrk_owner(&rmrk_child, child_token_id, None, ZERO_ID);
@@ -339,7 +337,7 @@ fn remove_child_simple() {
 #[test]
 fn remove_child_from_approved_account() {
     let sys = System::new();
-    before_test(&sys);
+    before_token_test(&sys);
     let rmrk_child = sys.get_program(CHILD_NFT_CONTRACT);
     let rmrk_parent = sys.get_program(PARENT_NFT_CONTRACT);
 
@@ -379,20 +377,20 @@ fn remove_child_from_approved_account() {
     assert!(res.contains(&(
         USERS[3],
         RMRKEvent::RemovedChild {
-            child_token_address: CHILD_NFT_CONTRACT.into(),
+            child_contract_id: CHILD_NFT_CONTRACT.into(),
             child_token_id: child_token_id.into(),
             parent_token_id: parent_token_id.into(),
         }
         .encode()
     )));
     // check that parent_token_id has no accepted children
-    check_accepted_children(&rmrk_parent, parent_token_id, BTreeMap::new());
+    check_accepted_children(&rmrk_parent, parent_token_id, BTreeSet::new());
 }
 
 #[test]
 fn remove_child_failures() {
     let sys = System::new();
-    before_test(&sys);
+    before_token_test(&sys);
     let rmrk_child = sys.get_program(1);
     let rmrk_parent = sys.get_program(2);
 

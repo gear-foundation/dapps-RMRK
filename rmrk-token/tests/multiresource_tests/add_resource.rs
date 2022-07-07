@@ -1,46 +1,41 @@
-use crate::multiresource_tests::utils::*;
+use crate::utils::*;
 use codec::Encode;
 use gstd::BTreeSet;
 use gtest::System;
 use resource_io::Resource;
 use rmrk_io::*;
+use types::primitives::ResourceId;
 
 // adds resource entry to the resource storage contract through the rmrk token contract
 #[test]
 fn add_resource_entry_simple() {
     let sys = System::new();
-    before_test(&sys);
+    before_multiresource_test(&sys);
     let rmrk = sys.get_program(1);
-    let resource = Resource {
-        id: 1,
-        ..Default::default()
-    };
-    add_resource_entry(&rmrk, USERS[0], resource);
+    let resource_id: ResourceId = 1;
+    let resource = Resource::Basic(Default::default());
+    add_resource_entry(&rmrk, USERS[0], resource_id, resource);
 }
 
 #[test]
 fn add_resource_entry_failures() {
     let sys = System::new();
-    before_test(&sys);
-    let resource = Resource {
-        id: 1,
-        ..Default::default()
-    };
+    before_multiresource_test(&sys);
+    let resource_id: ResourceId = 1;
+    let resource = Resource::Basic(Default::default());
 
     let rmrk = sys.get_program(1);
 
     // add resource
-    add_resource_entry(&rmrk, USERS[0], resource.clone());
+    add_resource_entry(&rmrk, USERS[0], resource_id, resource.clone());
 
     // must fail since resource already exists
     assert!(rmrk
         .send(
             USERS[0],
             RMRKAction::AddResourceEntry {
-                id: resource.id,
-                src: resource.src.clone(),
-                thumb: resource.thumb.clone(),
-                metadata_uri: resource.metadata_uri.clone(),
+                resource_id,
+                resource: resource.clone(),
             },
         )
         .main_failed());
@@ -50,10 +45,8 @@ fn add_resource_entry_failures() {
         .send(
             USERS[0],
             RMRKAction::AddResourceEntry {
-                id: 0,
-                src: resource.src,
-                thumb: resource.thumb,
-                metadata_uri: resource.metadata_uri,
+                resource_id: 0,
+                resource,
             },
         )
         .main_failed());
@@ -63,14 +56,12 @@ fn add_resource_entry_failures() {
 #[test]
 fn add_resource_to_token() {
     let sys = System::new();
-    before_test(&sys);
+    before_multiresource_test(&sys);
     let rmrk = sys.get_program(1);
-    let resource = Resource {
-        id: 1,
-        ..Default::default()
-    };
+    let resource_id: ResourceId = 1;
+    let resource = Resource::Basic(Default::default());
     // add resource entry to the storage contract
-    add_resource_entry(&rmrk, USERS[0], resource);
+    add_resource_entry(&rmrk, USERS[0], resource_id, resource);
 
     let token_id: u64 = 10;
     let resource_id: u8 = 1;
@@ -98,12 +89,9 @@ fn add_resource_to_token() {
 #[test]
 fn add_resource_to_token_failures() {
     let sys = System::new();
-    before_test(&sys);
+    before_multiresource_test(&sys);
     let rmrk = sys.get_program(1);
-    let mut resource = Resource {
-        id: 1,
-        ..Default::default()
-    };
+    let resource = Resource::Basic(Default::default());
     let token_id: u64 = 10;
     let mut pending_resources: BTreeSet<ResourceId> = BTreeSet::new();
 
@@ -114,15 +102,14 @@ fn add_resource_to_token_failures() {
     assert!(add_resource(&rmrk, USERS[0], 11, 1, 0).main_failed());
 
     for resource_id in 1..129 {
-        resource.id = resource_id;
-        add_resource_entry(&rmrk, USERS[0], resource.clone());
+        add_resource_entry(&rmrk, USERS[0], resource_id, resource.clone());
         pending_resources.insert(resource_id);
         assert!(!add_resource(&rmrk, USERS[0], token_id, resource_id, 0).main_failed());
     }
 
     // must fail since too many resources have already been added
-    resource.id = 129;
-    add_resource_entry(&rmrk, USERS[0], resource);
+    let resource_id: ResourceId = 129;
+    add_resource_entry(&rmrk, USERS[0], resource_id, resource);
     assert!(add_resource(&rmrk, USERS[0], token_id, 129, 0).main_failed());
 
     // check pending resources
@@ -135,17 +122,14 @@ fn add_resource_to_token_failures() {
 #[test]
 fn add_resource_to_different_tokens() {
     let sys = System::new();
-    before_test(&sys);
+    before_multiresource_test(&sys);
     let rmrk = sys.get_program(1);
-    let resource = Resource {
-        id: 1,
-        ..Default::default()
-    };
-    add_resource_entry(&rmrk, USERS[0], resource);
+    let resource_id: u8 = 1;
+    let resource = Resource::Basic(Default::default());
+    add_resource_entry(&rmrk, USERS[0], resource_id, resource);
 
     let token_id_0: u64 = 10;
     let token_id_1: u64 = 11;
-    let resource_id: u8 = 1;
 
     // add resource to token_id_0
     assert!(!add_resource(&rmrk, USERS[0], token_id_0, resource_id, 0).main_failed());

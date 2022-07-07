@@ -13,6 +13,8 @@ primitive-types = { version = "0.11.1", default-features = false, features = ["s
 sp-core-hashing = { version = "4.0.0", default-features = false }
 rmrk-io = { path = "io" }
 resource-io = { path = "../resource/io" }
+base-io = { path = "../base/io" }
+types = { path = "../types/" }
 hex-literal = "*"
 
 [dev-dependencies]

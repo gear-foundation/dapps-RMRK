@@ -2,6 +2,7 @@ use base_io::*;
 use codec::Encode;
 use gstd::{BTreeMap, BTreeSet};
 use gtest::{Program, RunResult, System};
+use types::primitives::PartId;
 pub const ISSUER: u64 = 10;
 
 pub fn init_base(sys: &System, issuer: u64) {
@@ -54,7 +55,7 @@ fn check_part(base: &Program, part_id: PartId) -> RunResult {
 }
 
 fn remove_parts(base: &Program, issuer: u64, parts: Vec<PartId>) -> RunResult {
-    base.send(issuer, BaseAction::RemoveParts(parts.clone()))
+    base.send(issuer, BaseAction::RemoveParts(parts))
 }
 
 fn add_equippable(
@@ -189,7 +190,7 @@ fn remove_parts_failures() {
     init_base(&sys, ISSUER);
     let base = sys.get_program(1);
     let parts = get_parts();
-    add_parts(&base, ISSUER, parts.clone());
+    add_parts(&base, ISSUER, parts);
 
     let mut removed_parts: Vec<PartId> = vec![100, 102];
 
@@ -228,10 +229,12 @@ fn add_remove_equippable_test() {
     let part = parts
         .get_mut(&part_id)
         .expect("Part with that id does not exist");
-    if let Part::Slot(SlotPart { equippable, .. }) = part {
-        if let EquippableList::Custom(collection_and_token) = equippable {
-            collection_and_token.insert((collection_id.into(), token_id.into()));
-        }
+    if let Part::Slot(SlotPart {
+        equippable: EquippableList::Custom(collection_and_token),
+        ..
+    }) = part
+    {
+        collection_and_token.insert((collection_id.into(), token_id.into()));
     }
     let part_reply: BaseStateReply = base
         .meta_state(BaseState::Part(102))
@@ -290,7 +293,7 @@ fn add_remove_equippable_failures() {
     init_base(&sys, ISSUER);
     let base = sys.get_program(1);
     let parts = get_parts();
-    add_parts(&base, ISSUER, parts.clone());
+    add_parts(&base, ISSUER, parts);
 
     let part_id: PartId = 102;
     let collection_id: u64 = 300;
@@ -321,11 +324,10 @@ fn add_check_failures() {
     init_base(&sys, ISSUER);
     let base = sys.get_program(1);
     let parts = get_parts();
-    add_parts(&base, ISSUER, parts.clone());
+    add_parts(&base, ISSUER, parts);
     // must fail since part does not exist
     assert!(check_part(&base, 300).main_failed());
 
     // must fail since token is not in equippable list
     assert!(check_equippable(&base, 102, 100, 100).main_failed());
-
 }

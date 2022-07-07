@@ -1,5 +1,6 @@
 use crate::*;
-
+use resource_io::Resource;
+use types::primitives::{BaseId, ResourceId, SlotId, TokenId};
 pub const MAX_RESOURCE_LEN: u8 = 128;
 
 #[derive(Debug, Default)]
@@ -24,20 +25,14 @@ impl RMRKToken {
     /// * `metadata_uri`:  a string pointing to a metadata file associated with the resource.
     ///
     /// On success reply `[RMRKEvent::ResourceEntryAdded]`.
-    pub async fn add_resource_entry(
-        &mut self,
-        id: u8,
-        src: String,
-        thumb: String,
-        metadata_uri: String,
-    ) {
+    pub async fn add_resource_entry(&mut self, resource_id: ResourceId, resource: Resource) {
         assert!(
             msg::source() == self.admin,
             "Only admin can add resource to storage contract"
         );
         // sends message to resource storage contract
-        add_resource_entry(&self.resource_id, id, src, thumb, metadata_uri).await;
-        msg::reply(RMRKEvent::ResourceEntryAdded { id }, 0)
+        add_resource_entry(&self.resource_id, resource_id, resource.clone()).await;
+        msg::reply(RMRKEvent::ResourceEntryAdded(resource), 0)
             .expect("Error in reply `[RMRKEvent::ResourceEntryAdded]`");
     }
 
@@ -217,6 +212,33 @@ impl RMRKToken {
             0,
         )
         .expect("Error in reply `[RMRKEvent::PrioritySet]`");
+    }
+
+    //
+    pub async fn check_slot_resource(
+        &self,
+        token_id: TokenId,
+        resource_id: ResourceId,
+        base_id: BaseId,
+        slot_id: SlotId,
+    ) {
+        assert!(
+            self.multiresource
+                .active_resources
+                .get(&token_id)
+                .expect("Token has no resources")
+                .contains(&resource_id),
+            "Token has no resource with that ID"
+        );
+        let resource = get_resource(&self.resource_id, resource_id).await;
+        if let Resource::Slot(slot_resource) = resource {
+            assert!(slot_resource.base == base_id, "Base contracts do not match");
+            assert!(slot_resource.slot == slot_id, "Slots ids do not match");
+        } else {
+            panic!("Resource must be Slot");
+        }
+        msg::reply(RMRKEvent::SlotResourceIsOk, 0)
+            .expect("Error in reply `[RMRKEvent::SlotResourceIsOk]`");
     }
 
     fn add_pending_resource(&mut self, token_id: TokenId, resource_id: ResourceId) {

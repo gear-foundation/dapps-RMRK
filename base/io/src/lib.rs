@@ -2,14 +2,8 @@
 
 use codec::{Decode, Encode};
 use gstd::{prelude::*, ActorId};
-use primitive_types::U256;
 use scale_info::TypeInfo;
-pub type TokenId = U256;
-pub type PartId = u32;
-pub type ZIndex = u8;
-pub type CollectionId = ActorId;
-pub type CollectionAndToken = (CollectionId, TokenId);
-pub type PartList = Vec<Part>;
+use types::primitives::*;
 
 #[derive(Debug, Default, Encode, Decode, TypeInfo)]
 pub struct Base {

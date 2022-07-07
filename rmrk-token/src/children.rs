@@ -1,13 +1,6 @@
 use crate::*;
 use gstd::msg;
 
-fn get_child_vec(child_contract_id: &ActorId, child_token_id: TokenId) -> Vec<u8> {
-    let mut nft_contract_and_token: Vec<u8> = <[u8; 32]>::from(*child_contract_id).into();
-    let token_id_vec: Vec<u8> = <[u8; 32]>::from(child_token_id).into();
-    nft_contract_and_token.extend(token_id_vec);
-    nft_contract_and_token
-}
-
 impl RMRKToken {
     /// That message is designed to be send from another RMRK contracts
     /// when minting an NFT(child_token_id) to another NFT(parent_token_id).
@@ -26,19 +19,18 @@ impl RMRKToken {
     pub async fn add_child(&mut self, parent_token_id: TokenId, child_token_id: TokenId) {
         self.assert_token_does_not_exist(parent_token_id);
 
-        // get the vector of `child_nft_contract` + `child_token_id`
-        let child_vec = get_child_vec(&msg::source(), child_token_id);
+        let child_token = (msg::source(), child_token_id);
 
         // check if the child already exists in pending array
         if let Some(children) = self.pending_children.get(&parent_token_id) {
             // if child already exists
-            if children.contains(&child_vec) {
+            if children.contains(&child_token) {
                 panic!("RMRKCore: child already exists in pending array");
             }
         }
 
         // add child to pending children array
-        self.internal_add_child(parent_token_id, child_vec, ChildStatus::Pending);
+        self.internal_add_child(parent_token_id, child_token, ChildStatus::Pending);
 
         msg::reply(
             RMRKEvent::PendingChild {
@@ -66,23 +58,23 @@ impl RMRKToken {
     pub async fn accept_child(
         &mut self,
         parent_token_id: TokenId,
-        child_contract_id: &ActorId,
+        child_contract_id: ActorId,
         child_token_id: TokenId,
     ) {
         let root_owner = self.find_root_owner(parent_token_id).await;
         self.assert_approved_or_owner(parent_token_id, &root_owner);
-        // get the vector of `child_nft_contract` + `child_token_id`
-        let child_vec = get_child_vec(child_contract_id, child_token_id);
+
+        let child_token = (child_contract_id, child_token_id);
 
         // remove child from pending array
-        self.internal_remove_child(parent_token_id, &child_vec, ChildStatus::Pending);
+        self.internal_remove_child(parent_token_id, child_token, ChildStatus::Pending);
 
         // add child to accepted children array
-        self.internal_add_child(parent_token_id, child_vec, ChildStatus::Accepted);
+        self.internal_add_child(parent_token_id, child_token, ChildStatus::Accepted);
 
         msg::reply(
             RMRKEvent::AcceptedChild {
-                child_token_address: *child_contract_id,
+                child_contract_id,
                 child_token_id,
                 parent_token_id,
             },
@@ -107,29 +99,23 @@ impl RMRKToken {
     pub async fn reject_child(
         &mut self,
         parent_token_id: TokenId,
-        child_contract_id: &ActorId,
+        child_contract_id: ActorId,
         child_token_id: TokenId,
     ) {
         let root_owner = self.find_root_owner(parent_token_id).await;
         self.assert_approved_or_owner(parent_token_id, &root_owner);
 
-        // get the vector of `child_nft_contract` + `child_token_id`
-        let child_vec = get_child_vec(child_contract_id, child_token_id);
+        let child_token = (child_contract_id, child_token_id);
 
         // remove child from pending array
-        self.internal_remove_child(parent_token_id, &child_vec, ChildStatus::Pending);
+        self.internal_remove_child(parent_token_id, child_token, ChildStatus::Pending);
 
         // send message to child contract to burn RMRK token from it
-        burn_from_parent(
-            child_contract_id,
-            BTreeSet::from([child_token_id]),
-            &root_owner,
-        )
-        .await;
+        burn_from_parent(&child_contract_id, child_token_id, &root_owner).await;
 
         msg::reply(
             RMRKEvent::RejectedChild {
-                child_token_address: *child_contract_id,
+                child_contract_id,
                 child_token_id,
                 parent_token_id,
             },
@@ -153,28 +139,23 @@ impl RMRKToken {
     pub async fn remove_child(
         &mut self,
         parent_token_id: TokenId,
-        child_contract_id: &ActorId,
+        child_contract_id: ActorId,
         child_token_id: TokenId,
     ) {
         let root_owner = self.find_root_owner(parent_token_id).await;
         self.assert_approved_or_owner(parent_token_id, &root_owner);
-        // get the vector of `child_nft_contract` + `child_token_id`
-        let child_vec = get_child_vec(child_contract_id, child_token_id);
+
+        let child_token = (child_contract_id, child_token_id);
 
         // remove child from accepted children array
-        self.internal_remove_child(parent_token_id, &child_vec, ChildStatus::Accepted);
+        self.internal_remove_child(parent_token_id, child_token, ChildStatus::Accepted);
 
         // send message to child contract to burn RMRK token from it
-        burn_from_parent(
-            child_contract_id,
-            BTreeSet::from([child_token_id]),
-            &root_owner,
-        )
-        .await;
+        burn_from_parent(&child_contract_id, child_token_id, &root_owner).await;
 
         msg::reply(
             RMRKEvent::RemovedChild {
-                child_token_address: *child_contract_id,
+                child_contract_id,
                 child_token_id,
                 parent_token_id,
             },
@@ -203,13 +184,13 @@ impl RMRKToken {
     /// On success replies [`RMRKEvent::ChildTransferred`].
     pub async fn transfer_child(&mut self, from: TokenId, to: TokenId, child_token_id: TokenId) {
         self.assert_token_does_not_exist(to);
-        // get the vector of `child_nft_contract` + `child_token_id`
-        let child_vec = get_child_vec(&msg::source(), child_token_id);
+
+        let child_token = (msg::source(), child_token_id);
 
         // check the status of the child
         let child_status = self
             .children_status
-            .get(&child_vec)
+            .get(&child_token)
             .expect("The child does not exist");
 
         let from_root_owner = self.find_root_owner(from).await;
@@ -217,15 +198,15 @@ impl RMRKToken {
         self.assert_exec_origin(&from_root_owner);
         match child_status {
             ChildStatus::Pending => {
-                self.internal_remove_child(from, &child_vec, ChildStatus::Pending);
-                self.internal_add_child(to, child_vec, ChildStatus::Pending);
+                self.internal_remove_child(from, child_token, ChildStatus::Pending);
+                self.internal_add_child(to, child_token, ChildStatus::Pending);
             }
             ChildStatus::Accepted => {
-                self.internal_remove_child(from, &child_vec, ChildStatus::Accepted);
+                self.internal_remove_child(from, child_token, ChildStatus::Accepted);
                 if from_root_owner == to_root_owner {
-                    self.internal_add_child(to, child_vec, ChildStatus::Accepted);
+                    self.internal_add_child(to, child_token, ChildStatus::Accepted);
                 } else {
-                    self.internal_add_child(to, child_vec, ChildStatus::Pending);
+                    self.internal_add_child(to, child_token, ChildStatus::Pending);
                 }
             }
         }
@@ -258,14 +239,13 @@ impl RMRKToken {
         let root_owner = self.find_root_owner(parent_token_id).await;
         self.assert_exec_origin(&root_owner);
 
-        // get the vector of `child_nft_contract` + `child_token_id`
-        let child_vec = get_child_vec(&msg::source(), child_token_id);
+        let child_token = (msg::source(), child_token_id);
 
-        self.internal_add_child(parent_token_id, child_vec, ChildStatus::Accepted);
+        self.internal_add_child(parent_token_id, child_token, ChildStatus::Accepted);
 
         msg::reply(
             RMRKEvent::AcceptedChild {
-                child_token_address: msg::source(),
+                child_contract_id: msg::source(),
                 child_token_id,
                 parent_token_id,
             },
@@ -287,13 +267,13 @@ impl RMRKToken {
     ///
     /// On success replies [`RMRKEvent::ChildBurnt`].
     pub fn burn_child(&mut self, parent_token_id: TokenId, child_token_id: TokenId) {
-        let child_vec = get_child_vec(&msg::source(), child_token_id);
+        let child_token = (msg::source(), child_token_id);
         let child_status = self
             .children_status
-            .remove(&child_vec)
+            .remove(&child_token)
             .expect("Child does not exist");
 
-        self.internal_remove_child(parent_token_id, &child_vec, child_status);
+        self.internal_remove_child(parent_token_id, child_token, child_status);
 
         msg::reply(
             RMRKEvent::ChildBurnt {
@@ -308,7 +288,7 @@ impl RMRKToken {
     fn internal_add_child(
         &mut self,
         parent_token_id: TokenId,
-        child_vec: Vec<u8>,
+        child_token: CollectionAndToken,
         child_status: ChildStatus,
     ) {
         match child_status {
@@ -316,22 +296,23 @@ impl RMRKToken {
                 self.pending_children
                     .entry(parent_token_id)
                     .and_modify(|children| {
-                        children.insert(child_vec.clone());
+                        children.insert(child_token);
                     })
-                    .or_insert_with(|| BTreeSet::from([child_vec.clone()]));
+                    .or_insert_with(|| BTreeSet::from([child_token]));
 
-                self.children_status.insert(child_vec, ChildStatus::Pending);
+                self.children_status
+                    .insert(child_token, ChildStatus::Pending);
             }
             ChildStatus::Accepted => {
                 self.accepted_children
                     .entry(parent_token_id)
                     .and_modify(|children| {
-                        children.insert(child_vec.clone());
+                        children.insert(child_token);
                     })
-                    .or_insert_with(|| BTreeSet::from([child_vec.clone()]));
+                    .or_insert_with(|| BTreeSet::from([child_token]));
 
                 self.children_status
-                    .insert(child_vec, ChildStatus::Accepted);
+                    .insert(child_token, ChildStatus::Accepted);
             }
         }
     }
@@ -339,14 +320,14 @@ impl RMRKToken {
     fn internal_remove_child(
         &mut self,
         parent_token_id: TokenId,
-        child_vec: &Vec<u8>,
+        child_token: CollectionAndToken,
         child_status: ChildStatus,
     ) {
-        self.children_status.remove(child_vec);
+        self.children_status.remove(&child_token);
         match child_status {
             ChildStatus::Pending => {
                 if let Some(children) = self.pending_children.get_mut(&parent_token_id) {
-                    if !children.remove(child_vec) {
+                    if !children.remove(&child_token) {
                         panic!("RMRKCore: child does not exist in pending array or has already been accepted");
                     }
                 } else {
@@ -355,8 +336,8 @@ impl RMRKToken {
             }
             ChildStatus::Accepted => {
                 if let Some(children) = self.accepted_children.get_mut(&parent_token_id) {
-                    if children.contains(child_vec) {
-                        children.remove(child_vec);
+                    if children.contains(&child_token) {
+                        children.remove(&child_token);
                     } else {
                         panic!("RMRKCore: child does not exist");
                     }

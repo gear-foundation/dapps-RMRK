@@ -2,10 +2,9 @@
 
 use codec::{Decode, Encode};
 use gstd::{prelude::*, ActorId};
-use primitive_types::U256;
+use resource_io::Resource;
 use scale_info::TypeInfo;
-pub type TokenId = U256;
-pub type ResourceId = u8;
+use types::primitives::*;
 
 #[derive(Debug, Decode, Encode, TypeInfo)]
 pub struct InitRMRK {
@@ -13,12 +12,6 @@ pub struct InitRMRK {
     pub symbol: String,
     pub resource_name: String,
     pub resource_hash: Option<[u8; 32]>,
-}
-
-#[derive(Debug, Clone, Encode)]
-pub struct Child {
-    pub token_id: TokenId,
-    pub status: ChildStatus,
 }
 
 #[derive(Debug, Clone, Encode, Decode, TypeInfo, Copy, Eq, PartialEq)]
@@ -165,7 +158,7 @@ pub enum RMRKAction {
     ///
     /// On success replies [`RMRKEvent::TokensBurnt`].
     BurnFromParent {
-        child_token_ids: BTreeSet<TokenId>,
+        child_token_id: TokenId,
         root_owner: ActorId,
     },
 
@@ -290,21 +283,17 @@ pub enum RMRKAction {
     /// * The `msg::source()` must be the contract admin.
     ///
     /// Arguments:
-    /// * `id`: is a resource identifier
-    /// * `src`: a string pointing to the media associated with the resource.
-    /// * `thumb`: a string pointing to thumbnail media associated with the resource.
-    /// * `metadata_uri`:  a string pointing to a metadata file associated with the resource.
+    /// * `resource_id`: is a resource identifier
+    /// * `resource`: Resource (Basic, Slot or Composable)
     ///
     /// On success reply `[RMRKEvent::ResourceEntryAdded]`.
     AddResourceEntry {
-        id: u8,
-        src: String,
-        thumb: String,
-        metadata_uri: String,
+        resource_id: ResourceId,
+        resource: Resource,
     },
 
     /// Adds resource to an existing token.
-    /// Checks that the resource woth indicated id exists in the resource storage contract.
+    /// Checks that the resource with indicated id exists in the resource storage contract.
     /// Proposed resource is placed in the "Pending" array.
     /// A pending resource can be also proposed to overwrite an existing resource.
     ///
@@ -380,6 +369,49 @@ pub enum RMRKAction {
         token_id: TokenId,
         priorities: Vec<u8>,
     },
+
+    /// Equips a child NFT's resource to a parent's slot.
+    /// It sends message to the parent contract checking the child status.
+    /// and the parent's resource.
+    /// to check whether the child token has the indicated slot resource.
+    ///
+    /// # Requirements:
+    /// * The `msg::source()` must be the root owner.
+    /// * The child token must have the slot resource with indicated `base_id` and `slot_id`.
+    /// * The parent token must have composed resource with indicated `base_id`.
+    Equip {
+        token_id: TokenId,
+        resource_id: ResourceId,
+        equippable: CollectionAndToken,
+        equippable_resource_id: ResourceId,
+    },
+
+    /// That message is designed to be send from another RMRK contracts
+    /// when minting an NFT(child_token_id) to another NFT(parent_token_id).
+    /// It adds a child to the NFT with tokenId `parent_token_id`
+    /// The status of added child is `Pending`.
+    ///
+    /// # Requirements:
+    /// * Token with TokenId `parent_token_id` must exist.
+    /// * There cannot be two identical children.
+    ///
+    /// # Arguments:
+    /// * `parent_token_id`: is the tokenId of the parent NFT.
+    /// * `child_token_id`: is the tokenId of the child instance.
+    ///
+    /// On success replies [`RMRKEvent::PendingChild`].
+    CheckEquippable {
+        parent_token_id: TokenId,
+        child_token_id: TokenId,
+        resource_id: ResourceId,
+        slot_id: SlotId,
+    },
+    CheckSlotResource {
+        token_id: TokenId,
+        resource_id: ResourceId,
+        base_id: BaseId,
+        slot_id: SlotId,
+    },
 }
 
 #[derive(Debug, Encode, Decode, TypeInfo)]
@@ -404,18 +436,18 @@ pub enum RMRKEvent {
         parent_token_id: TokenId,
     },
     AcceptedChild {
-        child_token_address: ActorId,
+        child_contract_id: ActorId,
         child_token_id: TokenId,
         parent_token_id: TokenId,
     },
     RootOwner(ActorId),
     RejectedChild {
-        child_token_address: ActorId,
+        child_contract_id: ActorId,
         child_token_id: TokenId,
         parent_token_id: TokenId,
     },
     RemovedChild {
-        child_token_address: ActorId,
+        child_contract_id: ActorId,
         child_token_id: TokenId,
         parent_token_id: TokenId,
     },
@@ -434,9 +466,7 @@ pub enum RMRKEvent {
         child_contract_id: ActorId,
         child_token_id: TokenId,
     },
-    TokensBurnt {
-        token_ids: BTreeSet<TokenId>,
-    },
+    TokenBurnt(TokenId),
     Transfer {
         to: ActorId,
         token_id: TokenId,
@@ -450,9 +480,7 @@ pub enum RMRKEvent {
         token_id: Option<TokenId>,
         owner_id: ActorId,
     },
-    ResourceEntryAdded {
-        id: u8,
-    },
+    ResourceEntryAdded(Resource),
     ResourceAdded {
         token_id: TokenId,
         resource_id: ResourceId,
@@ -473,6 +501,14 @@ pub enum RMRKEvent {
     ResourceInited {
         resource_id: ActorId,
     },
+    SlotResourceIsOk,
+    TokenEquipped {
+        token_id: TokenId,
+        resource_id: ResourceId,
+        slot_id: SlotId,
+        equippable: CollectionAndToken,
+    },
+    EquippableIsOk,
 }
 
 #[derive(Debug, Decode, Encode, TypeInfo)]
@@ -491,9 +527,9 @@ pub enum RMRKStateReply {
         token_id: Option<TokenId>,
         owner_id: ActorId,
     },
-    Balance(U256),
-    PendingChildren(BTreeMap<ActorId, BTreeSet<TokenId>>),
-    AcceptedChildren(BTreeMap<ActorId, BTreeSet<TokenId>>),
+    Balance(TokenId),
+    PendingChildren(BTreeSet<CollectionAndToken>),
+    AcceptedChildren(BTreeSet<CollectionAndToken>),
     PendingResources(BTreeSet<ResourceId>),
     ActiveResources(BTreeSet<ResourceId>),
 }

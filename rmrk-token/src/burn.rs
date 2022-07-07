@@ -56,34 +56,35 @@ impl RMRKToken {
     /// * `token_ids`: is the tokenIds of the burnt tokens.
     ///
     /// On success replies [`RMRKEvent::TokensBurnt`].
-    pub async fn burn_from_parent(&mut self, token_ids: BTreeSet<TokenId>, root_owner: &ActorId) {
-        for token_id in &token_ids {
-            let rmrk_owner = self
-                .rmrk_owners
-                .get(token_id)
-                .expect("Token does not exist");
-            if msg::source() != rmrk_owner.owner_id {
-                panic!("Caller must be parent RMRK contract")
-            }
-            self.token_approvals.remove(token_id);
-            self.decrease_balance(root_owner);
-            self.rmrk_owners.remove(token_id);
-            self.internal_burn_children(*token_id, root_owner).await;
+    pub async fn burn_from_parent(&mut self, token_id: TokenId, root_owner: &ActorId) {
+        let rmrk_owner = self
+            .rmrk_owners
+            .get(&token_id)
+            .expect("Token does not exist");
+        if msg::source() != rmrk_owner.owner_id {
+            panic!("Caller must be parent RMRK contract")
         }
+        self.token_approvals.remove(&token_id);
+        self.decrease_balance(root_owner);
+        self.rmrk_owners.remove(&token_id);
+        self.internal_burn_children(token_id, root_owner).await;
 
-        msg::reply(RMRKEvent::TokensBurnt { token_ids }, 0)
+        msg::reply(RMRKEvent::TokenBurnt(token_id), 0)
             .expect("Error in reply [RMRKEvent::TokensBurnt]");
     }
 
     // burn all pending and accepted children
     async fn internal_burn_children(&mut self, token_id: TokenId, root_owner: &ActorId) {
-        let pending_children = self.get_pending_children(token_id);
-        for (child_contract_id, children) in &pending_children {
-            burn_from_parent(child_contract_id, children.clone(), root_owner).await;
+        if let Some(children) = self.pending_children.get(&token_id) {
+            for (child_contract_id, child_token_id) in children {
+                burn_from_parent(child_contract_id, *child_token_id, root_owner).await;
+            }
         }
-        let accepted_children = self.get_accepted_children(token_id);
-        for (child_contract_id, children) in &accepted_children {
-            burn_from_parent(child_contract_id, children.clone(), root_owner).await;
+
+        if let Some(children) = self.accepted_children.get(&token_id) {
+            for (child_contract_id, child_token_id) in children {
+                burn_from_parent(child_contract_id, *child_token_id, root_owner).await;
+            }
         }
     }
 }

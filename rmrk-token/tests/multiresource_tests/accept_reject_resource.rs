@@ -1,23 +1,22 @@
-use crate::multiresource_tests::utils::*;
+use crate::utils::*;
 use codec::Encode;
 use gstd::BTreeSet;
 use gtest::System;
 use resource_io::Resource;
 use rmrk_io::*;
+use types::primitives::ResourceId;
 
 #[test]
 fn accept_resource_simple() {
     let sys = System::new();
-    before_test(&sys);
+    before_multiresource_test(&sys);
     let rmrk = sys.get_program(1);
-    let resource = Resource {
-        id: 1,
-        ..Default::default()
-    };
-    add_resource_entry(&rmrk, USERS[0], resource);
+    let resource_id: ResourceId = 1;
+    let resource = Resource::Basic(Default::default());
+
+    add_resource_entry(&rmrk, USERS[0], resource_id, resource);
 
     let token_id: u64 = 10;
-    let resource_id: u8 = 1;
 
     assert!(!add_resource(&rmrk, USERS[0], token_id, resource_id, 0).main_failed());
 
@@ -43,16 +42,13 @@ fn accept_resource_simple() {
 #[test]
 fn accept_resource_from_approved_address() {
     let sys = System::new();
-    before_test(&sys);
+    before_multiresource_test(&sys);
     let rmrk = sys.get_program(1);
-    let resource = Resource {
-        id: 1,
-        ..Default::default()
-    };
-    add_resource_entry(&rmrk, USERS[0], resource);
+    let resource_id: ResourceId = 1;
+    let resource = Resource::Basic(Default::default());
+    add_resource_entry(&rmrk, USERS[0], resource_id, resource);
 
     let token_id: u64 = 10;
-    let resource_id: u8 = 1;
 
     assert!(!add_resource(&rmrk, USERS[0], token_id, resource_id, 0).main_failed());
 
@@ -80,16 +76,14 @@ fn accept_resource_from_approved_address() {
 #[test]
 fn accept_resource_failures() {
     let sys = System::new();
-    before_test(&sys);
+    before_multiresource_test(&sys);
     let rmrk = sys.get_program(1);
-    let resource = Resource {
-        id: 1,
-        ..Default::default()
-    };
-    add_resource_entry(&rmrk, USERS[0], resource);
+    let resource_id: ResourceId = 1;
+    let resource = Resource::Basic(Default::default());
+
+    add_resource_entry(&rmrk, USERS[0], resource_id, resource);
 
     let token_id: u64 = 10;
-    let resource_id: u8 = 1;
 
     assert!(!add_resource(&rmrk, USERS[0], token_id, resource_id, 0).main_failed());
 
@@ -103,20 +97,17 @@ fn accept_resource_failures() {
 #[test]
 fn accept_multiple_resources() {
     let sys = System::new();
-    before_test(&sys);
+    before_multiresource_test(&sys);
     let rmrk = sys.get_program(1);
-    let mut resource = Resource {
-        id: 1,
-        ..Default::default()
-    };
+    let resource_id_1: ResourceId = 1;
+    let resource_id_2: ResourceId = 2;
+    let resource = Resource::Basic(Default::default());
+
     let token_id: u64 = 10;
-    let resource_id_1: u8 = 1;
-    let resource_id_2: u8 = 2;
 
-    add_resource_entry(&rmrk, USERS[0], resource.clone());
+    add_resource_entry(&rmrk, USERS[0], resource_id_1, resource.clone());
 
-    resource.id = 2;
-    add_resource_entry(&rmrk, USERS[0], resource);
+    add_resource_entry(&rmrk, USERS[0], resource_id_2, resource);
 
     assert!(!add_resource(&rmrk, USERS[0], token_id, resource_id_1, 0).main_failed());
     assert!(!add_resource(&rmrk, USERS[0], token_id, resource_id_2, 0).main_failed());
@@ -137,17 +128,13 @@ fn accept_multiple_resources() {
 #[test]
 fn reorder_prioroties() {
     let sys = System::new();
-    before_test(&sys);
+    before_multiresource_test(&sys);
     let rmrk = sys.get_program(1);
-    let mut resource = Resource {
-        id: 1,
-        ..Default::default()
-    };
+    let resource = Resource::Basic(Default::default());
     let token_id: u64 = 10;
 
     for resource_id in 1..6 {
-        resource.id = resource_id;
-        add_resource_entry(&rmrk, USERS[0], resource.clone());
+        add_resource_entry(&rmrk, USERS[0], resource_id, resource.clone());
         assert!(!add_resource(&rmrk, USERS[0], token_id, resource_id, 0).main_failed());
         assert!(!accept_resource(&rmrk, USERS[0], token_id, resource_id).main_failed());
     }
@@ -166,17 +153,13 @@ fn reorder_prioroties() {
 #[test]
 fn reorder_prioroties_failures() {
     let sys = System::new();
-    before_test(&sys);
+    before_multiresource_test(&sys);
     let rmrk = sys.get_program(1);
-    let mut resource = Resource {
-        id: 1,
-        ..Default::default()
-    };
+    let resource = Resource::Basic(Default::default());
     let token_id: u64 = 10;
 
     for resource_id in 1..4 {
-        resource.id = resource_id;
-        add_resource_entry(&rmrk, USERS[0], resource.clone());
+        add_resource_entry(&rmrk, USERS[0], resource_id, resource.clone());
         assert!(!add_resource(&rmrk, USERS[0], token_id, resource_id, 0).main_failed());
         assert!(!accept_resource(&rmrk, USERS[0], token_id, resource_id).main_failed());
     }
@@ -193,17 +176,13 @@ fn reorder_prioroties_failures() {
 #[test]
 fn reorder_prioroties_from_approved_address() {
     let sys = System::new();
-    before_test(&sys);
+    before_multiresource_test(&sys);
     let rmrk = sys.get_program(1);
-    let mut resource = Resource {
-        id: 1,
-        ..Default::default()
-    };
+    let resource = Resource::Basic(Default::default());
     let token_id: u64 = 10;
 
     for resource_id in 1..4 {
-        resource.id = resource_id;
-        add_resource_entry(&rmrk, USERS[0], resource.clone());
+        add_resource_entry(&rmrk, USERS[0], resource_id, resource.clone());
         assert!(!add_resource(&rmrk, USERS[0], token_id, resource_id, 0).main_failed());
         assert!(!accept_resource(&rmrk, USERS[0], token_id, resource_id).main_failed());
     }
@@ -223,23 +202,21 @@ fn reorder_prioroties_from_approved_address() {
 #[test]
 fn reject_resource_simple() {
     let sys = System::new();
-    before_test(&sys);
+    before_multiresource_test(&sys);
     let rmrk = sys.get_program(1);
     let token_id: u64 = 10;
-    let resource = Resource {
-        id: 1,
-        ..Default::default()
-    };
-    add_resource_entry(&rmrk, USERS[0], resource.clone());
+    let resource_id: ResourceId = 1;
+    let resource = Resource::Basic(Default::default());
+    add_resource_entry(&rmrk, USERS[0], resource_id, resource);
 
-    assert!(!add_resource(&rmrk, USERS[0], token_id, resource.id, 0).main_failed());
+    assert!(!add_resource(&rmrk, USERS[0], token_id, resource_id, 0).main_failed());
 
-    let res = reject_resource(&rmrk, USERS[0], token_id, resource.id);
+    let res = reject_resource(&rmrk, USERS[0], token_id, resource_id);
     assert!(res.contains(&(
         USERS[0],
         RMRKEvent::ResourceRejected {
             token_id: token_id.into(),
-            resource_id: resource.id
+            resource_id,
         }
         .encode()
     )));
@@ -254,46 +231,41 @@ fn reject_resource_simple() {
 #[test]
 fn reject_resource_failures() {
     let sys = System::new();
-    before_test(&sys);
+    before_multiresource_test(&sys);
     let rmrk = sys.get_program(1);
     let token_id: u64 = 10;
-    let resource = Resource {
-        id: 1,
-        ..Default::default()
-    };
-    add_resource_entry(&rmrk, USERS[0], resource.clone());
+    let resource_id: ResourceId = 1;
+    let resource = Resource::Basic(Default::default());
+    add_resource_entry(&rmrk, USERS[0], resource_id, resource);
 
     // must fail since token does not have any pending resources
-    assert!(reject_resource(&rmrk, USERS[0], token_id, resource.id).main_failed());
+    assert!(reject_resource(&rmrk, USERS[0], token_id, resource_id).main_failed());
 
     // add resource index
-    assert!(!add_resource(&rmrk, USERS[0], token_id, resource.id, 0).main_failed());
+    assert!(!add_resource(&rmrk, USERS[0], token_id, resource_id, 0).main_failed());
 
     // must fail since resource does not exist
     assert!(reject_resource(&rmrk, USERS[0], token_id, 10).main_failed());
 
     // must fail since not owner/approved tries to reject resource
-    assert!(reject_resource(&rmrk, USERS[3], token_id, resource.id).main_failed());
+    assert!(reject_resource(&rmrk, USERS[3], token_id, resource_id).main_failed());
 }
 
 #[test]
 fn reject_resource_from_approved_address() {
     let sys = System::new();
-    before_test(&sys);
+    before_multiresource_test(&sys);
     let rmrk = sys.get_program(1);
     let token_id: u64 = 10;
+    let resource_id: ResourceId = 1;
+    let resource = Resource::Basic(Default::default());
+    add_resource_entry(&rmrk, USERS[0], resource_id, resource);
 
-    let resource = Resource {
-        id: 1,
-        ..Default::default()
-    };
-    add_resource_entry(&rmrk, USERS[0], resource.clone());
-
-    assert!(!add_resource(&rmrk, USERS[0], token_id, resource.id, 0).main_failed());
+    assert!(!add_resource(&rmrk, USERS[0], token_id, resource_id, 0).main_failed());
 
     assert!(!approve(&rmrk, USERS[0], USERS[3], token_id.into()).main_failed());
 
-    assert!(!reject_resource(&rmrk, USERS[3], token_id, resource.id).main_failed());
+    assert!(!reject_resource(&rmrk, USERS[3], token_id, resource_id).main_failed());
 
     // check pending resources
     check_pending_resources(&rmrk, token_id, BTreeSet::new());

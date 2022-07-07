@@ -1,4 +1,4 @@
-use crate::token_tests::utils::*;
+use crate::utils::*;
 use codec::Encode;
 use gtest::System;
 use rmrk_io::*;
@@ -6,7 +6,7 @@ use rmrk_io::*;
 #[test]
 fn transfer_simple() {
     let sys = System::new();
-    before_test(&sys);
+    before_token_test(&sys);
     let rmrk = sys.get_program(2);
     let token_id: u64 = 9;
 
@@ -27,8 +27,8 @@ fn transfer_simple() {
 #[test]
 fn transfer_parent_with_child() {
     let sys = System::new();
-    before_test(&sys);
-    init_rmrk(&sys);
+    before_token_test(&sys);
+    init_rmrk(&sys, None);
     let rmrk_child = sys.get_program(1);
     let rmrk_parent = sys.get_program(2);
     let rmrk_grand = sys.get_program(3);

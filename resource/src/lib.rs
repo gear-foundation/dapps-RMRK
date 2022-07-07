@@ -30,22 +30,24 @@ impl ResourceStorage {
     /// * `metadata_uri`:  a string pointing to a metadata file associated with the resource.
     ///
     /// On success replies [`ResourceEvent::ResourceEntryAdded`].
-    fn add_resource_entry(&mut self, id: u8, src: String, thumb: String, metadata_uri: String) {
-        assert!(id != 0, " Write to zero");
+    fn add_resource_entry(&mut self, resource_id: u8, resource: Resource) {
+        assert!(resource_id != 0, " Write to zero");
         assert!(msg::source() == self.admin, "Not admin");
-        let resource = Resource {
-            id,
-            src,
-            thumb,
-            metadata_uri,
-        };
         assert!(
-            self.resources.insert(id, resource.clone()).is_none(),
+            self.resources
+                .insert(resource_id, resource.clone())
+                .is_none(),
             "resource already exists"
         );
-        self.all_resources.push(resource);
-        msg::reply(ResourceEvent::ResourceEntryAdded { id }, 0)
-            .expect("Error in reply `[ResourceEvent::ResourceEntryAdded]`");
+        self.all_resources.push(resource.clone());
+        msg::reply(
+            ResourceEvent::ResourceEntryAdded {
+                resource_id,
+                resource,
+            },
+            0,
+        )
+        .expect("Error in reply `[ResourceEvent::ResourceEntryAdded]`");
     }
 }
 
@@ -66,11 +68,9 @@ async unsafe fn main() {
     let storage = unsafe { RESOURCE_STORAGE.get_or_insert(Default::default()) };
     match action {
         ResourceAction::AddResourceEntry {
-            id,
-            src,
-            thumb,
-            metadata_uri,
-        } => storage.add_resource_entry(id, src, thumb, metadata_uri),
+            resource_id,
+            resource,
+        } => storage.add_resource_entry(resource_id, resource),
         ResourceAction::GetResource { id } => {
             let resource = storage.resources.get(&id).expect("Resource is not found");
             msg::reply(ResourceEvent::Resource(resource.clone()), 0)

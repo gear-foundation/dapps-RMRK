@@ -1,5 +1,6 @@
 use crate::*;
 use gstd::{exec, msg, ActorId};
+use types::primitives::ResourceId;
 
 impl RMRKToken {
     pub fn assert_zero_address(&self, account: &ActorId) {
@@ -42,5 +43,16 @@ impl RMRKToken {
             }
         }
         self.assert_owner(root_owner);
+    }
+
+    pub fn assert_resource_exists(&self, token_id: TokenId, resource_id: ResourceId) {
+        if let Some(active_resources) = self.multiresource.active_resources.get(&token_id) {
+            assert!(
+                active_resources.contains(&resource_id),
+                "The resource does not exist or not accepted"
+            );
+        } else {
+            panic!("Token has no active resources");
+        }
     }
 }

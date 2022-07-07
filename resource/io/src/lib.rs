@@ -2,17 +2,64 @@
 
 use codec::{Decode, Encode};
 use gstd::prelude::*;
-use primitive_types::U256;
 use scale_info::TypeInfo;
-pub type TokenId = U256;
-pub type ResourceId = u8;
+use types::primitives::{BaseId, PartId, ResourceId, SlotId};
 
 #[derive(Debug, Default, Clone, Encode, Decode, TypeInfo)]
-pub struct Resource {
-    pub id: u8,
+pub struct BasicResource {
+    /// URI like ipfs hash
     pub src: String,
-    pub thumb: String,
+
+    /// If the resource has the thumb property, this will be a URI to a thumbnail of the given
+    /// resource.
+    pub thumb: Option<String>,
+
+    /// Reference to IPFS location of metadata
     pub metadata_uri: String,
+}
+
+#[derive(Debug, Default, Clone, Encode, Decode, TypeInfo)]
+pub struct ComposedResource {
+    /// URI like ipfs hash
+    pub src: String,
+
+    /// If the resource has the thumb property, this will be a URI to a thumbnail of the given
+    /// resource.
+    pub thumb: String,
+
+    /// Reference to IPFS location of metadata
+    pub metadata_uri: String,
+
+    // The address of base contract
+    pub base: BaseId,
+
+    //  If a resource is composed, it will have an array of parts that compose it
+    pub parts: Vec<PartId>,
+}
+
+#[derive(Debug, Default, Clone, Encode, Decode, TypeInfo)]
+pub struct SlotResource {
+    /// URI like ipfs hash
+    pub src: String,
+
+    /// If the resource has the thumb property, this will be a URI to a thumbnail of the given
+    /// resource.
+    pub thumb: String,
+
+    /// Reference to IPFS location of metadata
+    pub metadata_uri: String,
+
+    // The address of base contract
+    pub base: BaseId,
+
+    /// If the resource has the slot property, it was designed to fit into a specific Base's slot.
+    pub slot: SlotId,
+}
+#[derive(Debug, Clone, Encode, Decode, TypeInfo)]
+pub enum Resource {
+    Basic(BasicResource),
+    Slot(SlotResource),
+    Composed(ComposedResource),
 }
 
 #[derive(Debug, Decode, Encode, TypeInfo)]
@@ -37,10 +84,8 @@ pub enum ResourceAction {
     ///
     /// On success replies [`ResourceEvent::ResourceEntryAdded`].
     AddResourceEntry {
-        id: u8,
-        src: String,
-        thumb: String,
-        metadata_uri: String,
+        resource_id: ResourceId,
+        resource: Resource,
     },
 
     /// Used to check from the RMRK contract whether the resource with indicated id exists or not.
@@ -49,11 +94,14 @@ pub enum ResourceAction {
     /// * `id`: is a resource identifier.
     ///
     /// On success replies [`ResourceEvent::Resource`].
-    GetResource { id: u8 },
+    GetResource { id: ResourceId },
 }
 
 #[derive(Debug, Encode, Decode, TypeInfo)]
 pub enum ResourceEvent {
-    ResourceEntryAdded { id: u8 },
+    ResourceEntryAdded {
+        resource_id: ResourceId,
+        resource: Resource,
+    },
     Resource(Resource),
 }
