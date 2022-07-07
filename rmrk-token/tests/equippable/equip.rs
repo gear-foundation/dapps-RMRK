@@ -72,7 +72,7 @@ fn equip_test() {
         &rmrk_child,
         child_token_id,
         slot_resource_id,
-        resource.clone(),
+        resource,
     );
 
     // equip child token: must fail token is not owned by another token

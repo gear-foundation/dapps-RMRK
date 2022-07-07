@@ -4,7 +4,6 @@ use resource_io::{ComposedResource, Resource, SlotResource};
 use types::primitives::ResourceId;
 
 impl RMRKToken {
-
     /// Equips a child NFT's resource to a parent's slot.
     /// It sends message to the parent contract checking the child status
     /// and the parent's resource.
