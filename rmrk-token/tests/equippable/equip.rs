@@ -68,12 +68,7 @@ fn equip_test() {
         slot: slot_part_id,
         ..Default::default()
     });
-    add_resource_to_token(
-        &rmrk_child,
-        child_token_id,
-        slot_resource_id,
-        resource,
-    );
+    add_resource_to_token(&rmrk_child, child_token_id, slot_resource_id, resource);
 
     // equip child token: must fail token is not owned by another token
     assert!(equip(
