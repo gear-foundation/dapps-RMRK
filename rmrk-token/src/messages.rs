@@ -210,3 +210,19 @@ pub async fn check_equippable(
     .await
     .expect("Error in async message `[RMRKAction::CheckEquippable]`");
 }
+
+pub async fn add_part_to_resource(resource_contract_id: ActorId, resource_id: ResourceId, part_id: PartId) {
+    msg::send_for_reply_as::<_, ResourceEvent>(
+        resource_contract_id,
+        ResourceAction::AddPartToResource {
+            resource_id,
+            part_id,
+        },
+        0,
+    )
+    .expect(
+        "Error in sending async message `[ResourceAction::AddPartToResource]` to resource contract",
+    )
+    .await
+    .expect("Error in async message `[ResourceAction::AddPartToResource]`");
+}

@@ -1233,6 +1233,7 @@ dependencies = [
 name = "rmrk-resource"
 version = "0.1.0"
 dependencies = [
+ "base-io",
  "gear-wasm-builder",
  "gstd",
  "gtest",

@@ -88,6 +88,23 @@ pub enum ResourceAction {
         resource: Resource,
     },
 
+    /// Adds part ids to composed resource.
+    ///
+    /// # Requirements:
+    /// * The `msg::source()` must be the contract admin (RMRK contract).
+    /// * `part_id` must exist in the base contract.
+    /// * Resource with indicated `id` must not exist.
+    ///
+    /// # Arguments:
+    /// * `part_id`: the part id to be added to composed resource.
+    /// * `resource_id`: the composed resource id.
+    ///
+    /// On success replies [`ResourceEvent::PartIdAddedToResource`].
+    AddPartToResource {
+        resource_id: ResourceId,
+        part_id: PartId,
+    },
+
     /// Used to check from the RMRK contract whether the resource with indicated id exists or not.
     ///
     /// # Arguments:
@@ -103,5 +120,6 @@ pub enum ResourceEvent {
         resource_id: ResourceId,
         resource: Resource,
     },
+    PartIdAddedToResource(PartId),
     Resource(Resource),
 }

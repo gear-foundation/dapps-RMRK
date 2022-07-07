@@ -1,14 +1,16 @@
 #![no_std]
 
+use base_io::*;
 use gstd::{msg, prelude::*, ActorId};
 use resource_io::*;
+use types::primitives::{PartId, ResourceId};
 
 #[derive(Debug, Default)]
 pub struct ResourceStorage {
     pub name: String,
     // the admin is the rmrk contract that initializes the storage contract
     pub admin: ActorId,
-    pub resources: BTreeMap<u8, Resource>,
+    pub resources: BTreeMap<ResourceId, Resource>,
     pub all_resources: Vec<Resource>,
 }
 
@@ -30,7 +32,7 @@ impl ResourceStorage {
     /// * `metadata_uri`:  a string pointing to a metadata file associated with the resource.
     ///
     /// On success replies [`ResourceEvent::ResourceEntryAdded`].
-    fn add_resource_entry(&mut self, resource_id: u8, resource: Resource) {
+    fn add_resource_entry(&mut self, resource_id: ResourceId, resource: Resource) {
         assert!(resource_id != 0, " Write to zero");
         assert!(msg::source() == self.admin, "Not admin");
         assert!(
@@ -48,6 +50,37 @@ impl ResourceStorage {
             0,
         )
         .expect("Error in reply `[ResourceEvent::ResourceEntryAdded]`");
+    }
+
+    /// Adds part ids to composed resource.
+    ///
+    /// # Requirements:
+    /// * The `msg::source()` must be the contract admin (RMRK contract).
+    /// * `part_id` must exist in the base contract.
+    /// * Resource with indicated `id` must not exist.
+    ///
+    /// # Arguments:
+    /// * `part_id`: the part id to be added to composed resource.
+    /// * `resource_id`: the composed resource id.
+    ///
+    /// On success replies [`ResourceEvent::PartIdAddedToResource`].
+    async fn add_part_to_resource(&mut self, resource_id: ResourceId, part_id: PartId) {
+        assert!(msg::source() == self.admin, "Not admin");
+        let resource = self
+            .resources
+            .get_mut(&resource_id)
+            .expect("Resource with indicated id does not exist");
+        if let Resource::Composed(ComposedResource { base, parts, .. }) = resource {
+            // check that part exist in base contract
+            msg::send_for_reply_as::<_, BaseEvent>(*base, BaseAction::CheckPart(part_id), 0)
+                .expect("Error in sending async message `[BaseAction::CheckPart]` to base contract")
+                .await
+                .expect("Error in async message `[BaseAction::CheckPart]`");
+            parts.push(part_id);
+        }
+
+        msg::reply(ResourceEvent::PartIdAddedToResource(part_id), 0)
+            .expect("Error in reply `[ResourceEvent::PartIdAddedToResource]`");
     }
 }
 
@@ -71,6 +104,10 @@ async unsafe fn main() {
             resource_id,
             resource,
         } => storage.add_resource_entry(resource_id, resource),
+        ResourceAction::AddPartToResource {
+            resource_id,
+            part_id,
+        } => storage.add_part_to_resource(resource_id, part_id).await,
         ResourceAction::GetResource { id } => {
             let resource = storage.resources.get(&id).expect("Resource is not found");
             msg::reply(ResourceEvent::Resource(resource.clone()), 0)

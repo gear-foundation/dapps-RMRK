@@ -4,6 +4,26 @@ use resource_io::{ComposedResource, Resource, SlotResource};
 use types::primitives::ResourceId;
 
 impl RMRKToken {
+
+    /// Equips a child NFT's resource to a parent's slot.
+    /// It sends message to the parent contract checking the child status
+    /// and the parent's resource.
+    /// If checks in parent contract are passed, parent contract sends message to resource contract
+    /// to add slot id to composed resource.
+    ///
+    /// # Requirements:
+    /// * The `msg::source()` must be the root owner.
+    /// * The child token must have the slot resource with indicated `base_id` and `slot_id`.
+    /// * The parent token must have composed resource with indicated `base_id`.
+    ///
+    /// # Arguments:
+    /// * `token_id`:  the tokenId of the NFT to be equipped.
+    /// * `resource_id`: the id of the slot resource.
+    /// * `equippable`: parent's contract and token.
+    /// * `equippable_resource_id`: the id of the composed resource.
+    ///
+    /// On success replies [`RMRKEvent::TokenEquipped`].
+
     pub async fn equip(
         &mut self,
         token_id: TokenId,
@@ -82,6 +102,8 @@ impl RMRKToken {
         if let Resource::Composed(ComposedResource { base, .. }) = resource {
             // check that the token in equippable list
             check_is_in_equippable_list(base, slot_id, token_id).await;
+            // add part to composed resource
+            add_part_to_resource(self.resource_id, resource_id, slot_id).await;
         } else {
             panic!("The resource must be composed");
         }

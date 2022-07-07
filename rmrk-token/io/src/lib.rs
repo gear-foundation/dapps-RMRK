@@ -379,6 +379,14 @@ pub enum RMRKAction {
     /// * The `msg::source()` must be the root owner.
     /// * The child token must have the slot resource with indicated `base_id` and `slot_id`.
     /// * The parent token must have composed resource with indicated `base_id`.
+    ///
+    /// # Arguments:
+    /// * `token_id`:  the tokenId of the NFT to be equipped.
+    /// * `resource_id`: the id of the slot resource.
+    /// * `equippable`: parent's contract and token.
+    /// * `equippable_resource_id`: the id of the composed resource.
+    ///
+    /// On success replies [`RMRKEvent::TokenEquipped`].
     Equip {
         token_id: TokenId,
         resource_id: ResourceId,
@@ -386,20 +394,25 @@ pub enum RMRKAction {
         equippable_resource_id: ResourceId,
     },
 
-    /// That message is designed to be send from another RMRK contracts
-    /// when minting an NFT(child_token_id) to another NFT(parent_token_id).
-    /// It adds a child to the NFT with tokenId `parent_token_id`
-    /// The status of added child is `Pending`.
+    /// That message is designed to be sent from another RMRK contracts
+    /// when equipping  `child_token_id` to `parent_token_id`.
+    /// It checks that `parent_token_id` has the child with `child_token_id` in its accepted children.
+    /// It checks that `parent_token_id` has composed resource.
+    /// It sends a message to base contract to check whether the `parent_token_id` is in equippable list.
+    /// It sends a message to resource contract to add part id to composed resource.
     ///
     /// # Requirements:
-    /// * Token with TokenId `parent_token_id` must exist.
-    /// * There cannot be two identical children.
+    /// * `msg::source()` must be the child contract.
+    /// * The resource with indicated id must exist in the token resources and must be Composed.
+    /// * The `parent_token_id` must be in the equippable list.
     ///
     /// # Arguments:
-    /// * `parent_token_id`: is the tokenId of the parent NFT.
-    /// * `child_token_id`: is the tokenId of the child instance.
+    /// * `parent_token_id`: the id of the equippable token.
+    /// * `child_token_id`: the id of the token to be equipped.
+    /// * `resource_id`: the id of the composed resource.
+    /// * `slot_id`: the id of the slot part.
     ///
-    /// On success replies [`RMRKEvent::PendingChild`].
+    /// On success replies [`RMRKEvent::EquippableIsOk`].
     CheckEquippable {
         parent_token_id: TokenId,
         child_token_id: TokenId,
