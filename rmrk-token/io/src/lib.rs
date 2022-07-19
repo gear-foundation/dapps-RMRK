@@ -1,9 +1,7 @@
 #![no_std]
 
-use codec::{Decode, Encode};
 use gstd::{prelude::*, ActorId};
 use resource_io::Resource;
-use scale_info::TypeInfo;
 use types::primitives::*;
 
 #[derive(Debug, Decode, Encode, TypeInfo)]
@@ -25,7 +23,7 @@ pub enum RMRKAction {
     /// Mints token that will belong to another token in another RMRK contract.
     ///
     /// # Requirements:
-    /// * The `parent_id`  must be a deployed RMRK contract.
+    /// * The `parent_id` must be a deployed RMRK contract.
     /// * The token with id `parent_token_id` must exist in `parent_id` contract.
     /// * The `token_id` must not exist.
     ///
@@ -326,7 +324,7 @@ pub enum RMRKAction {
     /// * `token_id`: an id of the token.
     /// * `resource_id`: a resource to be accepted.
     ///
-    /// On success reply  `[RMRKEvent::ResourceAccepted]`.
+    /// On success reply `[RMRKEvent::ResourceAccepted]`.
     AcceptResource {
         token_id: TokenId,
         resource_id: u8,
@@ -342,7 +340,7 @@ pub enum RMRKAction {
     /// * `token_id`: an id of the token.
     /// * `resource_id`: a resource to be rejected.
     ///
-    /// On success reply  `[RMRKEvent::ResourceRejected]`.
+    /// On success reply `[RMRKEvent::ResourceRejected]`.
     RejectResource {
         token_id: TokenId,
         resource_id: u8,
@@ -381,7 +379,7 @@ pub enum RMRKAction {
     /// * The parent token must have composed resource with indicated `base_id`.
     ///
     /// # Arguments:
-    /// * `token_id`:  the tokenId of the NFT to be equipped.
+    /// * `token_id`: the tokenId of the NFT to be equipped.
     /// * `resource_id`: the id of the slot resource.
     /// * `equippable`: parent's contract and token.
     /// * `equippable_resource_id`: the id of the composed resource.
@@ -417,13 +415,13 @@ pub enum RMRKAction {
         parent_token_id: TokenId,
         child_token_id: TokenId,
         resource_id: ResourceId,
-        slot_id: SlotId,
+        slot_id: PartId,
     },
     CheckSlotResource {
         token_id: TokenId,
         resource_id: ResourceId,
         base_id: BaseId,
-        slot_id: SlotId,
+        slot_id: PartId,
     },
 }
 
@@ -518,7 +516,7 @@ pub enum RMRKEvent {
     TokenEquipped {
         token_id: TokenId,
         resource_id: ResourceId,
-        slot_id: SlotId,
+        slot_id: PartId,
         equippable: CollectionAndToken,
     },
     EquippableIsOk,
@@ -526,6 +524,7 @@ pub enum RMRKEvent {
 
 #[derive(Debug, Decode, Encode, TypeInfo)]
 pub enum RMRKState {
+    RMRKInfo,
     Owner(TokenId),
     Balance(ActorId),
     PendingChildren(TokenId),
@@ -536,6 +535,12 @@ pub enum RMRKState {
 
 #[derive(Debug, Decode, Encode, TypeInfo, PartialEq, Eq)]
 pub enum RMRKStateReply {
+    RMRKInfo {
+        name: String,
+        symbol: String,
+        admin: ActorId,
+        resource_id: ActorId,
+    },
     Owner {
         token_id: Option<TokenId>,
         owner_id: ActorId,

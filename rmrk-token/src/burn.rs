@@ -21,7 +21,7 @@ impl RMRKToken {
         let rmrk_owner = self
             .rmrk_owners
             .remove(&token_id)
-            .expect("Token does not exist");
+            .expect("RMRK: Token does not exist");
         // If the burnt NFT is a child of another NFT.
         if let Some(parent_token_id) = rmrk_owner.token_id {
             burn_child(&rmrk_owner.owner_id, parent_token_id, token_id).await;
@@ -36,7 +36,7 @@ impl RMRKToken {
 
         msg::reply(
             RMRKEvent::Transfer {
-                to: ZERO_ID,
+                to: ActorId::zero(),
                 token_id,
             },
             0,

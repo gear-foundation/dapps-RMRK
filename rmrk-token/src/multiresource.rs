@@ -1,6 +1,6 @@
 use crate::*;
 use resource_io::Resource;
-use types::primitives::{BaseId, ResourceId, SlotId, TokenId};
+use types::primitives::{BaseId, PartId, ResourceId, TokenId};
 pub const MAX_RESOURCE_LEN: u8 = 128;
 
 #[derive(Debug, Default)]
@@ -114,9 +114,12 @@ impl RMRKToken {
         if let Some(pending_resources) = self.multiresource.pending_resources.get_mut(&token_id) {
             assert!(
                 pending_resources.remove(&resource_id),
-                "Resource does not exist"
+                "RMRK: Resource does not exist in token pending resources"
             );
+        } else {
+            panic!("RMRK: Token has no pending resources")
         }
+
         if let Some(resources) = self.multiresource.resource_overwrites.get_mut(&token_id) {
             if let Some(overwrite_resource) = resources.remove(&resource_id) {
                 self.multiresource
@@ -158,10 +161,10 @@ impl RMRKToken {
         if let Some(pending_resources) = self.multiresource.pending_resources.get_mut(&token_id) {
             assert!(
                 pending_resources.remove(&resource_id),
-                "Resource does not exist"
+                "RMRK: Resource does not exist"
             );
         } else {
-            panic!("Token does not have any pending resources");
+            panic!("RMRK: Token has no pending resources")
         }
 
         msg::reply(
@@ -214,13 +217,12 @@ impl RMRKToken {
         .expect("Error in reply `[RMRKEvent::PrioritySet]`");
     }
 
-    //
     pub async fn check_slot_resource(
         &self,
         token_id: TokenId,
         resource_id: ResourceId,
         base_id: BaseId,
-        slot_id: SlotId,
+        slot_id: PartId,
     ) {
         assert!(
             self.multiresource

@@ -38,7 +38,7 @@ impl RMRKToken {
         self.assert_owner(&root_owner);
 
         // check that resource exists for token
-        self.assert_resource_exists(token_id, resource_id);
+        self.assert_resource_exists_on_token(token_id, resource_id);
 
         // sends message to resource contract to check that the token has slot resource and get slot id from it
         let resource = get_resource(&self.resource_id, resource_id).await;
@@ -80,7 +80,7 @@ impl RMRKToken {
         token_id: TokenId,
         child_token_id: TokenId,
         resource_id: ResourceId,
-        slot_id: SlotId,
+        slot_id: PartId,
     ) {
         let child_token = (msg::source(), child_token_id);
         // check that token has the indicated child in the accepted child array
@@ -94,7 +94,7 @@ impl RMRKToken {
         }
 
         // check that token has the indicated resource
-        self.assert_resource_exists(token_id, resource_id);
+        self.assert_resource_exists_on_token(token_id, resource_id);
 
         // check that resource is composed
         let resource = get_resource(&self.resource_id, resource_id).await;

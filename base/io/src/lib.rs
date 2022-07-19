@@ -1,24 +1,22 @@
 #![no_std]
 
-use codec::{Decode, Encode};
 use gstd::{prelude::*, ActorId};
-use scale_info::TypeInfo;
 use types::primitives::*;
 
 #[derive(Debug, Default, Encode, Decode, TypeInfo)]
-pub struct Base {
+struct Base {
     /// Original creator of the Base.
-    pub issuer: ActorId,
+    issuer: ActorId,
 
     /// Specifies how an NFT should be rendered, ie "svg".
-    pub base_type: String,
+    base_type: String,
 
-    /// Provided ny user during Base creation.
-    pub symbol: String,
+    /// Provided by user during Base creation.
+    symbol: String,
 
     /// Parts that the base has.
     /// Mapping from `PartId` to fixed or slot `Part`.
-    pub parts: BTreeMap<PartId, Part>,
+    parts: BTreeMap<PartId, Part>,
 }
 
 #[derive(Debug, Clone, Encode, Decode, TypeInfo, PartialEq, Eq)]
@@ -26,6 +24,7 @@ pub enum EquippableList {
     All,
     Custom(BTreeSet<CollectionAndToken>),
 }
+
 #[derive(Debug, Clone, Default, Encode, Decode, TypeInfo, Eq, PartialEq)]
 pub struct FixedPart {
     /// An optional zIndex of base part layer.

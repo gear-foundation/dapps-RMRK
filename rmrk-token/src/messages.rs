@@ -152,28 +152,6 @@ pub async fn get_resource(resource_address: &ActorId, id: ResourceId) -> Resourc
     }
 }
 
-pub async fn check_slot_resource(
-    child_contract_id: ActorId,
-    token_id: TokenId,
-    resource_id: ResourceId,
-    base_id: BaseId,
-    slot_id: SlotId,
-) {
-    msg::send_for_reply_as::<_, RMRKEvent>(
-        child_contract_id,
-        RMRKAction::CheckSlotResource {
-            token_id,
-            resource_id,
-            base_id,
-            slot_id,
-        },
-        0,
-    )
-    .expect("Error in sending async message `[RMRKAction::CheckSlotResource]` to rmrk contract")
-    .await
-    .expect("Error in async message `[RMRKAction::CheckSlotResource]`");
-}
-
 pub async fn check_is_in_equippable_list(base_id: BaseId, part_id: PartId, token_id: TokenId) {
     msg::send_for_reply_as::<_, BaseEvent>(
         base_id,
@@ -194,7 +172,7 @@ pub async fn check_equippable(
     parent_token_id: TokenId,
     child_token_id: TokenId,
     resource_id: ResourceId,
-    slot_id: SlotId,
+    slot_id: PartId,
 ) {
     msg::send_for_reply_as::<_, RMRKEvent>(
         parent_contract_id,

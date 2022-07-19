@@ -4,7 +4,7 @@ use types::primitives::ResourceId;
 
 impl RMRKToken {
     pub fn assert_zero_address(&self, account: &ActorId) {
-        assert!(account != &ZERO_ID, "RMRK: Zero address");
+        assert!(account != &ActorId::zero(), "RMRK: Zero address");
     }
 
     /// Checks that NFT with indicated ID already exists
@@ -25,7 +25,7 @@ impl RMRKToken {
     pub fn assert_owner(&self, root_owner: &ActorId) {
         debug!("OWNER {:?}", root_owner);
         if msg::source() != *root_owner {
-            panic!("Wrong owner");
+            panic!("RMRK: Wrong owner");
         }
     }
 
@@ -37,15 +37,15 @@ impl RMRKToken {
         }
     }
     pub fn assert_approved_or_owner(&self, token_id: TokenId, root_owner: &ActorId) {
-        if let Some(approved_accounts) = self.token_approvals.get(&token_id) {
-            if approved_accounts.contains(&msg::source()) {
-                return;
-            }
+        if !matches!(
+            self.token_approvals.get(&token_id),
+            Some(approved_accounts) if approved_accounts.contains(&msg::source())
+        ) {
+            self.assert_owner(root_owner);
         }
-        self.assert_owner(root_owner);
     }
 
-    pub fn assert_resource_exists(&self, token_id: TokenId, resource_id: ResourceId) {
+    pub fn assert_resource_exists_on_token(&self, token_id: TokenId, resource_id: ResourceId) {
         if let Some(active_resources) = self.multiresource.active_resources.get(&token_id) {
             assert!(
                 active_resources.contains(&resource_id),

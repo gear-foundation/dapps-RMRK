@@ -1,123 +1,120 @@
 use crate::utils::*;
-use codec::Encode;
 use gstd::BTreeSet;
-use gtest::System;
-use rmrk_io::*;
+use gtest::{Program, System};
 use types::primitives::{CollectionId, TokenId};
+
 #[test]
 fn burn_simple() {
     let sys = System::new();
-    before_token_test(&sys);
-    let rmrk = sys.get_program(PARENT_NFT_CONTRACT);
+    let rmrk = Program::rmrk(&sys, None);
+
     let token_id: u64 = 5;
-    let res = burn(&rmrk, USERS[0], token_id);
-    assert!(res.contains(&(
-        USERS[0],
-        RMRKEvent::Transfer {
-            to: ZERO_ID.into(),
-            token_id: token_id.into(),
-        }
-        .encode()
-    )));
+
+    // mint
+    rmrk.mint_to_root_owner(USERS[0], USERS[0], token_id, None);
+
+    // burn
+    rmrk.burn(USERS[0], token_id, None);
 
     // check that token does not exist
-    check_rmrk_owner(&rmrk, token_id, None, ZERO_ID);
+    rmrk.check_rmrk_owner(token_id, None, ZERO_ID);
 }
 
 #[test]
 fn burn_simple_failures() {
     let sys = System::new();
-    before_token_test(&sys);
-    let rmrk = sys.get_program(2);
+    sys.init_logger();
+    let rmrk = Program::rmrk(&sys, None);
+
+    let token_id: u64 = 5;
+
+    // mint
+    rmrk.mint_to_root_owner(USERS[0], USERS[0], token_id, None);
+
     // must fail since caller is not owner and not approved
-    assert!(burn(&rmrk, USERS[3], 5).main_failed());
+    rmrk.burn(USERS[3], token_id, Some("RMRK: Wrong owner"));
+
+    // must fail since token does not exist
+    rmrk.burn(USERS[3], token_id + 1, Some("RMRK: Token does not exist"));
 }
 
 #[test]
 fn burn_nested_token() {
     let sys = System::new();
-    before_token_test(&sys);
-    let rmrk_child = sys.get_program(1);
-    let rmrk_parent = sys.get_program(2);
+
+    sys.init_logger();
+    let rmrk_child = Program::rmrk(&sys, None);
+    let rmrk_parent = Program::rmrk(&sys, None);
+
     let child_accepted_token_id: u64 = 8;
     let child_pending_token_id: u64 = 9;
     let parent_token_id: u64 = 10;
 
+    // mint `parent_token_id`
+    rmrk_parent.mint_to_root_owner(USERS[0], USERS[1], parent_token_id, None);
+
     // mint child_token_id to parent_token_id
-    assert!(!mint_to_nft(
-        &rmrk_child,
+    rmrk_child.mint_to_nft(
         USERS[1],
         PARENT_NFT_CONTRACT,
         parent_token_id,
         child_pending_token_id,
-    )
-    .main_failed());
+        None,
+    );
 
     // mint child_token_id to parent_token_id
-    assert!(!mint_to_nft(
-        &rmrk_child,
+    rmrk_child.mint_to_nft(
         USERS[1],
         PARENT_NFT_CONTRACT,
         parent_token_id,
         child_accepted_token_id,
-    )
-    .main_failed());
+        None,
+    );
 
     // accept one child
-    assert!(!accept_child(
-        &rmrk_parent,
-        USERS[0],
+    rmrk_parent.accept_child(
+        USERS[1],
         parent_token_id,
         CHILD_NFT_CONTRACT,
         child_accepted_token_id,
-    )
-    .main_failed());
-    let res = burn(&rmrk_child, USERS[0], child_pending_token_id);
-    assert!(res.contains(&(
-        USERS[0],
-        RMRKEvent::Transfer {
-            to: ZERO_ID.into(),
-            token_id: child_pending_token_id.into(),
-        }
-        .encode()
-    )));
-    let res = burn(&rmrk_child, USERS[0], child_accepted_token_id);
-    assert!(res.contains(&(
-        USERS[0],
-        RMRKEvent::Transfer {
-            to: ZERO_ID.into(),
-            token_id: child_accepted_token_id.into(),
-        }
-        .encode()
-    )));
+        None,
+    );
+
+    rmrk_child.burn(USERS[1], child_pending_token_id, None);
+    rmrk_child.burn(USERS[1], child_accepted_token_id, None);
 
     // check that parent contract has no pending children
-    check_pending_children(&rmrk_parent, parent_token_id, BTreeSet::new());
+    rmrk_parent.check_pending_children(parent_token_id, BTreeSet::new());
 
     // check that parent contract has no accepted children
-    check_accepted_children(&rmrk_parent, parent_token_id, BTreeSet::new());
+    rmrk_parent.check_accepted_children(parent_token_id, BTreeSet::new());
 }
 
 #[test]
 fn burn_nested_token_failures() {
     let sys = System::new();
-    before_token_test(&sys);
-    let rmrk_child = sys.get_program(1);
+
+    sys.init_logger();
+    let rmrk_child = Program::rmrk(&sys, None);
+    let rmrk_parent = Program::rmrk(&sys, None);
+
     let child_token_id: u64 = 9;
     let parent_token_id: u64 = 10;
 
+    // mint `parent_token_id`
+    rmrk_parent.mint_to_root_owner(USERS[0], USERS[1], parent_token_id, None);
+
     // mint child_token_id to parent_token_id
-    assert!(!mint_to_nft(
-        &rmrk_child,
+    rmrk_child.mint_to_nft(
         USERS[1],
         PARENT_NFT_CONTRACT,
-        child_token_id,
         parent_token_id,
-    )
-    .main_failed());
+        child_token_id,
+        None,
+    );
 
     // must fail since caller is not root owner of the nested child token
-    assert!(burn(&rmrk_child, USERS[3], child_token_id).main_failed());
+    rmrk_child.burn(USERS[3], child_token_id, Some("RMRK: Wrong owner"));
 }
 
 // ownership chain is now USERS[0] > parent_token_id > child_token_id > grand_token_id
@@ -126,11 +123,9 @@ fn burn_nested_token_failures() {
 #[test]
 fn recursive_burn_nested_token() {
     let sys = System::new();
-    before_token_test(&sys);
-    init_rmrk(&sys, None);
-    let rmrk_child = sys.get_program(1);
-    let rmrk_parent = sys.get_program(2);
-    let rmrk_grand = sys.get_program(3);
+    let rmrk_child = Program::rmrk(&sys, None);
+    let rmrk_parent = Program::rmrk(&sys, None);
+    let rmrk_grand = Program::rmrk(&sys, None);
     let child_token_id: u64 = 9;
     let parent_token_id: u64 = 10;
     let grand_token_id: u64 = 11;
@@ -148,24 +143,24 @@ fn recursive_burn_nested_token() {
     // check accepted children of parent_token_id
     let mut accepted_children: BTreeSet<(CollectionId, TokenId)> = BTreeSet::new();
     accepted_children.insert((CHILD_NFT_CONTRACT.into(), child_token_id.into()));
-    check_accepted_children(&rmrk_parent, parent_token_id, accepted_children);
+    rmrk_parent.check_accepted_children(parent_token_id, accepted_children);
 
     // check accepted children of child_token_id
     let mut accepted_children: BTreeSet<(CollectionId, TokenId)> = BTreeSet::new();
     accepted_children.insert((3.into(), grand_token_id.into()));
-    check_accepted_children(&rmrk_child, child_token_id, accepted_children);
+    rmrk_child.check_accepted_children(child_token_id, accepted_children);
 
     // burn child
-    assert!(!burn(&rmrk_child, USERS[0], child_token_id).main_failed());
+    rmrk_child.burn(USERS[0], child_token_id, None);
 
     // check that parent_token_id has no accepted children
-    check_accepted_children(&rmrk_parent, parent_token_id, BTreeSet::new());
+    rmrk_parent.check_accepted_children(parent_token_id, BTreeSet::new());
 
     // check that child_token_id does not exist
-    check_rmrk_owner(&rmrk_child, child_token_id, None, ZERO_ID);
+    rmrk_child.check_rmrk_owner(child_token_id, None, ZERO_ID);
 
     // check that grand_token_id does not exist
-    check_rmrk_owner(&rmrk_grand, grand_token_id, None, ZERO_ID);
+    rmrk_grand.check_rmrk_owner(grand_token_id, None, ZERO_ID);
 }
 
 // ownership chain is now USERS[0] > parent_token_id > child_token_id > grand_token_id
@@ -174,11 +169,10 @@ fn recursive_burn_nested_token() {
 #[test]
 fn recursive_burn_parent_token() {
     let sys = System::new();
-    before_token_test(&sys);
-    init_rmrk(&sys, None);
-    let rmrk_child = sys.get_program(1);
-    let rmrk_parent = sys.get_program(2);
-    let rmrk_grand = sys.get_program(3);
+    sys.init_logger();
+    let rmrk_child = Program::rmrk(&sys, None);
+    let rmrk_parent = Program::rmrk(&sys, None);
+    let rmrk_grand = Program::rmrk(&sys, None);
     let child_token_id: u64 = 9;
     let parent_token_id: u64 = 10;
     let grand_token_id: u64 = 11;
@@ -194,11 +188,11 @@ fn recursive_burn_parent_token() {
     );
 
     // burn parent_token_id
-    assert!(!burn(&rmrk_parent, USERS[0], parent_token_id).main_failed());
+    rmrk_parent.burn(USERS[0], parent_token_id, None);
 
     // check that child_token_id does not exist
-    check_rmrk_owner(&rmrk_child, child_token_id, None, ZERO_ID);
+    rmrk_child.check_rmrk_owner(child_token_id, None, ZERO_ID);
 
     // check that grand_token_id does not exist
-    check_rmrk_owner(&rmrk_grand, grand_token_id, None, ZERO_ID);
+    rmrk_grand.check_rmrk_owner(grand_token_id, None, ZERO_ID);
 }

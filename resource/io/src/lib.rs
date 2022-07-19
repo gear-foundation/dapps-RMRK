@@ -1,9 +1,7 @@
 #![no_std]
 
-use codec::{Decode, Encode};
-use gstd::prelude::*;
-use scale_info::TypeInfo;
-use types::primitives::{BaseId, PartId, ResourceId, SlotId};
+use gstd::{prelude::*, ActorId};
+use types::primitives::{BaseId, PartId, ResourceId};
 
 #[derive(Debug, Default, Clone, Encode, Decode, TypeInfo)]
 pub struct BasicResource {
@@ -53,7 +51,7 @@ pub struct SlotResource {
     pub base: BaseId,
 
     /// If the resource has the slot property, it was designed to fit into a specific Base's slot.
-    pub slot: SlotId,
+    pub slot: PartId,
 }
 #[derive(Debug, Clone, Encode, Decode, TypeInfo)]
 pub enum Resource {
@@ -77,10 +75,8 @@ pub enum ResourceAction {
     /// * Resource with indicated `id` must not exist.
     ///
     /// # Arguments:
-    /// * `id`: is a resource identifier.
-    /// * `src`: a string pointing to the media associated with the resource.
-    /// * `thumb`: a string pointing to thumbnail media associated with the resource.
-    /// * `metadata_uri`:  a string pointing to a metadata file associated with the resource.
+    /// * `resource_id`: is a resource identifier.
+    /// * `resource`: is a resource struct that can be `Basic`, `Slot` or `Composed`.
     ///
     /// On success replies [`ResourceEvent::ResourceEntryAdded`].
     AddResourceEntry {
@@ -122,4 +118,20 @@ pub enum ResourceEvent {
     },
     PartIdAddedToResource(PartId),
     Resource(Resource),
+}
+
+#[derive(Debug, Decode, Encode, TypeInfo)]
+pub enum ResourceState {
+    ResourceStorageInfo,
+    ResourceInfo(ResourceId),
+}
+
+#[derive(Debug, Decode, Encode, TypeInfo)]
+pub enum ResourceStateReply {
+    ResourceStorageInfo {
+        name: String,
+        admin: ActorId,
+        resources: BTreeMap<ResourceId, Resource>,
+    },
+    ResourceInfo(Option<Resource>),
 }

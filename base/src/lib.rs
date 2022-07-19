@@ -20,7 +20,7 @@ impl Base {
         for (part_id, part) in parts.clone() {
             assert!(
                 self.parts.insert(part_id, part).is_none(),
-                "The part with that `PartId` already exists"
+                "The part with that the one of given `PartId`'s already exists"
             );
         }
         msg::reply(BaseEvent::PartsAdded(parts), 0)
@@ -32,7 +32,7 @@ impl Base {
         for part_id in parts.clone() {
             assert!(
                 self.parts.remove(&part_id).is_some(),
-                "That part does not exist"
+                "One of given parts does not exist"
             );
         }
         msg::reply(BaseEvent::PartsRemoved(parts), 0)
@@ -122,7 +122,7 @@ impl Base {
 
 #[no_mangle]
 extern "C" fn init() {
-    let config: InitBase = msg::load().expect("Unable to decode InitResource");
+    let config: InitBase = msg::load().expect("Unable to decode InitBase");
     let base = Base {
         issuer: msg::source(),
         base_type: config.base_type,
@@ -160,7 +160,7 @@ extern "C" fn handle() {
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn meta_state() -> *mut [i32; 2] {
+unsafe extern "C" fn meta_state() -> *mut [i32; 2] {
     let query: BaseState = msg::load().expect("failed to decode BaseState");
     let base = BASE.get_or_insert(Default::default());
 

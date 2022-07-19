@@ -5,7 +5,7 @@ impl RMRKToken {
     /// Mints token that will belong to another token in another RMRK contract.
     ///
     /// # Requirements:
-    /// * The `parent_id`  must be a deployed RMRK contract.
+    /// * The `parent_id` must be a deployed RMRK contract.
     /// * The token with id `parent_token_id` must exist in `parent_id` contract.
     /// * The `token_id` must not exist.
     ///

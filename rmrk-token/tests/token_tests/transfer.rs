@@ -1,37 +1,34 @@
 use crate::utils::*;
-use codec::Encode;
-use gtest::System;
-use rmrk_io::*;
+use gtest::{Program, System};
 
 #[test]
 fn transfer_simple() {
     let sys = System::new();
-    before_token_test(&sys);
-    let rmrk = sys.get_program(2);
+    let rmrk = Program::rmrk(&sys, None);
     let token_id: u64 = 9;
 
-    let res = transfer(&rmrk, USERS[0], USERS[3], token_id.into());
-    assert!(res.contains(&(
-        USERS[0],
-        RMRKEvent::Transfer {
-            to: USERS[3].into(),
-            token_id: token_id.into(),
-        }
-        .encode()
-    )));
+    // mint token
+    rmrk.mint_to_root_owner(USERS[0], USERS[0], token_id, None);
+
+    // transfer token
+    rmrk.transfer(USERS[0], USERS[3], token_id, None);
 
     // check that RMRK owner
-    check_rmrk_owner(&rmrk, token_id, None, USERS[3]);
+    rmrk.check_rmrk_owner(token_id, None, USERS[3]);
+
+    // check the balance of previous owner
+    rmrk.check_balance(USERS[0], 0);
+
+    // check the balance of new owner
+    rmrk.check_balance(USERS[3], 1);
 }
 
 #[test]
 fn transfer_parent_with_child() {
     let sys = System::new();
-    before_token_test(&sys);
-    init_rmrk(&sys, None);
-    let rmrk_child = sys.get_program(1);
-    let rmrk_parent = sys.get_program(2);
-    let rmrk_grand = sys.get_program(3);
+    let rmrk_child = Program::rmrk(&sys, None);
+    let rmrk_parent = Program::rmrk(&sys, None);
+    let rmrk_grand = Program::rmrk(&sys, None);
     let child_token_id: u64 = 9;
     let parent_token_id: u64 = 10;
     let grand_token_id: u64 = 11;
@@ -46,13 +43,11 @@ fn transfer_parent_with_child() {
         parent_token_id,
     );
 
-    assert!(!transfer(&rmrk_parent, USERS[0], USERS[3], parent_token_id.into()).main_failed());
+    rmrk_parent.transfer(USERS[0], USERS[3], parent_token_id, None);
 
     // check root_owner of child_token_id
-    let res = get_root_owner(&rmrk_child, child_token_id.into());
-    assert!(res.contains(&(10, RMRKEvent::RootOwner(USERS[3].into(),).encode())));
+    rmrk_child.check_root_owner(child_token_id, USERS[3]);
 
     // check root_owner of grand_token_id
-    let res = get_root_owner(&rmrk_grand, grand_token_id.into());
-    assert!(res.contains(&(10, RMRKEvent::RootOwner(USERS[3].into(),).encode())));
+    rmrk_grand.check_root_owner(grand_token_id, USERS[3]);
 }

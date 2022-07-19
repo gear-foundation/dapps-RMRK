@@ -191,7 +191,7 @@ impl RMRKToken {
         let child_status = self
             .children_status
             .get(&child_token)
-            .expect("The child does not exist");
+            .expect("RMRK: The child does not exist");
 
         let from_root_owner = self.find_root_owner(from).await;
         let to_root_owner = self.find_root_owner(to).await;
@@ -328,10 +328,10 @@ impl RMRKToken {
             ChildStatus::Pending => {
                 if let Some(children) = self.pending_children.get_mut(&parent_token_id) {
                     if !children.remove(&child_token) {
-                        panic!("RMRKCore: child does not exist in pending array or has already been accepted");
+                        panic!("RMRK: child does not exist in pending array or has already been accepted");
                     }
                 } else {
-                    panic!("RMRKCore: there are no pending children at all");
+                    panic!("RMRK: there are no pending children at all");
                 }
             }
             ChildStatus::Accepted => {
@@ -339,7 +339,7 @@ impl RMRKToken {
                     if children.contains(&child_token) {
                         children.remove(&child_token);
                     } else {
-                        panic!("RMRKCore: child does not exist");
+                        panic!("RMRK: child does not exist");
                     }
                 }
             }

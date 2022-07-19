@@ -1,19 +1,18 @@
 #![no_std]
 
-use codec::Encode;
 use gstd::{debug, msg, prelude::*, prog::ProgramGenerator, ActorId};
 use resource_io::{InitResource, ResourceAction, ResourceEvent};
 use rmrk_io::*;
-use types::primitives::{BaseId, CollectionAndToken, SlotId, TokenId};
-pub mod burn;
-pub mod checks;
-pub mod children;
-pub mod equippable;
-pub mod messages;
-pub mod transfer;
+use types::primitives::{BaseId, CollectionAndToken, PartId, TokenId};
+mod burn;
+mod checks;
+mod children;
+mod equippable;
+mod messages;
+mod transfer;
 use messages::*;
-pub mod mint;
-pub mod multiresource;
+mod mint;
+mod multiresource;
 use multiresource::*;
 
 gstd::metadata! {
@@ -29,30 +28,28 @@ gstd::metadata! {
 }
 
 #[derive(Debug, Default, PartialEq, Eq)]
-pub struct RMRKOwner {
-    pub token_id: Option<TokenId>,
-    pub owner_id: ActorId,
+struct RMRKOwner {
+    token_id: Option<TokenId>,
+    owner_id: ActorId,
 }
 
 #[derive(Debug, Default)]
-pub struct RMRKToken {
-    pub name: String,
-    pub symbol: String,
-    pub admin: ActorId,
-    pub token_approvals: BTreeMap<TokenId, BTreeSet<ActorId>>,
-    pub rmrk_owners: BTreeMap<TokenId, RMRKOwner>,
-    pub pending_children: BTreeMap<TokenId, BTreeSet<CollectionAndToken>>,
-    pub accepted_children: BTreeMap<TokenId, BTreeSet<CollectionAndToken>>,
-    pub children_status: BTreeMap<CollectionAndToken, ChildStatus>,
-    pub balances: BTreeMap<ActorId, TokenId>,
-    pub multiresource: MultiResource,
-    pub resource_hash: [u8; 32],
-    pub resource_id: ActorId,
-    pub equipped_tokens: BTreeSet<TokenId>,
+struct RMRKToken {
+    name: String,
+    symbol: String,
+    admin: ActorId,
+    token_approvals: BTreeMap<TokenId, BTreeSet<ActorId>>,
+    rmrk_owners: BTreeMap<TokenId, RMRKOwner>,
+    pending_children: BTreeMap<TokenId, BTreeSet<CollectionAndToken>>,
+    accepted_children: BTreeMap<TokenId, BTreeSet<CollectionAndToken>>,
+    children_status: BTreeMap<CollectionAndToken, ChildStatus>,
+    balances: BTreeMap<ActorId, TokenId>,
+    multiresource: MultiResource,
+    resource_id: ActorId,
+    equipped_tokens: BTreeSet<TokenId>,
 }
 
 static mut RMRK: Option<RMRKToken> = None;
-pub const ZERO_ID: ActorId = ActorId::new([0u8; 32]);
 
 impl RMRKToken {
     // reply about root_owner
@@ -77,7 +74,7 @@ impl RMRKToken {
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn init() {
+unsafe extern "C" fn init() {
     let config: InitRMRK = msg::load().expect("Unable to decode InitRMRK");
 
     let mut rmrk = RMRKToken {
@@ -229,11 +226,17 @@ async unsafe fn main() {
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn meta_state() -> *mut [i32; 2] {
+unsafe extern "C" fn meta_state() -> *mut [i32; 2] {
     let query: RMRKState = msg::load().expect("failed to decode RMRKState");
     let rmrk = RMRK.get_or_insert(Default::default());
 
     let encoded = match query {
+        RMRKState::RMRKInfo => RMRKStateReply::RMRKInfo {
+            name: rmrk.name.clone(),
+            symbol: rmrk.symbol.clone(),
+            admin: rmrk.admin,
+            resource_id: rmrk.resource_id,
+        },
         RMRKState::Owner(token_id) => {
             if let Some(rmrk_owner) = rmrk.rmrk_owners.get(&token_id) {
                 RMRKStateReply::Owner {
@@ -243,7 +246,7 @@ pub unsafe extern "C" fn meta_state() -> *mut [i32; 2] {
             } else {
                 RMRKStateReply::Owner {
                     token_id: None,
-                    owner_id: ZERO_ID,
+                    owner_id: ActorId::zero(),
                 }
             }
         }
