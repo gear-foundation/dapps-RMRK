@@ -8,7 +8,8 @@ fn equip_test() {
     let sys = System::new();
     sys.init_logger();
     // Prepare resource
-    let code_hash_stored = sys.submit_code("../target/wasm32-unknown-unknown/release/rmrk_resource.wasm");
+    let code_hash_stored =
+        sys.submit_code("../target/wasm32-unknown-unknown/release/rmrk_resource.wasm");
     // init child contract with resource
     let rmrk_child = Program::rmrk(&sys, Some(code_hash_stored.into()));
 

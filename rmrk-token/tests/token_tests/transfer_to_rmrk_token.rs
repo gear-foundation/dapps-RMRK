@@ -376,7 +376,7 @@ fn transfer_to_token_failures() {
         PARENT_NFT_CONTRACT,
         child_token_id,
         new_parent_token_id,
-        Some("RMRK: Wrong owner")
+        Some("RMRK: Wrong owner"),
     );
 
     // must fail since token does not exist

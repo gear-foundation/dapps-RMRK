@@ -75,7 +75,6 @@ impl RMRKToken {
 
 #[no_mangle]
 unsafe extern "C" fn init() {
-
     let config: InitRMRK = msg::load().expect("Unable to decode InitRMRK");
 
     let mut rmrk = RMRKToken {

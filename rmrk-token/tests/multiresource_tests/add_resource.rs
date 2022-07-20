@@ -10,7 +10,8 @@ fn add_resource_entry_simple() {
     let sys = System::new();
 
     // Prepare resource
-    let code_hash_stored = sys.submit_code("../target/wasm32-unknown-unknown/release/rmrk_resource.wasm");
+    let code_hash_stored =
+        sys.submit_code("../target/wasm32-unknown-unknown/release/rmrk_resource.wasm");
 
     let rmrk = Program::rmrk(&sys, Some(code_hash_stored.into()));
 
@@ -26,7 +27,8 @@ fn add_resource_entry_failures() {
     let sys = System::new();
     sys.init_logger();
     // Prepare resource
-    let code_hash_stored = sys.submit_code("../target/wasm32-unknown-unknown/release/rmrk_resource.wasm");
+    let code_hash_stored =
+        sys.submit_code("../target/wasm32-unknown-unknown/release/rmrk_resource.wasm");
 
     let rmrk = Program::rmrk(&sys, Some(code_hash_stored.into()));
 
@@ -57,7 +59,8 @@ fn add_resource_entry_failures() {
 fn add_resource_to_token() {
     let sys = System::new();
     // Prepare resource
-    let code_hash_stored = sys.submit_code("../target/wasm32-unknown-unknown/release/rmrk_resource.wasm");
+    let code_hash_stored =
+        sys.submit_code("../target/wasm32-unknown-unknown/release/rmrk_resource.wasm");
 
     let rmrk = Program::rmrk(&sys, Some(code_hash_stored.into()));
 
@@ -81,7 +84,8 @@ fn add_resource_to_token_failures() {
     let sys = System::new();
     sys.init_logger();
     // Prepare resource
-    let code_hash_stored = sys.submit_code("../target/wasm32-unknown-unknown/release/rmrk_token.wasm");
+    let code_hash_stored =
+        sys.submit_code("../target/wasm32-unknown-unknown/release/rmrk_token.wasm");
 
     let rmrk = Program::rmrk(&sys, Some(code_hash_stored.into()));
 
