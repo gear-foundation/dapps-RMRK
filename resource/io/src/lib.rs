@@ -5,7 +5,7 @@ use types::primitives::{BaseId, PartId, ResourceId};
 
 #[derive(Debug, Default, Clone, Encode, Decode, TypeInfo)]
 pub struct BasicResource {
-    /// URI like ipfs hash
+    /// URI like IPFS hash
     pub src: String,
 
     /// If the resource has the thumb property, this will be a URI to a thumbnail of the given

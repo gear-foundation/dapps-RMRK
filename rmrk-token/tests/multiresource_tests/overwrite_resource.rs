@@ -10,7 +10,7 @@ fn overwrite_resource() {
 
     // Prepare resource
     let code_hash_stored =
-        sys.submit_code("../target/wasm32-unknown-unknown/release/rmrk_resource.wasm");
+        sys.submit_code("../target/wasm32-unknown-unknown/release/rmrk_resource.opt.wasm");
 
     let rmrk = Program::rmrk(&sys, Some(code_hash_stored.into()));
 
@@ -52,7 +52,7 @@ fn overwrite_resource_failures() {
     sys.init_logger();
     // Prepare resource
     let code_hash_stored =
-        sys.submit_code("../target/wasm32-unknown-unknown/release/rmrk_resource.wasm");
+        sys.submit_code("../target/wasm32-unknown-unknown/release/rmrk_resource.opt.wasm");
 
     let rmrk = Program::rmrk(&sys, Some(code_hash_stored.into()));
 
