@@ -389,11 +389,11 @@ fn transfer_to_token_failures() {
     );
 
     // must fail since destination token does not exist
-    rmrk_child.transfer_to_nft_fail(
+    rmrk_child.transfer_to_nft(
         USERS[0],
         PARENT_NFT_CONTRACT,
         child_token_id,
         new_parent_token_id + 100,
-        Some("Error in async message `[RMRKAction::TransferChild]`"),
+        Some("Error in message [RMRKAction::RootOwner]"),
     );
 }

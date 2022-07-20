@@ -9,7 +9,7 @@ fn accept_resource_simple() {
     let sys = System::new();
 
     // Prepare resource
-    let code_hash_stored = sys.submit_code("../target/wasm-projects/release/rmrk_resource.wasm");
+    let code_hash_stored = sys.submit_code("../target/wasm32-unknown-unknown/release/rmrk_resource.wasm");
 
     let rmrk = Program::rmrk(&sys, Some(code_hash_stored.into()));
 
@@ -38,7 +38,7 @@ fn accept_resource_simple() {
 fn accept_resource_from_approved_address() {
     let sys = System::new();
     // Prepare resource
-    let code_hash_stored = sys.submit_code("../target/wasm-projects/release/rmrk_resource.wasm");
+    let code_hash_stored = sys.submit_code("../target/wasm32-unknown-unknown/release/rmrk_resource.wasm");
 
     let rmrk = Program::rmrk(&sys, Some(code_hash_stored.into()));
 
@@ -66,7 +66,7 @@ fn accept_resource_failures() {
     let sys = System::new();
     sys.init_logger();
     // Prepare resource
-    let code_hash_stored = sys.submit_code("../target/wasm-projects/release/rmrk_resource.wasm");
+    let code_hash_stored = sys.submit_code("../target/wasm32-unknown-unknown/release/rmrk_resource.wasm");
 
     let rmrk = Program::rmrk(&sys, Some(code_hash_stored.into()));
 
@@ -102,7 +102,7 @@ fn accept_resource_failures() {
 fn accept_multiple_resources() {
     let sys = System::new();
     // Prepare resource
-    let code_hash_stored = sys.submit_code("../target/wasm-projects/release/rmrk_resource.wasm");
+    let code_hash_stored = sys.submit_code("../target/wasm32-unknown-unknown/release/rmrk_resource.wasm");
 
     let rmrk = Program::rmrk(&sys, Some(code_hash_stored.into()));
     let token_id: u64 = 10;
@@ -138,7 +138,7 @@ fn accept_multiple_resources() {
 fn reorder_prioroties() {
     let sys = System::new();
     // Prepare resource
-    let code_hash_stored = sys.submit_code("../target/wasm-projects/release/rmrk_resource.wasm");
+    let code_hash_stored = sys.submit_code("../target/wasm32-unknown-unknown/release/rmrk_resource.wasm");
 
     let rmrk = Program::rmrk(&sys, Some(code_hash_stored.into()));
     let token_id: u64 = 10;
@@ -183,7 +183,7 @@ fn reorder_prioroties() {
 fn reject_resource_simple() {
     let sys = System::new();
     // Prepare resource
-    let code_hash_stored = sys.submit_code("../target/wasm-projects/release/rmrk_resource.wasm");
+    let code_hash_stored = sys.submit_code("../target/wasm32-unknown-unknown/release/rmrk_resource.wasm");
 
     let rmrk = Program::rmrk(&sys, Some(code_hash_stored.into()));
 
@@ -207,7 +207,7 @@ fn reject_resource_failures() {
     let sys = System::new();
     sys.init_logger();
     // Prepare resource
-    let code_hash_stored = sys.submit_code("../target/wasm-projects/release/rmrk_resource.wasm");
+    let code_hash_stored = sys.submit_code("./target/wasm32-unknown-unknown/release/rmrk_resource.wasm");
 
     let rmrk = Program::rmrk(&sys, Some(code_hash_stored.into()));
 
@@ -244,7 +244,7 @@ fn reject_resource_failures() {
 fn reject_resource_from_approved_address() {
     let sys = System::new();
     // Prepare resource
-    let code_hash_stored = sys.submit_code("../target/wasm-projects/release/rmrk_resource.wasm");
+    let code_hash_stored = sys.submit_code("../target/wasm32-unknown-unknown/release/rmrk_resource.wasm");
 
     let rmrk = Program::rmrk(&sys, Some(code_hash_stored.into()));
 

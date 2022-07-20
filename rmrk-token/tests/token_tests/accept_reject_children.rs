@@ -152,7 +152,7 @@ fn reject_child_from_approved_address() {
 
     // approve to USERS[3]
     rmrk_parent.approve(USERS[0], USERS[3], parent_token_id);
-    // reject child from USERSS[3]
+    // reject child from USERS[3]
     rmrk_parent.reject_child(
         USERS[3],
         parent_token_id,

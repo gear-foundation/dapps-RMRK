@@ -101,11 +101,7 @@ unsafe extern "C" fn meta_state() -> *mut [i32; 2] {
             resources: resource_storage.resources.clone(),
         },
         ResourceState::ResourceInfo(resource_id) => {
-            if let Some(resource) = resource_storage.resources.get(&resource_id) {
-                ResourceStateReply::ResourceInfo(Some(resource.clone()))
-            } else {
-                ResourceStateReply::ResourceInfo(None)
-            }
+            ResourceStateReply::ResourceInfo(resource_storage.resources.get(&resource_id).cloned())
         }
     }
     .encode();

@@ -104,11 +104,7 @@ impl RMRKToken for Program<'_> {
                 resource_name: "ResourceName".to_string(),
             },
         );
-        if resource_hash.is_some() {
-            assert!(!res.log().is_empty());
-        } else {
-            assert!(res.log().is_empty());
-        }
+        assert!(!res.main_failed());
         rmrk
     }
 
