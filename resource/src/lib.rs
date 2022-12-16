@@ -2,6 +2,7 @@
 
 use base_io::*;
 use gstd::{msg, prelude::*, ActorId};
+use hashbrown::HashMap;
 use resource_io::*;
 use types::primitives::{PartId, ResourceId};
 
@@ -10,7 +11,7 @@ struct ResourceStorage {
     name: String,
     // the admin is the rmrk contract that initializes the storage contract
     admin: ActorId,
-    resources: BTreeMap<ResourceId, Resource>,
+    resources: HashMap<ResourceId, Resource>,
 }
 
 static mut RESOURCE_STORAGE: Option<ResourceStorage> = None;
@@ -95,11 +96,17 @@ unsafe extern "C" fn meta_state() -> *mut [i32; 2] {
     let resource_storage = RESOURCE_STORAGE.get_or_insert(Default::default());
 
     let encoded = match query {
-        ResourceState::ResourceStorageInfo => ResourceStateReply::ResourceStorageInfo {
-            name: resource_storage.name.clone(),
-            admin: resource_storage.admin,
-            resources: resource_storage.resources.clone(),
-        },
+        ResourceState::ResourceStorageInfo => {
+            let mut resources = vec![];
+            for (n, res) in resource_storage.resources.iter() {
+                resources.push((*n, res.clone()))
+            }
+            ResourceStateReply::ResourceStorageInfo {
+                name: resource_storage.name.clone(),
+                admin: resource_storage.admin,
+                resources,
+            }
+        }
         ResourceState::ResourceInfo(resource_id) => {
             ResourceStateReply::ResourceInfo(resource_storage.resources.get(&resource_id).cloned())
         }

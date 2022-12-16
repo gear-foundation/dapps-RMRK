@@ -1,6 +1,7 @@
 #![no_std]
 
 use gstd::{debug, msg, prelude::*, prog::ProgramGenerator, ActorId};
+use hashbrown::HashMap;
 use resource_io::{InitResource, ResourceAction, ResourceEvent};
 use rmrk_io::*;
 use types::primitives::{BaseId, CollectionAndToken, PartId, TokenId};
@@ -38,12 +39,12 @@ struct RMRKToken {
     name: String,
     symbol: String,
     admin: ActorId,
-    token_approvals: BTreeMap<TokenId, BTreeSet<ActorId>>,
-    rmrk_owners: BTreeMap<TokenId, RMRKOwner>,
-    pending_children: BTreeMap<TokenId, BTreeSet<CollectionAndToken>>,
-    accepted_children: BTreeMap<TokenId, BTreeSet<CollectionAndToken>>,
-    children_status: BTreeMap<CollectionAndToken, ChildStatus>,
-    balances: BTreeMap<ActorId, TokenId>,
+    token_approvals: HashMap<TokenId, BTreeSet<ActorId>>,
+    rmrk_owners: HashMap<TokenId, RMRKOwner>,
+    pending_children: HashMap<TokenId, BTreeSet<CollectionAndToken>>,
+    accepted_children: HashMap<TokenId, BTreeSet<CollectionAndToken>>,
+    children_status: HashMap<CollectionAndToken, ChildStatus>,
+    balances: HashMap<ActorId, TokenId>,
     multiresource: MultiResource,
     resource_id: ActorId,
     equipped_tokens: BTreeSet<TokenId>,

@@ -178,7 +178,7 @@ pub enum RMRKAction {
     },
 
     /// Transfers NFT to another account.
-    /// If the previous owner is another RMRK contract, it sends the message [`RMRKAction::BurnChild`] to the parent conract.
+    /// If the previous owner is another RMRK contract, it sends the message [`RMRKAction::BurnChild`] to the parent contract.
     ///
     /// # Requirements:
     /// * The `token_id` must exist.

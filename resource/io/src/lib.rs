@@ -131,7 +131,7 @@ pub enum ResourceStateReply {
     ResourceStorageInfo {
         name: String,
         admin: ActorId,
-        resources: BTreeMap<ResourceId, Resource>,
+        resources: Vec<(ResourceId, Resource)>,
     },
     ResourceInfo(Option<Resource>),
 }

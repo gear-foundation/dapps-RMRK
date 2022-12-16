@@ -19,8 +19,8 @@ fn check_run_result_for_error(run_result: &RunResult, exp_error: &str) {
     let error = String::from_utf8((run_result.log()[0].payload()).to_vec())
         .expect("Failed to decode error");
     if !error.contains(exp_error) {
-        println!("Received panic {:?}", error);
-        println!("Expected panic {:?}", exp_error);
+        println!("Received panic {error:?}");
+        println!("Expected panic {exp_error:?}");
         panic!("");
     }
 }

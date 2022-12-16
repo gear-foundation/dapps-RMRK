@@ -12,6 +12,7 @@ rmrk-io = { path = "io" }
 resource-io = { path = "../resource/io" }
 base-io = { path = "../base/io" }
 types = { path = "../types/" }
+hashbrown = { version = "0.13.1" }
 
 [dev-dependencies]
 gtest = { git = "https://github.com/gear-tech/gear.git" }
