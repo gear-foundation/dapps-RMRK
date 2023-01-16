@@ -20,15 +20,15 @@ pub struct RMRKState {
     pub name: String,
     pub symbol: String,
     pub admin: ActorId,
-    pub token_approvals: Vec<(TokenId, BTreeSet<ActorId>)>,
+    pub token_approvals: Vec<(TokenId, Vec<ActorId>)>,
     pub rmrk_owners: Vec<(TokenId, RMRKOwner)>,
-    pub pending_children: Vec<(TokenId, BTreeSet<CollectionAndToken>)>,
-    pub accepted_children: Vec<(TokenId, BTreeSet<CollectionAndToken>)>,
+    pub pending_children: Vec<(TokenId, Vec<CollectionAndToken>)>,
+    pub accepted_children: Vec<(TokenId, Vec<CollectionAndToken>)>,
     pub children_status: Vec<(CollectionAndToken, ChildStatus)>,
     pub balances: Vec<(ActorId, TokenId)>,
     pub multiresource: MultiResourceState,
     pub resource_id: ActorId,
-    pub equipped_tokens: BTreeSet<TokenId>,
+    pub equipped_tokens: Vec<TokenId>,
 }
 
 #[derive(Debug, Default, PartialEq, Eq, Encode, Decode, TypeInfo, Clone)]
@@ -39,8 +39,8 @@ pub struct RMRKOwner {
 
 #[derive(Debug, Default, Encode, Decode, TypeInfo)]
 pub struct MultiResourceState {
-    pub pending_resources: Vec<(TokenId, BTreeSet<ResourceId>)>,
-    pub active_resources: Vec<(TokenId, BTreeSet<ResourceId>)>,
+    pub pending_resources: Vec<(TokenId, Vec<ResourceId>)>,
+    pub active_resources: Vec<(TokenId, Vec<ResourceId>)>,
     pub resource_overwrites: Vec<(TokenId, Vec<(ResourceId, ResourceId)>)>,
     pub active_resources_priorities: Vec<(TokenId, Vec<u8>)>,
 }

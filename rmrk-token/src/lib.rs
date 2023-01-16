@@ -15,22 +15,22 @@ mod mint;
 mod multiresource;
 use multiresource::*;
 mod utils;
-use hashbrown::HashMap;
+use hashbrown::{HashMap, HashSet};
 
 #[derive(Debug, Default)]
 struct RMRKToken {
     name: String,
     symbol: String,
     admin: ActorId,
-    token_approvals: HashMap<TokenId, BTreeSet<ActorId>>,
+    token_approvals: HashMap<TokenId, HashSet<ActorId>>,
     rmrk_owners: HashMap<TokenId, RMRKOwner>,
-    pending_children: HashMap<TokenId, BTreeSet<CollectionAndToken>>,
-    accepted_children: HashMap<TokenId, BTreeSet<CollectionAndToken>>,
+    pending_children: HashMap<TokenId, HashSet<CollectionAndToken>>,
+    accepted_children: HashMap<TokenId, HashSet<CollectionAndToken>>,
     children_status: HashMap<CollectionAndToken, ChildStatus>,
     balances: HashMap<ActorId, TokenId>,
     multiresource: MultiResource,
     resource_id: ActorId,
-    equipped_tokens: BTreeSet<TokenId>,
+    equipped_tokens: HashSet<TokenId>,
 }
 
 static mut RMRK: Option<RMRKToken> = None;

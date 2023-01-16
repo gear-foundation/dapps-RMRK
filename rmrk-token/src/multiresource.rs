@@ -5,8 +5,8 @@ pub const MAX_RESOURCE_LEN: u8 = 128;
 
 #[derive(Debug, Default, Clone)]
 pub struct MultiResource {
-    pub pending_resources: HashMap<TokenId, BTreeSet<ResourceId>>,
-    pub active_resources: HashMap<TokenId, BTreeSet<ResourceId>>,
+    pub pending_resources: HashMap<TokenId, HashSet<ResourceId>>,
+    pub active_resources: HashMap<TokenId, HashSet<ResourceId>>,
     pub resource_overwrites: HashMap<TokenId, HashMap<ResourceId, ResourceId>>,
     pub active_resources_priorities: HashMap<TokenId, Vec<u8>>,
 }
@@ -250,7 +250,7 @@ impl RMRKToken {
             .and_modify(|r| {
                 r.insert(resource_id);
             })
-            .or_insert_with(|| BTreeSet::from([resource_id]));
+            .or_insert_with(|| HashSet::from([resource_id]));
     }
 
     fn add_active_resource(&mut self, token_id: TokenId, resource_id: ResourceId) {
@@ -260,7 +260,7 @@ impl RMRKToken {
             .and_modify(|r| {
                 r.insert(resource_id);
             })
-            .or_insert_with(|| BTreeSet::from([resource_id]));
+            .or_insert_with(|| HashSet::from([resource_id]));
     }
 
     fn add_overwrite_resource(
