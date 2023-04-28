@@ -48,7 +48,7 @@ jobs:
         run: make build
 
       - name: Upload artifacts
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           path: |
             target/wasm32-unknown-unknown/*
