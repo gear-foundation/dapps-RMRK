@@ -63,7 +63,7 @@ jobs:
     needs: build
     steps:
       - name: Download artifacts
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
 
       - name: Delete previous release
         uses: dev-drprasad/delete-tag-and-release@v0.2.1
