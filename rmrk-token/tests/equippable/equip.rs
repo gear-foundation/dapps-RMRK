@@ -2,9 +2,9 @@ use crate::utils::*;
 use gtest::{Program, System};
 use resource_io::*;
 use rmrk_io::*;
-use types::primitives::{CollectionAndToken, ResourceId};
+use types::primitives::{CollectionAndToken, ResourceId, TokenId};
 
-use super::utils::{add_gem_assets, add_kanaria_assets, mint_tokens, setup_catalog};
+use super::utils::{add_gem_assets, add_kanaria_assets, equip_gems, mint_tokens, setup_catalog, compose};
 
 #[test]
 fn equip() {
@@ -14,6 +14,10 @@ fn equip() {
     mint_tokens(&system);
     add_kanaria_assets(&system);
     add_gem_assets(&system);
+    equip_gems(&system);
+    let token_id: TokenId = 1.into();
+    let asset_id = 2;
+    compose(&system, token_id, asset_id);
     let catalog = system.get_program(CATALOG_ID);
 }
 // #[test]

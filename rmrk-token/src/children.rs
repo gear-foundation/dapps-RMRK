@@ -16,7 +16,7 @@ impl RMRKToken {
     /// * `child_token_id`: is the tokenId of the child instance.
     ///
     /// On success replies [`RMRKEvent::PendingChild`].
-    pub async fn add_child(&mut self, parent_token_id: TokenId, child_token_id: TokenId) {
+    pub fn add_child(&mut self, parent_token_id: TokenId, child_token_id: TokenId) {
         self.assert_token_does_not_exist(parent_token_id);
 
         let child_token = (msg::source(), child_token_id);
@@ -33,7 +33,7 @@ impl RMRKToken {
         self.internal_add_child(parent_token_id, child_token, ChildStatus::Pending);
 
         msg::reply(
-            RMRKEvent::PendingChild {
+            RMRKReply::PendingChild {
                 child_token_address: msg::source(),
                 child_token_id,
                 parent_token_id,
@@ -55,32 +55,73 @@ impl RMRKToken {
     /// * `child_token_id`: is the tokenId of the child instance
     ///
     /// On success replies [`RMRKEvent::AcceptedChild`].
-    pub async fn accept_child(
+    pub fn accept_child(
         &mut self,
+        tx_manager: &mut TxManager,
+        msg: &RMRKAction,
         parent_token_id: TokenId,
         child_contract_id: ActorId,
         child_token_id: TokenId,
-    ) {
-        let root_owner = self.find_root_owner(parent_token_id).await;
-        self.assert_approved_or_owner(parent_token_id, &root_owner);
+    ) -> Result<RMRKReply, RMRKError> {
+        let rmrk_owner = self
+            .rmrk_owners
+            .get(&parent_token_id)
+            .expect("RMRK: Token does not exist");
 
-        let child_token = (child_contract_id, child_token_id);
+        // if the NFT owner is another NFT
+        let owner_token_id = if let Some(owner_token_id) = rmrk_owner.token_id {
+            owner_token_id
+        } else {
+            let root_owner = rmrk_owner.owner_id;
+            self.assert_approved_or_owner(parent_token_id, &root_owner);
+            let child_token = (child_contract_id, child_token_id);
 
-        // remove child from pending array
-        self.internal_remove_child(parent_token_id, child_token, ChildStatus::Pending);
+            // remove child from pending array
+            self.internal_remove_child(parent_token_id, child_token, ChildStatus::Pending);
 
-        // add child to accepted children array
-        self.internal_add_child(parent_token_id, child_token, ChildStatus::Accepted);
+            // add child to accepted children array
+            self.internal_add_child(parent_token_id, child_token, ChildStatus::Accepted);
 
-        msg::reply(
-            RMRKEvent::AcceptedChild {
+            return Ok(RMRKReply::AcceptedChild {
                 child_contract_id,
                 child_token_id,
                 parent_token_id,
-            },
-            0,
-        )
-        .expect("Error in reply [RMRKEvent::AcceptedChild]");
+            });
+        };
+
+        let tx = tx_manager.get_tx(msg);
+        let state = tx.state.clone();
+        let current_msg_id = msg::id();
+
+        match state {
+            TxState::Initial => {
+                let msg_id = get_root_owner_msg(&rmrk_owner.owner_id, owner_token_id);
+                tx.state = TxState::MsgGetRootOwnerSent;
+                tx_manager.msg_sent_to_msg.insert(msg_id, current_msg_id);
+                exec::wait_for(5);
+            }
+            TxState::ReplyRootOwnerReceived => {
+                let reply = tx.data.take().expect("Failed to get a reply");
+                let root_owner = decode_root_owner(reply);
+                self.assert_approved_or_owner(parent_token_id, &root_owner);
+                let child_token = (child_contract_id, child_token_id);
+
+                // remove child from pending array
+                self.internal_remove_child(parent_token_id, child_token, ChildStatus::Pending);
+
+                // add child to accepted children array
+                self.internal_add_child(parent_token_id, child_token, ChildStatus::Accepted);
+
+                return Ok(RMRKReply::AcceptedChild {
+                    child_contract_id,
+                    child_token_id,
+                    parent_token_id,
+                });
+            }
+            _ => {
+                unreachable!()
+            }
+        }
     }
 
     /// Rejects an RMRK child being in the `Pending` status.
@@ -96,32 +137,70 @@ impl RMRKToken {
     /// * `child_token_id`: is the tokenId of the child instance.
     ///
     /// On success replies [`RMRKEvent::RejectedChild`].
-    pub async fn reject_child(
+    pub fn reject_child(
         &mut self,
+        tx_manager: &mut TxManager,
+        msg: &RMRKAction,
         parent_token_id: TokenId,
         child_contract_id: ActorId,
         child_token_id: TokenId,
-    ) {
-        let root_owner = self.find_root_owner(parent_token_id).await;
-        self.assert_approved_or_owner(parent_token_id, &root_owner);
+    ) -> Result<RMRKReply, RMRKError> {
+        let rmrk_owner = self
+            .rmrk_owners
+            .get(&parent_token_id)
+            .expect("RMRK: Token does not exist");
 
-        let child_token = (child_contract_id, child_token_id);
+        let tx = tx_manager.get_tx(msg);
+        let state = tx.state.clone();
+        let current_msg_id = msg::id();
 
-        // remove child from pending array
-        self.internal_remove_child(parent_token_id, child_token, ChildStatus::Pending);
+        match state {
+            TxState::Initial if rmrk_owner.token_id.is_some() => {
+                let owner_token_id = rmrk_owner.token_id.expect("Can't be None");
+                // get root owner
+                let msg_id = get_root_owner_msg(&rmrk_owner.owner_id, owner_token_id);
+                tx.state = TxState::MsgGetRootOwnerSent;
+                tx_manager.msg_sent_to_msg.insert(msg_id, current_msg_id);
+                exec::wait_for(5);
+            }
+            TxState::Initial if rmrk_owner.token_id.is_none() => {
+                let root_owner = rmrk_owner.owner_id;
+                self.assert_approved_or_owner(parent_token_id, &root_owner);
 
-        // send message to child contract to burn RMRK token from it
-        burn_from_parent(&child_contract_id, child_token_id, &root_owner).await;
-
-        msg::reply(
-            RMRKEvent::RejectedChild {
-                child_contract_id,
-                child_token_id,
-                parent_token_id,
-            },
-            0,
-        )
-        .expect("Error in reply [RMRKEvent::RejectedChild]");
+                let msg_id = burn_from_parent_msg(&child_contract_id, child_token_id, &root_owner);
+                tx.state = TxState::MsgBurnFromParentSent;
+                tx_manager.msg_sent_to_msg.insert(msg_id, current_msg_id);
+                exec::wait_for(5);
+            }
+            TxState::ReplyRootOwnerReceived => {
+                let reply = tx.data.take().expect("Failed to get a reply");
+                let decoded_reply =
+                    RMRKReply::decode(&mut &reply[..]).expect("Failed to decode a reply");
+                let root_owner = if let RMRKReply::RootOwner(root_owner) = decoded_reply {
+                    root_owner
+                } else {
+                    panic!("Wrong received reply");
+                };
+                self.assert_approved_or_owner(parent_token_id, &root_owner);
+                let msg_id = burn_from_parent_msg(&child_contract_id, child_token_id, &root_owner);
+                tx.state = TxState::MsgBurnFromParentSent;
+                tx_manager.msg_sent_to_msg.insert(msg_id, current_msg_id);
+                exec::wait_for(5);
+            }
+            TxState::ReplyOnBurnFromParentReceived => {
+                // remove child from pending array
+                let child_token = (child_contract_id, child_token_id);
+                self.internal_remove_child(parent_token_id, child_token, ChildStatus::Pending);
+                return Ok(RMRKReply::RejectedChild {
+                    child_contract_id,
+                    child_token_id,
+                    parent_token_id,
+                });
+            }
+            _ => {
+                unreachable!()
+            }
+        }
     }
 
     /// Removes an RMRK child being in the `Accepted` status.
@@ -136,32 +215,70 @@ impl RMRKToken {
     /// * `child_token_id`: is the tokenId of the child instance.
     ///
     /// On success replies [`RMRKEvent::RemovedChild`].
-    pub async fn remove_child(
+    pub fn remove_child(
         &mut self,
+        tx_manager: &mut TxManager,
+        msg: &RMRKAction,
         parent_token_id: TokenId,
         child_contract_id: ActorId,
         child_token_id: TokenId,
-    ) {
-        let root_owner = self.find_root_owner(parent_token_id).await;
-        self.assert_approved_or_owner(parent_token_id, &root_owner);
+    ) -> Result<RMRKReply, RMRKError> {
+        let rmrk_owner = self
+            .rmrk_owners
+            .get(&parent_token_id)
+            .expect("RMRK: Token does not exist");
 
-        let child_token = (child_contract_id, child_token_id);
+        let tx = tx_manager.get_tx(msg);
+        let state = tx.state.clone();
+        let current_msg_id = msg::id();
 
-        // remove child from accepted children array
-        self.internal_remove_child(parent_token_id, child_token, ChildStatus::Accepted);
+        match state {
+            TxState::Initial if rmrk_owner.token_id.is_some() => {
+                let owner_token_id = rmrk_owner.token_id.expect("Can't be None");
+                // get root owner
+                let msg_id = get_root_owner_msg(&rmrk_owner.owner_id, owner_token_id);
+                tx.state = TxState::MsgGetRootOwnerSent;
+                tx_manager.msg_sent_to_msg.insert(msg_id, current_msg_id);
+                exec::wait_for(5);
+            }
+            TxState::Initial if rmrk_owner.token_id.is_none() => {
+                let root_owner = rmrk_owner.owner_id;
+                self.assert_approved_or_owner(parent_token_id, &root_owner);
 
-        // send message to child contract to burn RMRK token from it
-        burn_from_parent(&child_contract_id, child_token_id, &root_owner).await;
-
-        msg::reply(
-            RMRKEvent::RemovedChild {
-                child_contract_id,
-                child_token_id,
-                parent_token_id,
-            },
-            0,
-        )
-        .expect("Error in reply `[RMRKEvent::RejectedChild]`");
+                let msg_id = burn_from_parent_msg(&child_contract_id, child_token_id, &root_owner);
+                tx.state = TxState::MsgBurnFromParentSent;
+                tx_manager.msg_sent_to_msg.insert(msg_id, current_msg_id);
+                exec::wait_for(5);
+            }
+            TxState::ReplyRootOwnerReceived => {
+                let reply = tx.data.take().expect("Failed to get a reply");
+                let decoded_reply =
+                    RMRKReply::decode(&mut &reply[..]).expect("Failed to decode a reply");
+                let root_owner = if let RMRKReply::RootOwner(root_owner) = decoded_reply {
+                    root_owner
+                } else {
+                    panic!("Wrong received reply");
+                };
+                self.assert_approved_or_owner(parent_token_id, &root_owner);
+                let msg_id = burn_from_parent_msg(&child_contract_id, child_token_id, &root_owner);
+                tx.state = TxState::MsgBurnFromParentSent;
+                tx_manager.msg_sent_to_msg.insert(msg_id, current_msg_id);
+                exec::wait_for(5);
+            }
+            TxState::ReplyOnBurnFromParentReceived => {
+                // remove child from pending array
+                let child_token = (child_contract_id, child_token_id);
+                self.internal_remove_child(parent_token_id, child_token, ChildStatus::Accepted);
+                return Ok(RMRKReply::RemovedChild {
+                    child_contract_id,
+                    child_token_id,
+                    parent_token_id,
+                });
+            }
+            _ => {
+                unreachable!()
+            }
+        }
     }
 
     /// That message is designed to be sent from another RMRK contracts
@@ -174,7 +291,6 @@ impl RMRKToken {
     /// # Requirements:
     /// * The `msg::source()` must be a child RMRK contract.
     /// * The `to` must be an existing RMRK token
-    /// * The `root_owner` of `to` and `from` must be the same.
     ///
     /// # Arguments:
     /// * `from`: RMRK token from which the child token will be transferred.
@@ -182,7 +298,14 @@ impl RMRKToken {
     /// * `child_token_id`: is the tokenId of the child in the RMRK child contract.
     ///
     /// On success replies [`RMRKEvent::ChildTransferred`].
-    pub async fn transfer_child(&mut self, from: TokenId, to: TokenId, child_token_id: TokenId) {
+    pub fn transfer_child(
+        &mut self,
+        tx_manager: &mut TxManager,
+        msg: &RMRKAction,
+        from: TokenId,
+        to: TokenId,
+        child_token_id: TokenId,
+    ) {
         self.assert_token_does_not_exist(to);
 
         let child_token = (msg::source(), child_token_id);
@@ -193,8 +316,79 @@ impl RMRKToken {
             .get(&child_token)
             .expect("RMRK: The child does not exist");
 
-        let from_root_owner = self.find_root_owner(from).await;
-        let to_root_owner = self.find_root_owner(to).await;
+        let from_rmrk_owner = self
+            .rmrk_owners
+            .get(&from)
+            .expect("RMRK: Token does not exist");
+
+        let to_rmrk_owner = self
+            .rmrk_owners
+            .get(&to)
+            .expect("RMRK: Token does not exist");
+
+        let tx = tx_manager.get_tx(msg);
+        let state = tx.state.clone();
+        let current_msg_id = msg::id();
+
+        let (from_root_owner, to_root_owner) = match state {
+            TxState::Initial => match (from_rmrk_owner.token_id, to_rmrk_owner.token_id) {
+                (None, None) => (from_rmrk_owner.owner_id, to_rmrk_owner.owner_id),
+                (Some(parent_token_id), None) | (Some(parent_token_id), Some(_)) => {
+                    let msg_id = get_root_owner_msg(&from_rmrk_owner.owner_id, parent_token_id);
+                    tx.state = TxState::MsgGetRootOwnerSent;
+                    tx_manager.msg_sent_to_msg.insert(msg_id, current_msg_id);
+                    exec::wait_for(5);
+                }
+                (None, Some(parent_token_id)) => {
+                    let msg_id = get_root_owner_msg(&to_rmrk_owner.owner_id, parent_token_id);
+                    tx.state = TxState::MsgGetNewRootOwnerSent;
+                    tx.data = Some(from_rmrk_owner.owner_id.encode());
+                    tx_manager.msg_sent_to_msg.insert(msg_id, current_msg_id);
+                    exec::wait_for(5);
+                }
+            },
+            TxState::ReplyRootOwnerReceived => {
+                match (from_rmrk_owner.token_id, to_rmrk_owner.token_id) {
+                    (Some(_), Some(parent_token_id)) => {
+                        let msg_id = get_root_owner_msg(&to_rmrk_owner.owner_id, parent_token_id);
+                        tx.state = TxState::MsgGetNewRootOwnerSent;
+                        tx_manager.msg_sent_to_msg.insert(msg_id, current_msg_id);
+                        exec::wait_for(5);
+                    }
+                    (Some(_), None) => {
+                        let data = tx.data.clone().expect("msg");
+
+                        let from_root_owner = root_owner_from_data(&data[..]);
+                        (from_root_owner, to_rmrk_owner.owner_id)
+                    }
+                    _ => {
+                        unreachable!()
+                    }
+                }
+            }
+            TxState::ReplyNewRootOwnerReceived => {
+                let reply = tx.data.take().expect("Failed to get a reply");
+                let to_root_owner = decode_root_owner(reply);
+
+                match (from_rmrk_owner.token_id, to_rmrk_owner.token_id) {
+                    (Some(_), Some(_)) => {
+                        let data = tx.data.clone().expect("msg");
+
+                        let from_root_owner =
+                            ActorId::decode(&mut &data[..]).expect("Failed to decode ActorId");
+                        (from_root_owner, to_root_owner)
+                    }
+                    (None, Some(_)) => (from_rmrk_owner.owner_id, to_root_owner),
+                    _ => {
+                        unreachable!()
+                    }
+                }
+            }
+            _ => {
+                unreachable!()
+            }
+        };
+
         self.assert_exec_origin(&from_root_owner);
         match child_status {
             ChildStatus::Pending => {
@@ -211,7 +405,7 @@ impl RMRKToken {
             }
         }
         msg::reply(
-            RMRKEvent::ChildTransferred {
+            RMRKReply::ChildTransferred {
                 from,
                 to,
                 child_contract_id: msg::source(),
@@ -235,23 +429,23 @@ impl RMRKToken {
     /// * `child_token_id`: is the tokenId of the child of the RMRK child contract.
     ///
     /// On success replies [`RMRKEvent::AcceptedChild`].
-    pub async fn add_accepted_child(&mut self, parent_token_id: TokenId, child_token_id: TokenId) {
-        let root_owner = self.find_root_owner(parent_token_id).await;
-        self.assert_exec_origin(&root_owner);
+    pub fn add_accepted_child(&mut self, parent_token_id: TokenId, child_token_id: TokenId) {
+        // let root_owner = self.find_root_owner(parent_token_id).await;
+        // self.assert_exec_origin(&root_owner);
 
-        let child_token = (msg::source(), child_token_id);
+        // let child_token = (msg::source(), child_token_id);
 
-        self.internal_add_child(parent_token_id, child_token, ChildStatus::Accepted);
+        // self.internal_add_child(parent_token_id, child_token, ChildStatus::Accepted);
 
-        msg::reply(
-            RMRKEvent::AcceptedChild {
-                child_contract_id: msg::source(),
-                child_token_id,
-                parent_token_id,
-            },
-            0,
-        )
-        .expect("Error in reply `[RMRKEvent::AcceptedChild]`");
+        // msg::reply(
+        //     RMRKReply::AcceptedChild {
+        //         child_contract_id: msg::source(),
+        //         child_token_id,
+        //         parent_token_id,
+        //     },
+        //     0,
+        // )
+        // .expect("Error in reply `[RMRKEvent::AcceptedChild]`");
     }
 
     /// Burns a child of NFT.
@@ -276,7 +470,7 @@ impl RMRKToken {
         self.internal_remove_child(parent_token_id, child_token, child_status);
 
         msg::reply(
-            RMRKEvent::ChildBurnt {
+            RMRKReply::ChildBurnt {
                 parent_token_id,
                 child_token_id,
             },
@@ -343,6 +537,78 @@ impl RMRKToken {
                     }
                 }
             }
+        }
+    }
+}
+
+pub fn accept_child_reply(tx: &mut Tx, processing_msg_id: MessageId) {
+    let state = tx.state.clone();
+    match state {
+        TxState::MsgGetRootOwnerSent => {
+            tx.state = TxState::ReplyRootOwnerReceived;
+            tx.data = Some(msg::load_bytes().expect("Failed to load the payload"));
+            exec::wake(processing_msg_id).expect("Failed to wake the message");
+        }
+        _ => {
+            unreachable!()
+        }
+    }
+}
+
+pub fn reject_child_reply(tx: &mut Tx, processing_msg_id: MessageId) {
+    let state = tx.state.clone();
+    match state {
+        TxState::MsgGetRootOwnerSent => {
+            tx.state = TxState::ReplyRootOwnerReceived;
+            tx.data = Some(msg::load_bytes().expect("Failed to load the payload"));
+            exec::wake(processing_msg_id).expect("Failed to wake the message");
+        }
+        TxState::MsgBurnFromParentSent => {
+            tx.state = TxState::ReplyOnBurnFromParentReceived;
+            exec::wake(processing_msg_id).expect("Failed to wake the message");
+        }
+        _ => {
+            unreachable!()
+        }
+    }
+}
+
+pub fn remove_child_reply(tx: &mut Tx, processing_msg_id: MessageId) {
+    let state = tx.state.clone();
+    match state {
+        TxState::MsgGetRootOwnerSent => {
+            tx.state = TxState::ReplyRootOwnerReceived;
+            tx.data = Some(msg::load_bytes().expect("Failed to load the payload"));
+            exec::wake(processing_msg_id).expect("Failed to wake the message");
+        }
+        TxState::MsgBurnFromParentSent => {
+            tx.state = TxState::ReplyOnBurnFromParentReceived;
+            exec::wake(processing_msg_id).expect("Failed to wake the message");
+        }
+        _ => {
+            unreachable!()
+        }
+    }
+}
+
+pub fn transfer_child_reply(tx: &mut Tx, processing_msg_id: MessageId) {
+    let state = tx.state.clone();
+    match state {
+        TxState::MsgGetRootOwnerSent => {
+            tx.state = TxState::ReplyRootOwnerReceived;
+            let reply = msg::load_bytes().expect("Failed to load the payload");
+            let root_owner = decode_root_owner(reply);
+            tx.data = Some(root_owner.encode());
+            exec::wake(processing_msg_id).expect("Failed to wake the message");
+        }
+        TxState::MsgGetNewRootOwnerSent => {
+            tx.state = TxState::ReplyRootOwnerReceived;
+            tx.data = Some(msg::load_bytes().expect("Failed to load the payload"));
+            tx.state = TxState::ReplyOnBurnFromParentReceived;
+            exec::wake(processing_msg_id).expect("Failed to wake the message");
+        }
+        _ => {
+            unreachable!()
         }
     }
 }

@@ -6,17 +6,17 @@ license = "GPL-3.0"
 authors = ["Gear Technologies"]
 
 [dependencies]
-gstd = { git = "https://github.com/gear-tech/gear.git", features = ["debug"] }
+gstd = { git = "https://github.com/gear-tech/gear.git", features = ["debug"], branch = "dn-reply-provision" }
 scale-info = { version = "2", default-features = false }
 parity-scale-codec = { version = "3", default-features = false }
 resource-io = { path = "io" }
-base-io = { path = "../base/io" }
+catalog-io = { path = "../catalog/io" }
 types = { path = "../types/" }
 hashbrown = "0.13.1"
 
 [dev-dependencies]
-gtest = { git = "https://github.com/gear-tech/gear.git" }
+gtest = { git = "https://github.com/gear-tech/gear.git", branch = "dn-reply-provision" }
 
 [build-dependencies]
-gear-wasm-builder = { git = "https://github.com/gear-tech/gear.git" }
+gear-wasm-builder = { git = "https://github.com/gear-tech/gear.git", branch = "dn-reply-provision" }
 resource-io = { path = "io" }

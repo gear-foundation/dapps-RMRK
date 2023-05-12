@@ -2,7 +2,8 @@ use catalog_io::*;
 use gstd::{prelude::*, ActorId};
 use gtest::{Program, System};
 use rmrk_io::*;
-use types::primitives::{TokenId, PartId};
+use rmrk_state::WASM_BINARY;
+use types::primitives::{PartId, TokenId};
 const CATALOG_ID: u64 = 100;
 const PATH_TO_CATALOG: &str = "../target/wasm32-unknown-unknown/release/rmrk_catalog.opt.wasm";
 const ADMIN: u64 = 200;
@@ -64,21 +65,21 @@ pub fn setup_catalog(system: &System) {
     });
     parts.insert(part_id_for_body_2, part_for_body_2);
 
-    let part_id_for_wings_1 = 5;
+    let part_id_for_wings_1 = 7;
     let part_for_wings_1 = Part::Fixed(FixedPart {
         z: Some(4),
         metadata_uri: String::from("ipfs://wings/1.svg"),
     });
     parts.insert(part_id_for_wings_1, part_for_wings_1);
 
-    let part_id_for_wings_2 = 6;
+    let part_id_for_wings_2 = 8;
     let part_for_wings_2 = Part::Fixed(FixedPart {
         z: Some(4),
         metadata_uri: String::from("ipfs://wings/2.svg"),
     });
     parts.insert(part_id_for_wings_2, part_for_wings_2);
 
-    let part_id_for_gem_slot_1 = 7;
+    let part_id_for_gem_slot_1 = 9;
     let part_for_gem_slot_1 = Part::Slot(SlotPart {
         equippable: vec![GEM_ID.into()],
         z: Some(4),
@@ -86,15 +87,15 @@ pub fn setup_catalog(system: &System) {
     });
     parts.insert(part_id_for_gem_slot_1, part_for_gem_slot_1);
 
-    let part_id_for_gem_slot_2 = 8;
+    let part_id_for_gem_slot_2 = 10;
     let part_for_gem_slot_2 = Part::Slot(SlotPart {
         equippable: vec![GEM_ID.into()],
         z: Some(4),
         metadata_uri: String::from(""),
     });
-    parts.insert(part_id_for_gem_slot_1, part_for_gem_slot_2);
+    parts.insert(part_id_for_gem_slot_2, part_for_gem_slot_2);
 
-    let part_id_for_gem_slot_3 = 9;
+    let part_id_for_gem_slot_3 = 11;
     let part_for_gem_slot_3 = Part::Slot(SlotPart {
         equippable: vec![GEM_ID.into()],
         z: Some(4),
@@ -134,7 +135,7 @@ pub fn mint_tokens(system: &System) {
     assert!(!res.main_failed());
 
     // mint 5 birds
-    for token_id in 0..5 {
+    for token_id in 1..6 {
         let res = kanaria.send(
             ADMIN,
             RMRKAction::MintToRootOwner {
@@ -151,9 +152,9 @@ pub fn mint_tokens(system: &System) {
     }
 
     // Mint 3 gems into each kanaria
-    let mut gem_token_id = 0;
-    for token_id in 0..5 {
-        for _i in 0..3 {
+    let mut gem_token_id = 1;
+    for token_id in 1..6 {
+        for _i in 1..4 {
             let res = gem.send(
                 ADMIN,
                 RMRKAction::MintToNft {
@@ -184,7 +185,6 @@ pub fn mint_tokens(system: &System) {
                 parent_token_id: token_id.into(),
             });
             assert!(res.contains(&(ADMIN, reply.encode())));
-
             gem_token_id += 1;
         }
     }
@@ -195,107 +195,34 @@ pub fn add_kanaria_assets(system: &System) {
     let default_asset_id = 1;
     let composed_asset_id = 2;
 
-    let res = kanaria.send(
-        ADMIN,
-        RMRKAction::AddEquippableAssetEntry {
-            equippable_group_id: 0,
-            catalog_address: None,
-            metadata_uri: String::from("ipfs://default.png"),
-            part_ids: vec![],
-        },
+    add_equippable_asset_entry(
+        &kanaria,
+        0,
+        None,
+        String::from("ipfs://default.png"),
+        vec![],
+        default_asset_id,
     );
 
-    let reply: Result<RMRKReply, RMRKError> = Ok(RMRKReply::EquippableAssetEntryAdded {
-        id: default_asset_id,
-        equippable_group_id: 0,
-        catalog_address: None,
-        metadata_uri: String::from("ipfs://default.png"),
-        part_ids: vec![],
-    });
-
-    assert!(res.contains(&(ADMIN, reply.encode())));
-
-    let res = kanaria.send(
-        ADMIN,
-        RMRKAction::AddEquippableAssetEntry {
-            equippable_group_id: 0,
-            catalog_address: Some(CATALOG_ID.into()),
-            metadata_uri: String::from("ipfs://meta1.json"),
-            part_ids: vec![1, 3, 5, 7, 9, 10, 11],
-        },
+    add_equippable_asset_entry(
+        &kanaria,
+        0,
+        Some(CATALOG_ID.into()),
+        String::from("ipfs://meta1.json"),
+        vec![1, 3, 5, 7, 9, 10, 11],
+        composed_asset_id,
     );
-
-    let reply: Result<RMRKReply, RMRKError> = Ok(RMRKReply::EquippableAssetEntryAdded {
-        id: composed_asset_id,
-        equippable_group_id: 0,
-        catalog_address: Some(CATALOG_ID.into()),
-        metadata_uri: String::from("ipfs://meta1.json"),
-        part_ids: vec![1, 3, 5, 7, 9, 10, 11],
-    });
-
-    assert!(res.contains(&(ADMIN, reply.encode())));
 
     let token_id: TokenId = 1.into();
 
-    let res = kanaria.send(
-        ADMIN,
-        RMRKAction::AddAssetToToken {
-            token_id,
-            asset_id: default_asset_id,
-            replaces_asset_with_id: 0,
-        },
-    );
-    let reply: Result<RMRKReply, RMRKError> = Ok(RMRKReply::AssetAddedToToken {
-        token_id,
-        asset_id: default_asset_id,
-        replaces_asset_with_id: 0,
-    });
-    assert!(res.contains(&(ADMIN, reply.encode())));
+    add_asset_to_token(&kanaria, token_id, default_asset_id, 0);
+    add_asset_to_token(&kanaria, token_id, composed_asset_id, 0);
 
-    let res = kanaria.send(
-        ADMIN,
-        RMRKAction::AddAssetToToken {
-            token_id,
-            asset_id: composed_asset_id,
-            replaces_asset_with_id: 0,
-        },
-    );
-    let reply: Result<RMRKReply, RMRKError> = Ok(RMRKReply::AssetAddedToToken {
-        token_id,
-        asset_id: composed_asset_id,
-        replaces_asset_with_id: 0,
-    });
-    assert!(res.contains(&(ADMIN, reply.encode())));
-
-    let res = kanaria.send(
-        ADMIN,
-        RMRKAction::AcceptAsset {
-            token_id,
-            asset_id: default_asset_id,
-        },
-    );
-    let reply: Result<RMRKReply, RMRKError> = Ok(RMRKReply::AssetAccepted {
-        token_id,
-        asset_id: default_asset_id,
-    });
-    assert!(res.contains(&(ADMIN, reply.encode())));
-
-    let res = kanaria.send(
-        ADMIN,
-        RMRKAction::AcceptAsset {
-            token_id,
-            asset_id: composed_asset_id,
-        },
-    );
-    let reply: Result<RMRKReply, RMRKError> = Ok(RMRKReply::AssetAccepted {
-        token_id,
-        asset_id: composed_asset_id,
-    });
-    assert!(res.contains(&(ADMIN, reply.encode())));
+    accept_asset(&kanaria, token_id, default_asset_id);
+    accept_asset(&kanaria, token_id, composed_asset_id);
 }
 
 pub fn add_gem_assets(system: &System) {
-    let gem_version = 4;
     let gem = system.get_program(GEM_ID);
 
     // These refIds are used from the child's perspective, to group assets that can be equipped into a parent
@@ -376,6 +303,148 @@ pub fn add_gem_assets(system: &System) {
         8,
     );
 
+    // 9, 10 and 11 are the slot part ids for the gems, defined on the catalog.
+    // e.g. Any asset on gem, which sets its equippableRefId to equippableRefIdLeftGem
+    // will be considered a valid equip into any kanaria on slot 9 (left gem).
+    set_valid_parent_for_equippable_group(&gem, equippable_ref_id_left_gem, 9, KANARIA_ID.into());
+    set_valid_parent_for_equippable_group(&gem, equippable_ref_id_mid_gem, 10, KANARIA_ID.into());
+    set_valid_parent_for_equippable_group(&gem, equippable_ref_id_right_gem, 11, KANARIA_ID.into());
+
+    // We add assets of type A to gem 1 and 2, and type B to gem 3. Both are nested into the first kanaria
+    // This means gems 1 and 2 will have the same asset, which is totally valid.
+
+    add_asset_to_token(&gem, 1.into(), 1, 0);
+    add_asset_to_token(&gem, 1.into(), 2, 0);
+    add_asset_to_token(&gem, 1.into(), 3, 0);
+    add_asset_to_token(&gem, 1.into(), 4, 0);
+
+    add_asset_to_token(&gem, 2.into(), 1, 0);
+    add_asset_to_token(&gem, 2.into(), 2, 0);
+    add_asset_to_token(&gem, 2.into(), 3, 0);
+    add_asset_to_token(&gem, 2.into(), 4, 0);
+
+    add_asset_to_token(&gem, 3.into(), 5, 0);
+    add_asset_to_token(&gem, 3.into(), 6, 0);
+    add_asset_to_token(&gem, 3.into(), 7, 0);
+    add_asset_to_token(&gem, 3.into(), 8, 0);
+
+    accept_asset(&gem, 1.into(), 1);
+    accept_asset(&gem, 1.into(), 2);
+    accept_asset(&gem, 1.into(), 3);
+    accept_asset(&gem, 1.into(), 4);
+
+    accept_asset(&gem, 2.into(), 1);
+    accept_asset(&gem, 2.into(), 2);
+    accept_asset(&gem, 2.into(), 3);
+    accept_asset(&gem, 2.into(), 4);
+
+    accept_asset(&gem, 3.into(), 5);
+    accept_asset(&gem, 3.into(), 6);
+    accept_asset(&gem, 3.into(), 7);
+    accept_asset(&gem, 3.into(), 8);
+}
+
+pub fn equip_gems(system: &System) {
+    let kanaria = system.get_program(KANARIA_ID);
+
+    let result = kanaria.send(
+        ADMIN,
+        RMRKAction::Equip {
+            token_id: 1.into(),       // Kanaria 1
+            child_token_id: 1.into(), // Gem 1
+            child_id: GEM_ID.into(),
+            asset_id: 2,       // Asset for the kanaria which is composable
+            slot_part_id: 9,   // left gem slot
+            child_asset_id: 2, // Asset id for child meant for the left gem
+        },
+    );
+    let reply: Result<RMRKReply, RMRKError> = Ok(RMRKReply::ChildAssetEquipped {
+        token_id: 1.into(),
+        asset_id: 2,
+        slot_part_id: 9,
+        child_token_id: 1.into(),
+        child_id: GEM_ID.into(),
+        child_asset_id: 2,
+    });
+    assert!(result.contains(&(ADMIN, reply.encode())));
+
+    let result = kanaria.send(
+        ADMIN,
+        RMRKAction::Equip {
+            token_id: 1.into(),       // Kanaria 1
+            child_token_id: 2.into(), // Gem 2
+            child_id: GEM_ID.into(),
+            asset_id: 2,       // Asset for the kanaria which is composable
+            slot_part_id: 10,  // mid gem slot
+            child_asset_id: 3, // Asset id for child meant for the mid gem
+        },
+    );
+    let reply: Result<RMRKReply, RMRKError> = Ok(RMRKReply::ChildAssetEquipped {
+        token_id: 1.into(),
+        asset_id: 2,
+        slot_part_id: 10,
+        child_token_id: 2.into(),
+        child_id: GEM_ID.into(),
+        child_asset_id: 3,
+    });
+    assert!(result.contains(&(ADMIN, reply.encode())));
+
+    let result = kanaria.send(
+        ADMIN,
+        RMRKAction::Equip {
+            token_id: 1.into(),       // Kanaria 1
+            child_token_id: 3.into(), // Gem 3
+            child_id: GEM_ID.into(),
+            asset_id: 2,       // Asset for the kanaria which is composable
+            slot_part_id: 11,  // mid gem slot
+            child_asset_id: 8, // Asset id for child meant for the mid gem
+        },
+    );
+    let reply: Result<RMRKReply, RMRKError> = Ok(RMRKReply::ChildAssetEquipped {
+        token_id: 1.into(),
+        asset_id: 2,
+        slot_part_id: 11,
+        child_token_id: 3.into(),
+        child_id: GEM_ID.into(),
+        child_asset_id: 8,
+    });
+    assert!(result.contains(&(ADMIN, reply.encode())));
+}
+
+pub fn compose(system: &System, token_id: TokenId, asset_id: u64) {
+    let kanaria = system.get_program(KANARIA_ID);
+    let (metadata, equippable_group_id, catalog_address, part_ids): (
+        String,
+        u64,
+        ActorId,
+        Vec<PartId>,
+    ) = kanaria
+        .read_state_using_wasm(
+            "get_assets_and_equippable_data",
+            WASM_BINARY.into(),
+            Some((token_id, asset_id)),
+        )
+        .expect("Failed to read state");
+
+    println!("Metadata {:?}", metadata);
+    println!("equippable_group_id {:?}", equippable_group_id);
+    println!("catalog_address {:?}", catalog_address);
+
+    let catalog = system.get_program(CATALOG_ID);
+    let catalog_state: CatalogState = catalog.read_state().expect("Failed to decode CatalogState");
+    let parts = catalog_state.parts;
+    let mut fixed_parts = Vec::new();
+    let mut slot_parts = Vec::new();
+
+    for part_id in part_ids.iter() {
+        let (_, part) = parts.iter().find(|(id, _)| id == part_id).unwrap();
+        match part {
+            Part::Fixed(part) => { fixed_parts.push(part); },
+            Part::Slot(part) => { slot_parts.push(part); }
+        }
+    }
+    println!("fixed parts {:?}", fixed_parts);
+    println!("slot parts {:?}", slot_parts);
 }
 
 fn add_equippable_asset_entry(
@@ -405,186 +474,55 @@ fn add_equippable_asset_entry(
     });
     assert!(result.contains(&(ADMIN, reply.encode())));
 }
-// fn setup() {
-//     let mut parts = BTreeMap::new();
 
-//     let part_id_for_head_1 = 1;
-//     let part_for_head_1 = Part::Fixed(FixedPart {
-//         z: Some(1),
-//         metadata_uri: String::from("ipfs://head1.png"),
-//     });
-//     parts.insert(part_id_for_head_1, part_for_head_1);
+fn set_valid_parent_for_equippable_group(
+    program: &Program,
+    equippable_group_id: u64,
+    slot_part_id: PartId,
+    parent_id: ActorId,
+) {
+    let result = program.send(
+        ADMIN,
+        RMRKAction::SetValidParentForEquippableGroup {
+            equippable_group_id,
+            slot_part_id,
+            parent_id,
+        },
+    );
 
-//     let part_id_for_head_2 = 2;
-//     let part_for_head_2 = Part::Fixed(FixedPart {
-//         z: Some(1),
-//         metadata_uri: String::from("ipfs://head2.png"),
-//     });
-//     parts.insert(part_id_for_head_2, part_for_head_2);
+    let reply: Result<RMRKReply, RMRKError> = Ok(RMRKReply::ValidParentEquippableGroupIdSet {
+        equippable_group_id,
+        slot_part_id,
+        parent_id,
+    });
+    assert!(result.contains(&(ADMIN, reply.encode())));
+}
 
-//     let part_id_for_head_3 = 3;
-//     let part_for_head_3 = Part::Fixed(FixedPart {
-//         z: Some(1),
-//         metadata_uri: String::from("ipfs://head3.png"),
-//     });
-//     parts.insert(part_id_for_head_3, part_for_head_3);
+fn add_asset_to_token(
+    program: &Program,
+    token_id: TokenId,
+    asset_id: u64,
+    replaces_asset_with_id: u64,
+) {
+    let result = program.send(
+        ADMIN,
+        RMRKAction::AddAssetToToken {
+            token_id,
+            asset_id,
+            replaces_asset_with_id,
+        },
+    );
 
-//     let part_id_for_body_1 = 4;
-//     let part_for_body_1 = Part::Fixed(FixedPart {
-//         z: Some(1),
-//         metadata_uri: String::from("ipfs://body1.png"),
-//     });
-//     parts.insert(part_id_for_body_1, part_for_body_1);
+    let reply: Result<RMRKReply, RMRKError> = Ok(RMRKReply::AssetAddedToToken {
+        token_id,
+        asset_id,
+        replaces_asset_with_id,
+    });
+    assert!(result.contains(&(ADMIN, reply.encode())));
+}
 
-//     let part_id_for_body_2 = 5;
-//     let part_for_body_2 = Part::Fixed(FixedPart {
-//         z: Some(1),
-//         metadata_uri: String::from("ipfs://body2.png"),
-//     });
-//     parts.insert(part_id_for_body_2, part_for_body_2);
-
-//     let part_id_for_hair_1 = 6;
-//     let part_for_hair_1 = Part::Fixed(FixedPart {
-//         z: Some(2),
-//         metadata_uri: String::from("ipfs://hair1.png"),
-//     });
-//     parts.insert(part_id_for_hair_1, part_for_hair_1);
-
-//     let part_id_for_hair_2 = 7;
-//     let part_for_hair_2 = Part::Fixed(FixedPart {
-//         z: Some(2),
-//         metadata_uri: String::from("ipfs://hair2.png"),
-//     });
-//     parts.insert(part_id_for_hair_2, part_for_hair_2);
-
-//     let part_id_for_hair_3 = 8;
-//     let part_for_hair_3 = Part::Fixed(FixedPart {
-//         z: Some(2),
-//         metadata_uri: String::from("ipfs://hair3.png"),
-//     });
-//     parts.insert(part_id_for_hair_3, part_for_hair_3);
-
-//     let part_id_for_mask_catalog_1 = 9;
-//     let part_for_mask_catalog_1 = Part::Fixed(FixedPart {
-//         z: Some(3),
-//         metadata_uri: String::from("ipfs://maskCatalog1.png"),
-//     });
-//     parts.insert(part_id_for_mask_catalog_1, part_for_mask_catalog_1);
-
-//     let part_id_for_mask_catalog_2 = 10;
-//     let part_for_mask_catalog_2 = Part::Fixed(FixedPart {
-//         z: Some(3),
-//         metadata_uri: String::from("ipfs://maskCatalog2.png"),
-//     });
-//     parts.insert(part_id_for_mask_catalog_2, part_for_mask_catalog_2);
-
-//     let part_id_for_mask_catalog_3 = 11;
-//     let part_for_mask_catalog_3 = Part::Fixed(FixedPart {
-//         z: Some(3),
-//         metadata_uri: String::from("ipfs://maskCatalog3.png"),
-//     });
-//     parts.insert(part_id_for_mask_catalog_3, part_for_mask_catalog_3);
-
-//     let part_id_for_ears_1 = 12;
-//     let part_for_mask_ears_1 = Part::Fixed(FixedPart {
-//         z: Some(4),
-//         metadata_uri: String::from("ipfs://ears1.png"),
-//     });
-//     parts.insert(part_id_for_mask_ears_1, part_for_mask_ears_1);
-
-//     let part_id_for_ears_2 = 13;
-//     let part_for_mask_ears_2 = Part::Fixed(FixedPart {
-//         z: Some(4),
-//         metadata_uri: String::from("ipfs://ears2.png"),
-//     });
-//     parts.insert(part_id_for_mask_ears_2, part_for_mask_ears_2);
-
-//     let part_id_for_horns_1 = 14;
-//     let part_for_horns_1 = Part::Fixed(FixedPart {
-//         z: Some(5),
-//         metadata_uri: String::from("ipfs://horns1.png"),
-//     });
-//     parts.insert(part_id_for_horns_1, part_for_horns_1);
-
-//     let part_id_for_horns_2 = 15;
-//     let part_for_horns_2 = Part::Fixed(FixedPart {
-//         z: Some(5),
-//         metadata_uri: String::from("ipfs://horns2.png"),
-//     });
-//     parts.insert(part_id_for_horns_2, part_for_horns_2);
-
-//     let part_id_for_horns_3 = 16;
-//     let part_for_horns_3 = Part::Fixed(FixedPart {
-//         z: Some(5),
-//         metadata_uri: String::from("ipfs://horns3.png"),
-//     });
-//     parts.insert(part_id_for_horns_3, part_for_horns_3);
-
-//     let part_id_for_mask_catalog_equipped_1 = 17;
-//     let part_for_mask_catalog_equipped_1 = Part::Fixed(FixedPart {
-//         z: Some(3),
-//         metadata_uri: String::from("ipfs://maskCatalogEquipped1.png"),
-//     });
-//     parts.insert(part_id_for_mask_catalog_equipped_1,  part_for_mask_catalog_equipped_1);
-
-//     let part_id_for_mask_catalog_equipped_2 = 18;
-//     let part_for_mask_catalog_equipped_2 = Part::Fixed(FixedPart {
-//         z: Some(3),
-//         metadata_uri: String::from("ipfs://maskCatalogEquipped2.png"),
-//     });
-//     parts.insert(part_id_for_mask_catalog_equipped_2,  part_for_mask_catalog_equipped_2);
-
-//     let part_id_for_mask_catalog_equipped_3 = 19;
-//     let part_for_mask_catalog_equipped_3 = Part::Fixed(FixedPart {
-//         z: Some(3),
-//         metadata_uri: String::from("ipfs://maskCatalogEquipped3.png"),
-//     });
-//     parts.insert(part_id_for_mask_catalog_equipped_3,  part_for_mask_catalog_equipped_3);
-
-//     let part_id_for_ears_equipped_1 = 20;
-//     let part_for_ears_equipped_1 = Part::Fixed(FixedPart {
-//         z: Some(5),
-//         metadata_uri: String::from("ipfs://maskEarsEquipped1.png"),
-//     });
-//     parts.insert(part_id_for_ears_equipped_1,  part_for_ears_equipped_1);
-
-//     let part_id_for_ears_equipped_2 = 21;
-//     let part_for_ears_equipped_2 = Part::Fixed(FixedPart {
-//         z: Some(5),
-//         metadata_uri: String::from("ipfs://maskEarsEquipped2.png"),
-//     });
-//     parts.insert(part_id_for_ears_equipped_2,  part_for_ears_equipped_2);
-
-//     let part_id_for_horns_equipped_1 = 22;
-//     let part_for_horns_equipped_1 = Part::Fixed(FixedPart {
-//         z: Some(5),
-//         metadata_uri: String::from("ipfs://maskHornsEquipped1.png"),
-//     });
-//     parts.insert(part_id_for_horns_equipped_1,  part_for_horns_equipped_1);
-
-//     let part_id_for_horns_equipped_2 = 23;
-//     let part_for_horns_equipped_2 = Part::Fixed(FixedPart {
-//         z: Some(5),
-//         metadata_uri: String::from("ipfs://maskHornsEquipped2.png"),
-//     });
-//     parts.insert(part_id_for_horns_equipped_2,  part_for_horns_equipped_2);
-
-//     let part_id_for_horns_equipped_3 = 24;
-//     let part_for_horns_equipped_3 = Part::Fixed(FixedPart {
-//         z: Some(5),
-//         metadata_uri: String::from("ipfs://maskHornsEquipped3.png"),
-//     });
-//     parts.insert(part_id_for_horns_equipped_3,  part_for_horns_equipped_3);
-
-//     let part_id_for_mask = 25;
-//     let part_for_mask = Part::Slot(SlotPart { equippable: vec![MASK_EQUIP_ADDRESS.into()], z: Some(2), metadata_uri: String::from("") });
-//     parts.insert(part_id_for_mask,  part_for_mask);
-
-//     let unique_neons = 10;
-//     let unique_masks = 4;
-
-// }
-
-// fn mint_neons() {}
-
-// fn mint_masks() {}
+fn accept_asset(program: &Program, token_id: TokenId, asset_id: u64) {
+    let res = program.send(ADMIN, RMRKAction::AcceptAsset { token_id, asset_id });
+    let reply: Result<RMRKReply, RMRKError> = Ok(RMRKReply::AssetAccepted { token_id, asset_id });
+    assert!(res.contains(&(ADMIN, reply.encode())));
+}

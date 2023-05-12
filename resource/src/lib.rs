@@ -1,6 +1,6 @@
 #![no_std]
 
-use base_io::*;
+use catalog_io::*;
 use gstd::{msg, prelude::*, ActorId};
 use hashbrown::HashMap;
 use resource_io::*;
@@ -44,7 +44,7 @@ impl ResourceStorage {
             .expect("Resource with indicated id does not exist");
         if let Resource::Composed(ComposedResource { base, parts, .. }) = resource {
             // check that part exist in base contract
-            msg::send_for_reply_as::<_, BaseEvent>(*base, BaseAction::CheckPart(part_id), 0)
+            msg::send_for_reply_as::<_, CatalogReply>(*base, CatalogAction::CheckPart(part_id), 0)
                 .expect("Error in sending async message `[BaseAction::CheckPart]` to base contract")
                 .await
                 .expect("Error in async message `[BaseAction::CheckPart]`");

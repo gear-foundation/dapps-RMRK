@@ -75,7 +75,82 @@ impl From<&RMRKToken> for RMRKState {
                 .collect(),
             multiresource: rmrk.multiresource.clone().into(),
             resource_id: rmrk.resource_id,
-            equipped_tokens: rmrk.equipped_tokens.iter().copied().collect(),
+            assets: AssetsState::default(),
+        }
+    }
+}
+
+impl From<&Assets> for AssetsState {
+    fn from(assets: &Assets) -> AssetsState {
+        AssetsState {
+            assets: assets
+                .assets
+                .iter()
+                .map(|(key, value)| (*key, value.clone()))
+                .collect(),
+            catalog_addresses: assets
+                .catalog_addresses
+                .iter()
+                .map(|(key, value)| (*key, *value))
+                .collect(),
+            equippable_group_ids: assets
+                .equippable_group_ids
+                .iter()
+                .map(|(key, value)| (*key, *value))
+                .collect(),
+            part_ids: assets
+                .part_ids
+                .iter()
+                .map(|(key, value)| (*key, value.clone()))
+                .collect(),
+            pending_assets: assets
+                .pending_assets
+                .iter()
+                .map(|(key, value)| (*key, value.clone()))
+                .collect(),
+            active_assets: assets
+                .active_assets
+                .iter()
+                .map(|(key, value)| (*key, value.clone()))
+                .collect(),
+            active_assets_priorities: assets
+                .active_assets_priorities
+                .iter()
+                .map(|(key, value)| (*key, value.clone()))
+                .collect(),
+            asset_replacement: assets
+                .asset_replacement
+                .iter()
+                .map(|(key, value)| {
+                    (
+                        *key,
+                        value.iter().map(|(key, value)| (*key, *value)).collect(),
+                    )
+                })
+                .collect(),
+            valid_parent_slots: assets
+                .valid_parent_slots
+                .iter()
+                .map(|(key, value)| {
+                    (
+                        *key,
+                        value.iter().map(|(key, value)| (*key, *value)).collect(),
+                    )
+                })
+                .collect(),
+            equipments: assets
+                .equipments
+                .iter()
+                .map(|(key, value)| {
+                    (
+                        *key,
+                        value
+                            .iter()
+                            .map(|(key, value)| (*key, value.clone()))
+                            .collect(),
+                    )
+                })
+                .collect(),
         }
     }
 }

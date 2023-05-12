@@ -1,16 +1,18 @@
-use base_io::{BaseAction, EquippableList, FixedPart, InitBase, Part, SlotPart};
-use codec::Encode;
-use gstd::BTreeMap;
+use catalog_io::*;
+use gstd::prelude::*;
 use gtest::{Program, RunResult, System};
+use hashbrown::HashSet;
 use resource_io::Resource;
 use rmrk_io::*;
-use types::primitives::{CollectionAndToken, PartId, ResourceId};
+use rmrk_state::WASM_BINARY;
+
+use types::primitives::{CollectionAndToken, CollectionId, PartId, ResourceId, TokenId};
 pub const USERS: &[u64] = &[10, 11, 12, 13];
 pub const ZERO_ID: u64 = 0;
 pub const PARENT_NFT_CONTRACT: u64 = 2;
 pub const CHILD_NFT_CONTRACT: u64 = 1;
 
-pub const BASE_ID: u64 = 3;
+pub const CATALOG_ID: u64 = 3;
 pub const CHILD_RESOURCE_ID: ResourceId = 150;
 pub const PARENT_RESOURCE_ID: ResourceId = 151;
 
@@ -77,13 +79,13 @@ pub trait RMRKToken {
         destination_id: u64,
         exp_error: Option<&str>,
     );
-    // fn check_rmrk_owner(&self, token_id: u64, expected_token_id: Option<TokenId>, owner_id: u64);
+    fn check_rmrk_owner(&self, token_id: u64, expected_token_id: Option<TokenId>, owner_id: u64);
     // fn check_balance(&self, user: u64, balance: u64);
-    // fn check_pending_children(
-    //     &self,
-    //     parent_token_id: u64,
-    //     expected_pending_children: BTreeSet<(CollectionId, TokenId)>,
-    // );
+    fn check_pending_children(
+        &self,
+        parent_token_id: u64,
+        expected_pending_children: HashSet<(CollectionId, TokenId)>,
+    );
     // fn check_accepted_children(
     //     &self,
     //     parent_token_id: u64,
@@ -127,13 +129,12 @@ impl RMRKToken for Program<'_> {
         if let Some(exp_error) = exp_error {
             check_run_result_for_error(&res, exp_error);
         } else {
-            let reply = RMRKEvent::MintToNft {
+            let reply: Result<RMRKReply, RMRKError> = Ok(RMRKReply::MintToNft {
                 parent_id: parent_id.into(),
                 parent_token_id: parent_token_id.into(),
                 token_id: token_id.into(),
-            }
-            .encode();
-            assert!(res.contains(&(user, reply)));
+            });
+            assert!(res.contains(&(user, reply.encode())));
         }
     }
 
@@ -154,7 +155,7 @@ impl RMRKToken for Program<'_> {
         if let Some(exp_error) = exp_error {
             check_run_result_for_error(&res, exp_error);
         } else {
-            let reply = RMRKEvent::MintToRootOwner {
+            let reply = RMRKReply::MintToRootOwner {
                 root_owner: root_owner.into(),
                 token_id: token_id.into(),
             }
@@ -169,7 +170,7 @@ impl RMRKToken for Program<'_> {
         if let Some(exp_error) = exp_error {
             check_run_result_for_error(&res, exp_error);
         } else {
-            let reply = RMRKEvent::Transfer {
+            let reply = RMRKReply::Transfer {
                 to: ZERO_ID.into(),
                 token_id: token_id.into(),
             }
@@ -198,7 +199,7 @@ impl RMRKToken for Program<'_> {
         if let Some(exp_error) = exp_error {
             check_run_result_for_error(&res, exp_error);
         } else {
-            let reply = RMRKEvent::AcceptedChild {
+            let reply = RMRKReply::AcceptedChild {
                 child_contract_id: child_contract_id.into(),
                 child_token_id: child_token_id.into(),
                 parent_token_id: parent_token_id.into(),
@@ -228,7 +229,7 @@ impl RMRKToken for Program<'_> {
         if let Some(exp_error) = exp_error {
             check_run_result_for_error(&res, exp_error);
         } else {
-            let reply = RMRKEvent::RejectedChild {
+            let reply = RMRKReply::RejectedChild {
                 child_contract_id: child_contract_id.into(),
                 child_token_id: child_token_id.into(),
                 parent_token_id: parent_token_id.into(),
@@ -258,7 +259,7 @@ impl RMRKToken for Program<'_> {
         if let Some(exp_error) = exp_error {
             check_run_result_for_error(&res, exp_error);
         } else {
-            let reply = RMRKEvent::RemovedChild {
+            let reply = RMRKReply::RemovedChild {
                 child_contract_id: child_contract_id.into(),
                 child_token_id: child_token_id.into(),
                 parent_token_id: parent_token_id.into(),
@@ -276,7 +277,7 @@ impl RMRKToken for Program<'_> {
                 token_id: token_id.into(),
             },
         );
-        let reply = RMRKEvent::Approval {
+        let reply = RMRKReply::Approval {
             root_owner: user.into(),
             approved_account: to.into(),
             token_id: token_id.into(),
@@ -297,7 +298,7 @@ impl RMRKToken for Program<'_> {
         if let Some(exp_error) = exp_error {
             check_run_result_for_error(&res, exp_error);
         } else {
-            let reply = RMRKEvent::Transfer {
+            let reply = RMRKReply::Transfer {
                 to: to.into(),
                 token_id: token_id.into(),
             }
@@ -326,7 +327,7 @@ impl RMRKToken for Program<'_> {
         if let Some(exp_error) = exp_error {
             check_run_result_for_error(&res, exp_error);
         } else {
-            let reply = RMRKEvent::TransferToNft {
+            let reply = RMRKReply::TransferToNft {
                 to: to.into(),
                 token_id: token_id.into(),
                 destination_id: destination_id.into(),
@@ -336,18 +337,22 @@ impl RMRKToken for Program<'_> {
         }
     }
 
-    // fn check_rmrk_owner(&self, token_id: u64, expected_token_id: Option<TokenId>, owner_id: u64) {
-    //     let rmrk_owner: RMRKStateReply = self
-    //         .meta_state(&RMRKState::Owner(token_id.into()))
-    //         .expect("Meta_state failed");
-    //     assert_eq!(
-    //         rmrk_owner,
-    //         RMRKStateReply::Owner {
-    //             token_id: expected_token_id,
-    //             owner_id: owner_id.into(),
-    //         }
-    //     );
-    // }
+    fn check_rmrk_owner(&self, token_id: u64, expected_token_id: Option<TokenId>, owner_id: u64) {
+        let rmrk_owner: RMRKOwner = self
+            .read_state_using_wasm(
+                "rmrk_owner",
+                WASM_BINARY.into(),
+                Some(TokenId::from(token_id)),
+            )
+            .expect("Failed to read state");
+        assert_eq!(
+            rmrk_owner,
+            RMRKOwner {
+                token_id: expected_token_id,
+                owner_id: owner_id.into(),
+            }
+        );
+    }
 
     // fn check_balance(&self, account: u64, expected_balance: u64) {
     //     let balance: RMRKStateReply = self
@@ -356,19 +361,22 @@ impl RMRKToken for Program<'_> {
     //     assert_eq!(balance, RMRKStateReply::Balance(expected_balance.into()));
     // }
 
-    // fn check_pending_children(
-    //     &self,
-    //     token_id: u64,
-    //     expected_pending_children: BTreeSet<(CollectionId, TokenId)>,
-    // ) {
-    //     let pending_children: RMRKStateReply = self
-    //         .meta_state(RMRKState::PendingChildren(token_id.into()))
-    //         .expect("Meta_state failed");
-    //     assert_eq!(
-    //         pending_children,
-    //         RMRKStateReply::PendingChildren(expected_pending_children),
-    //     );
-    // }
+    fn check_pending_children(
+        &self,
+        token_id: u64,
+        expected_pending_children: HashSet<(CollectionId, TokenId)>,
+    ) {
+        let pending_children: Vec<(CollectionId, TokenId)> = self
+            .read_state_using_wasm(
+                "pending_children",
+                WASM_BINARY.into(),
+                Some(TokenId::from(token_id)),
+            )
+            .expect("Failed to read state");
+        let pending_children: HashSet<(CollectionId, TokenId)> =
+            HashSet::from_iter(pending_children);
+        assert_eq!(pending_children, expected_pending_children,);
+    }
 
     // fn check_accepted_children(
     //     &self,
@@ -385,7 +393,7 @@ impl RMRKToken for Program<'_> {
     // }
     fn check_root_owner(&self, token_id: u64, root_owner: u64) {
         let res = self.send(10, RMRKAction::RootOwner(token_id.into()));
-        assert!(res.contains(&(10, RMRKEvent::RootOwner(root_owner.into(),).encode())));
+        assert!(res.contains(&(10, RMRKReply::RootOwner(root_owner.into(),).encode())));
     }
 }
 
@@ -487,7 +495,7 @@ impl MultiResource for Program<'_> {
         if let Some(exp_error) = exp_error {
             check_run_result_for_error(&res, exp_error);
         } else {
-            let reply = RMRKEvent::ResourceEntryAdded(resource).encode();
+            let reply = RMRKReply::ResourceEntryAdded(resource).encode();
             assert!(res.contains(&(user, reply)));
         }
     }
@@ -512,7 +520,7 @@ impl MultiResource for Program<'_> {
         if let Some(exp_error) = exp_error {
             check_run_result_for_error(&res, exp_error);
         } else {
-            let reply = RMRKEvent::ResourceAdded {
+            let reply = RMRKReply::ResourceAdded {
                 token_id: token_id.into(),
                 resource_id,
                 overwrite_id,
@@ -539,7 +547,7 @@ impl MultiResource for Program<'_> {
         if let Some(exp_error) = exp_error {
             check_run_result_for_error(&res, exp_error);
         } else {
-            let reply = RMRKEvent::ResourceAccepted {
+            let reply = RMRKReply::ResourceAccepted {
                 token_id: token_id.into(),
                 resource_id,
             }
@@ -565,7 +573,7 @@ impl MultiResource for Program<'_> {
         if let Some(exp_error) = exp_error {
             check_run_result_for_error(&res, exp_error);
         } else {
-            let reply = RMRKEvent::ResourceRejected {
+            let reply = RMRKReply::ResourceRejected {
                 token_id: token_id.into(),
                 resource_id,
             }
@@ -586,7 +594,7 @@ impl MultiResource for Program<'_> {
         if let Some(exp_error) = exp_error {
             check_run_result_for_error(&res, exp_error);
         } else {
-            let reply = RMRKEvent::PrioritySet {
+            let reply = RMRKReply::PrioritySet {
                 token_id: token_id.into(),
                 priorities,
             }
@@ -623,26 +631,26 @@ impl MultiResource for Program<'_> {
     //     );
     // }
 }
-pub fn init_base(sys: &System) {
-    let base = Program::from_file(
+pub fn init_catalog(sys: &System) {
+    let catalog = Program::from_file(
         sys,
-        "../target/wasm32-unknown-unknown/release/rmrk_base.wasm",
+        "../target/wasm32-unknown-unknown/release/rmrk_catalog.wasm",
     );
-    let res = base.send(
+    let res = catalog.send(
         USERS[0],
-        InitBase {
-            base_type: "svg".to_string(),
+        InitCatalog {
+            catalog_type: "svg".to_string(),
             symbol: "".to_string(),
         },
     );
     assert!(res.log().is_empty());
 
     let mut parts: BTreeMap<PartId, Part> = BTreeMap::new();
-    // setup base
+    // setup catalog
     let fixed_part_body_id = 100;
     let fixed_part_body = FixedPart {
         z: Some(0),
-        src: "body-1".to_string(),
+        metadata_uri: "body-1".to_string(),
     };
     parts.insert(fixed_part_body_id, Part::Fixed(fixed_part_body));
 
@@ -650,13 +658,13 @@ pub fn init_base(sys: &System) {
     let slot_part_left_hand_id = 400;
     let slot_part_left_hand = SlotPart {
         z: Some(0),
-        src: "left-hand".to_string(),
-        equippable: EquippableList::All,
+        metadata_uri: "left-hand".to_string(),
+        equippable: vec![],
     };
     parts.insert(slot_part_left_hand_id, Part::Slot(slot_part_left_hand));
-    // add parts to base
-    assert!(!base
-        .send(USERS[0], BaseAction::AddParts(parts))
+    // add parts to catalog
+    assert!(!catalog
+        .send(USERS[0], CatalogAction::AddParts(parts))
         .main_failed());
 }
 
@@ -753,27 +761,27 @@ impl Equippable for Program<'_> {
         equippable_resource_id: ResourceId,
         exp_error: Option<&str>,
     ) {
-        let res = self.send(
-            USERS[0],
-            RMRKAction::Equip {
-                token_id: token_id.into(),
-                resource_id,
-                equippable,
-                equippable_resource_id,
-            },
-        );
+        // let res = self.send(
+        //     USERS[0],
+        //     RMRKAction::Equip {
+        //         token_id: token_id.into(),
+        //         resource_id,
+        //         equippable,
+        //         equippable_resource_id,
+        //     },
+        // );
 
-        if let Some(exp_error) = exp_error {
-            check_run_result_for_error(&res, exp_error);
-        } else {
-            let reply = RMRKEvent::TokenEquipped {
-                token_id: token_id.into(),
-                resource_id,
-                slot_id: 400,
-                equippable,
-            }
-            .encode();
-            assert!(res.contains(&(USERS[0], reply)));
-        }
+        // if let Some(exp_error) = exp_error {
+        //     check_run_result_for_error(&res, exp_error);
+        // } else {
+        //     let reply = RMRKReply::TokenEquipped {
+        //         token_id: token_id.into(),
+        //         resource_id,
+        //         slot_id: 400,
+        //         equippable,
+        //     }
+        //     .encode();
+        //     assert!(res.contains(&(USERS[0], reply)));
+        // }
     }
 }

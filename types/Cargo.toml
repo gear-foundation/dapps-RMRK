@@ -6,5 +6,5 @@ license = "GPL-3.0"
 authors = ["Gear Technologies"]
 
 [dependencies]
-gstd = { git = "https://github.com/gear-tech/gear.git", features = ["debug"] }
+gstd = { git = "https://github.com/gear-tech/gear.git", features = ["debug"], branch = "dn-reply-provision" }
 primitive-types = { version = "0.12.1", default-features = false, features = ["scale-info"] }

@@ -1,5 +1,4 @@
 #![no_std]
-
 use gmeta::{In, InOut, Metadata};
 use gstd::{prelude::*, ActorId};
 use resource_io::Resource;
@@ -8,7 +7,7 @@ pub struct RMRKMetadata;
 
 impl Metadata for RMRKMetadata {
     type Init = In<InitRMRK>;
-    type Handle = InOut<RMRKAction, RMRKEvent>;
+    type Handle = InOut<RMRKAction, Result<RMRKReply, RMRKError>>;
     type Others = ();
     type Reply = ();
     type Signal = ();
@@ -28,9 +27,44 @@ pub struct RMRKState {
     pub balances: Vec<(ActorId, TokenId)>,
     pub multiresource: MultiResourceState,
     pub resource_id: ActorId,
-    pub equipped_tokens: Vec<TokenId>,
+    pub assets: AssetsState,
 }
 
+#[derive(Default, Encode, Debug, Decode, TypeInfo)]
+pub struct AssetsState {
+    /// Mapping of uint64 Ids to asset metadata
+    pub assets: Vec<(u64, String)>,
+    /// Mapping of uint64 asset ID to corresponding catalog address.
+    pub catalog_addresses: Vec<(u64, ActorId)>,
+    /// Mapping of asset_id to equippable_group_ids.
+    pub equippable_group_ids: Vec<(u64, u64)>,
+    /// Mapping of asset_id to catalog parts applicable to this asset, both fixed and slot
+    pub part_ids: Vec<(u64, Vec<PartId>)>,
+    /// Mapping of tokenId to an array of pending assets
+    pub pending_assets: Vec<(TokenId, Vec<u64>)>,
+    /// Mapping of tokenId to an array of active assets
+    pub active_assets: Vec<(TokenId, Vec<u64>)>,
+    /// Mapping of tokenId to an array of priorities for active assets
+    pub active_assets_priorities: Vec<(TokenId, Vec<u64>)>,
+    /// Mapping of tokenId to new asset, to asset to be replaced
+    pub asset_replacement: Vec<(TokenId, Vec<(u64, u64)>)>,
+    /// Mapping of `equippable_group_id` to parent contract address and valid `slot_id`.
+    pub valid_parent_slots: Vec<(u64, Vec<(ActorId, PartId)>)>,
+    /// Mapping of token ID and catalog address to slot part ID to equipment information.
+    /// Used to compose an NFT.
+    pub equipments: Vec<((TokenId, ActorId), Vec<(PartId, Equipment)>)>,
+}
+#[derive(Default, Debug, Clone, Encode, Decode, TypeInfo)]
+pub struct Equipment {
+    ///  The ID of the asset equipping a child
+    pub asset_id: u64,
+    /// The ID of the asset used as equipment
+    pub child_asset_id: u64,
+    /// The ID of token that is equipped
+    pub child_token_id: TokenId,
+    /// Address of the collection to which the child asset belongs to
+    pub child_id: ActorId,
+}
 #[derive(Debug, Default, PartialEq, Eq, Encode, Decode, TypeInfo, Clone)]
 pub struct RMRKOwner {
     pub token_id: Option<TokenId>,
@@ -59,7 +93,7 @@ pub enum ChildStatus {
     Accepted,
 }
 
-#[derive(Debug, Decode, Encode, TypeInfo)]
+#[derive(Debug, Decode, Encode, TypeInfo, Clone)]
 pub enum RMRKAction {
     /// Mints token that will belong to another token in another RMRK contract.
     ///
@@ -331,6 +365,42 @@ pub enum RMRKAction {
         resource: Resource,
     },
 
+    /// Used to add an equippable asset entry.
+    ///
+    /// Arguments:
+    /// * `equippable_group_id`: ID of the equippable group
+    /// * `catalog_address`: Address of the `Catalog` smart contract this asset belongs to
+    /// * `metadata_uri`: Metadata URI of the asset
+    /// * `parts_ids`:  An array of IDs of fixed and slot parts to be included in the asset
+    ///
+    /// On success reply `[RMRKEvent::ResourceEntryAdded]`.
+    AddEquippableAssetEntry {
+        equippable_group_id: u64,
+        catalog_address: Option<ActorId>,
+        metadata_uri: String,
+        part_ids: Vec<PartId>,
+    },
+
+    AddAssetToToken {
+        token_id: TokenId,
+        asset_id: u64,
+        replaces_asset_with_id: u64,
+    },
+
+    AcceptAsset {
+        token_id: TokenId,
+        asset_id: u64,
+    },
+
+    /// Declares that the assets belonging to a given `equippable_group_id` are
+    /// equippable into the `Slot` associated with the `part_id` of the collection
+    ///  at the specified `parent_id`.
+    SetValidParentForEquippableGroup {
+        equippable_group_id: u64,
+        slot_part_id: PartId,
+        parent_id: ActorId,
+    },
+
     /// Adds resource to an existing token.
     /// Checks that the resource with indicated id exists in the resource storage contract.
     /// Proposed resource is placed in the "Pending" array.
@@ -409,54 +479,24 @@ pub enum RMRKAction {
         priorities: Vec<u8>,
     },
 
-    /// Equips a child NFT's resource to a parent's slot.
-    /// It sends message to the parent contract checking the child status.
-    /// and the parent's resource.
-    /// to check whether the child token has the indicated slot resource.
-    ///
-    /// # Requirements:
-    /// * The `msg::source()` must be the root owner.
-    /// * The child token must have the slot resource with indicated `base_id` and `slot_id`.
-    /// * The parent token must have composed resource with indicated `base_id`.
+    /// Equips a child to a parent's slot.
     ///
     /// # Arguments:
     /// * `token_id`: the tokenId of the NFT to be equipped.
-    /// * `resource_id`: the id of the slot resource.
-    /// * `equippable`: parent's contract and token.
-    /// * `equippable_resource_id`: the id of the composed resource.
+    /// * `child_token_id`:
+    /// * `child_id`:
+    /// * `asset_id`:ID of the asset that we are equipping into
+    /// * `slot_part_id`: slotPartId ID of the slot part that we are using to equip
+    /// * `child_asset_id`: childAssetId ID of the asset that we are equipping
     ///
     /// On success replies [`RMRKEvent::TokenEquipped`].
     Equip {
         token_id: TokenId,
-        resource_id: ResourceId,
-        equippable: CollectionAndToken,
-        equippable_resource_id: ResourceId,
-    },
-
-    /// That message is designed to be sent from another RMRK contracts
-    /// when equipping  `child_token_id` to `parent_token_id`.
-    /// It checks that `parent_token_id` has the child with `child_token_id` in its accepted children.
-    /// It checks that `parent_token_id` has composed resource.
-    /// It sends a message to base contract to check whether the `parent_token_id` is in equippable list.
-    /// It sends a message to resource contract to add part id to composed resource.
-    ///
-    /// # Requirements:
-    /// * `msg::source()` must be the child contract.
-    /// * The resource with indicated id must exist in the token resources and must be Composed.
-    /// * The `parent_token_id` must be in the equippable list.
-    ///
-    /// # Arguments:
-    /// * `parent_token_id`: the id of the equippable token.
-    /// * `child_token_id`: the id of the token to be equipped.
-    /// * `resource_id`: the id of the composed resource.
-    /// * `slot_id`: the id of the slot part.
-    ///
-    /// On success replies [`RMRKEvent::EquippableIsOk`].
-    CheckEquippable {
-        parent_token_id: TokenId,
         child_token_id: TokenId,
-        resource_id: ResourceId,
-        slot_id: PartId,
+        child_id: CollectionId,
+        asset_id: u64,
+        slot_part_id: PartId,
+        child_asset_id: u64,
     },
     CheckSlotResource {
         token_id: TokenId,
@@ -464,10 +504,16 @@ pub enum RMRKAction {
         base_id: BaseId,
         slot_id: PartId,
     },
+    CanTokenBeEquippedWithAssetIntoSlot {
+        parent_id: ActorId,
+        token_id: TokenId,
+        asset_id: u64,
+        slot_part_id: PartId,
+    },
 }
 
 #[derive(Debug, Encode, Decode, TypeInfo)]
-pub enum RMRKEvent {
+pub enum RMRKReply {
     MintToNft {
         parent_id: ActorId,
         parent_token_id: TokenId,
@@ -561,4 +607,57 @@ pub enum RMRKEvent {
         equippable: CollectionAndToken,
     },
     EquippableIsOk,
+    AssetSet {
+        id: u64,
+    },
+    EquippableAssetEntryAdded {
+        id: u64,
+        equippable_group_id: u64,
+        catalog_address: Option<ActorId>,
+        metadata_uri: String,
+        part_ids: Vec<PartId>,
+    },
+    AssetAddedToToken {
+        token_id: TokenId,
+        asset_id: u64,
+        replaces_asset_with_id: u64,
+    },
+    AssetAccepted {
+        token_id: TokenId,
+        asset_id: u64,
+    },
+    ValidParentEquippableGroupIdSet {
+        equippable_group_id: u64,
+        slot_part_id: PartId,
+        parent_id: ActorId,
+    },
+    TokenBeEquippedWithAssetIntoSlot,
+    ChildAssetEquipped {
+        token_id: TokenId,
+        asset_id: u64,
+        slot_part_id: PartId,
+        child_token_id: TokenId,
+        child_id: CollectionId,
+        child_asset_id: u64,
+    },
+}
+
+#[derive(Debug, Encode, Decode, TypeInfo, PartialEq, Eq, Clone)]
+pub enum RMRKError {
+    ZeroIdForbidden,
+    AssetAlreadyExists,
+    CatalogRequiredForParts,
+    NoAssetMatchingId,
+    MaxPendingAssetsReached,
+    AssetDoesNotExistInPendingArray,
+    EquippableNotFound,
+    WrongSlotId,
+    WrongPartFormat,
+    ActiveAssetNotFound,
+    EquippableNotAllowedByCatalog,
+    TargetAssetCannotReceiveSlot,
+    SlotAlreadyUsed,
+    GasIsOver,
+    NotInEquippableList,
+    UnknownError,
 }

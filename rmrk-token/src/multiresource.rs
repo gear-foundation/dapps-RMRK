@@ -1,3 +1,5 @@
+use core::hash::Hash;
+
 use crate::*;
 use resource_io::Resource;
 use types::primitives::{BaseId, PartId, ResourceId, TokenId};
@@ -25,15 +27,37 @@ impl RMRKToken {
     /// * `metadata_uri`:  a string pointing to a metadata file associated with the resource.
     ///
     /// On success reply `[RMRKEvent::ResourceEntryAdded]`.
-    pub async fn add_resource_entry(&mut self, resource_id: ResourceId, resource: Resource) {
+    pub fn add_resource_entry(
+        &mut self,
+        tx_manager: &mut TxManager,
+        msg: &RMRKAction,
+        resource_id: ResourceId,
+        resource: Resource,
+    ) -> Result<RMRKReply, RMRKError> {
         assert!(
             msg::source() == self.admin,
             "Only admin can add resource to storage contract"
         );
-        // sends message to resource storage contract
-        add_resource_entry(&self.resource_id, resource_id, resource.clone()).await;
-        msg::reply(RMRKEvent::ResourceEntryAdded(resource), 0)
-            .expect("Error in reply `[RMRKEvent::ResourceEntryAdded]`");
+
+        let tx = tx_manager.get_tx(msg);
+        let state = tx.state.clone();
+        let current_msg_id = msg::id();
+
+        match state {
+            TxState::Initial => {
+                let msg_id =
+                    add_resource_entry_msg(&self.resource_id, resource_id, resource.clone());
+                tx.state = TxState::MsgAddResourceSent;
+                tx_manager.msg_sent_to_msg.insert(msg_id, current_msg_id);
+                exec::wait_for(5);
+            }
+            TxState::ReplyOnAddResourceReceived => {
+                return Ok(RMRKReply::ResourceEntryAdded(resource));
+            }
+            _ => {
+                unreachable!()
+            }
+        }
     }
 
     /// Adds resource to an existing token.
@@ -53,46 +77,68 @@ impl RMRKToken {
     /// * `overwrite_id`: a resource to be overwritten.
     ///
     /// On success reply `[RMRKEvent::ResourceAdded]`.
-    pub async fn add_resource(&mut self, token_id: TokenId, resource_id: u8, overwrite_id: u8) {
+    pub fn add_resource(
+        &mut self,
+        tx_manager: &mut TxManager,
+        msg: &RMRKAction,
+        token_id: TokenId,
+        resource_id: u8,
+        overwrite_id: u8,
+    ) -> Result<RMRKReply, RMRKError> {
         self.assert_token_does_not_exist(token_id);
-        assert_resource_exists(&self.resource_id, resource_id).await;
 
-        if let Some(token_resources) = self.multiresource.active_resources.get(&token_id) {
-            assert!(
-                !token_resources.contains(&resource_id),
-                "Resource already exists on token"
-            );
-        }
-        if let Some(pending_resources) = self.multiresource.pending_resources.get(&token_id) {
-            assert!(
-                pending_resources.len() < MAX_RESOURCE_LEN as usize,
-                "Max pending resources reached"
-            );
-        }
+        let tx = tx_manager.get_tx(msg);
+        let state = tx.state.clone();
+        let current_msg_id = msg::id();
 
-        if overwrite_id != 0 {
-            if let Some(token_resources) = self.multiresource.active_resources.get(&token_id) {
-                assert!(
-                    token_resources.contains(&overwrite_id),
-                    "Proposed overwritten resource must exist on token"
-                );
-            } else {
-                panic!("No resources to overwrite")
+        match state {
+            TxState::Initial => {
+                let msg_id = get_resource_msg(&self.resource_id, resource_id);
+                tx.state = TxState::MsgGetResourceSent;
+                tx_manager.msg_sent_to_msg.insert(msg_id, current_msg_id);
+                exec::wait_for(5);
             }
-            self.add_overwrite_resource(token_id, resource_id, overwrite_id);
+            TxState::ReplyOnGetResourceReceived => {
+                if let Some(token_resources) = self.multiresource.active_resources.get(&token_id) {
+                    assert!(
+                        !token_resources.contains(&resource_id),
+                        "Resource already exists on token"
+                    );
+                }
+                if let Some(pending_resources) = self.multiresource.pending_resources.get(&token_id)
+                {
+                    assert!(
+                        pending_resources.len() < MAX_RESOURCE_LEN as usize,
+                        "Max pending resources reached"
+                    );
+                }
+
+                if overwrite_id != 0 {
+                    if let Some(token_resources) =
+                        self.multiresource.active_resources.get(&token_id)
+                    {
+                        assert!(
+                            token_resources.contains(&overwrite_id),
+                            "Proposed overwritten resource must exist on token"
+                        );
+                    } else {
+                        panic!("No resources to overwrite")
+                    }
+                    self.add_overwrite_resource(token_id, resource_id, overwrite_id);
+                }
+
+                self.add_pending_resource(token_id, resource_id);
+
+                return Ok(RMRKReply::ResourceAdded {
+                    token_id,
+                    resource_id,
+                    overwrite_id,
+                });
+            }
+            _ => {
+                unreachable!()
+            }
         }
-
-        self.add_pending_resource(token_id, resource_id);
-
-        msg::reply(
-            RMRKEvent::ResourceAdded {
-                token_id,
-                resource_id,
-                overwrite_id,
-            },
-            0,
-        )
-        .expect("Error in reply `[RMRKEvent::ResourceAdded]`");
     }
 
     /// Accepts resource from pending list.
@@ -107,8 +153,41 @@ impl RMRKToken {
     /// * `resource_id`: a resource to be accepted.
     ///
     /// On success reply  `[RMRKEvent::ResourceAccepted]`.
-    pub async fn accept_resource(&mut self, token_id: TokenId, resource_id: u8) {
-        let root_owner = self.find_root_owner(token_id).await;
+    pub fn accept_resource(
+        &mut self,
+        tx_manager: &mut TxManager,
+        msg: &RMRKAction,
+        token_id: TokenId,
+        resource_id: u8,
+    ) -> Result<RMRKReply, RMRKError> {
+        let rmrk_owner = self
+            .rmrk_owners
+            .get(&token_id)
+            .expect("RMRK: Token does not exist");
+
+        let tx = tx_manager.get_tx(msg);
+        let state = tx.state.clone();
+        let current_msg_id = msg::id();
+
+        let root_owner = match state {
+            TxState::Initial => {
+                if let Some(parent_token_id) = rmrk_owner.token_id {
+                    let msg_id = get_root_owner_msg(&rmrk_owner.owner_id, parent_token_id);
+                    tx.state = TxState::MsgGetRootOwnerSent;
+                    tx_manager.msg_sent_to_msg.insert(msg_id, current_msg_id);
+                    exec::wait_for(5);
+                } else {
+                    rmrk_owner.owner_id
+                }
+            }
+            TxState::ReplyRootOwnerReceived => {
+                let reply = tx.data.take().expect("Failed to get a reply");
+                decode_root_owner(reply)
+            }
+            _ => {
+                unreachable!()
+            }
+        };
         self.assert_approved_or_owner(token_id, &root_owner);
 
         if let Some(pending_resources) = self.multiresource.pending_resources.get_mut(&token_id) {
@@ -134,14 +213,10 @@ impl RMRKToken {
         self.multiresource
             .active_resources_priorities
             .remove(&token_id);
-        msg::reply(
-            RMRKEvent::ResourceAccepted {
-                token_id,
-                resource_id,
-            },
-            0,
-        )
-        .expect("Error in reply `[RMRKEvent::ResourceAccepted]`");
+        Ok(RMRKReply::ResourceAccepted {
+            token_id,
+            resource_id,
+        })
     }
 
     /// Rejects a resource, dropping it from the pending array.
@@ -155,8 +230,42 @@ impl RMRKToken {
     /// * `resource_id`: a resource to be rejected.
     ///
     /// On success reply  `[RMRKEvent::ResourceRejected]`.
-    pub async fn reject_resource(&mut self, token_id: TokenId, resource_id: u8) {
-        let root_owner = self.find_root_owner(token_id).await;
+    pub fn reject_resource(
+        &mut self,
+        tx_manager: &mut TxManager,
+        msg: &RMRKAction,
+        token_id: TokenId,
+        resource_id: u8,
+    ) -> Result<RMRKReply, RMRKError> {
+        let rmrk_owner = self
+            .rmrk_owners
+            .get(&token_id)
+            .expect("RMRK: Token does not exist");
+
+        let tx = tx_manager.get_tx(msg);
+        let state = tx.state.clone();
+        let current_msg_id = msg::id();
+
+        let root_owner = match state {
+            TxState::Initial => {
+                if let Some(parent_token_id) = rmrk_owner.token_id {
+                    let msg_id = get_root_owner_msg(&rmrk_owner.owner_id, parent_token_id);
+                    tx.state = TxState::MsgGetRootOwnerSent;
+                    tx_manager.msg_sent_to_msg.insert(msg_id, current_msg_id);
+                    exec::wait_for(5);
+                } else {
+                    rmrk_owner.owner_id
+                }
+            }
+            TxState::ReplyRootOwnerReceived => {
+                let reply = tx.data.take().expect("Failed to get a reply");
+                decode_root_owner(reply)
+            }
+            _ => {
+                unreachable!()
+            }
+        };
+
         self.assert_approved_or_owner(token_id, &root_owner);
         if let Some(pending_resources) = self.multiresource.pending_resources.get_mut(&token_id) {
             assert!(
@@ -167,14 +276,10 @@ impl RMRKToken {
             panic!("RMRK: Token has no pending resources")
         }
 
-        msg::reply(
-            RMRKEvent::ResourceRejected {
-                token_id,
-                resource_id,
-            },
-            0,
-        )
-        .expect("Error in reply `[RMRKEvent::ResourceRejected]`");
+        Ok(RMRKReply::ResourceRejected {
+            token_id,
+            resource_id,
+        })
     }
 
     /// Sets the priority of the active resources array
@@ -194,8 +299,42 @@ impl RMRKToken {
     /// * `priorities`: An array of priorities to set.
     ///
     /// On success reply `[RMRKEvent::PrioritySet]`.
-    pub async fn set_priority(&mut self, token_id: TokenId, priorities: Vec<u8>) {
-        let root_owner = self.find_root_owner(token_id).await;
+    pub fn set_priority(
+        &mut self,
+        tx_manager: &mut TxManager,
+        msg: &RMRKAction,
+        token_id: TokenId,
+        priorities: Vec<u8>,
+    ) -> Result<RMRKReply, RMRKError> {
+        let rmrk_owner = self
+            .rmrk_owners
+            .get(&token_id)
+            .expect("RMRK: Token does not exist");
+
+        let tx = tx_manager.get_tx(msg);
+        let state = tx.state.clone();
+        let current_msg_id = msg::id();
+
+        let root_owner = match state {
+            TxState::Initial => {
+                if let Some(parent_token_id) = rmrk_owner.token_id {
+                    let msg_id = get_root_owner_msg(&rmrk_owner.owner_id, parent_token_id);
+                    tx.state = TxState::MsgGetRootOwnerSent;
+                    tx_manager.msg_sent_to_msg.insert(msg_id, current_msg_id);
+                    exec::wait_for(5);
+                } else {
+                    rmrk_owner.owner_id
+                }
+            }
+            TxState::ReplyRootOwnerReceived => {
+                let reply = tx.data.take().expect("Failed to get a reply");
+                decode_root_owner(reply)
+            }
+            _ => {
+                unreachable!()
+            }
+        };
+
         self.assert_approved_or_owner(token_id, &root_owner);
 
         if let Some(active_resources) = self.multiresource.active_resources.get(&token_id) {
@@ -207,23 +346,21 @@ impl RMRKToken {
         self.multiresource
             .active_resources_priorities
             .insert(token_id, priorities.clone());
-        msg::reply(
-            RMRKEvent::PrioritySet {
-                token_id,
-                priorities,
-            },
-            0,
-        )
-        .expect("Error in reply `[RMRKEvent::PrioritySet]`");
+        Ok(RMRKReply::PrioritySet {
+            token_id,
+            priorities,
+        })
     }
 
-    pub async fn check_slot_resource(
+    pub fn check_slot_resource(
         &self,
+        tx_manager: &mut TxManager,
+        msg: &RMRKAction,
         token_id: TokenId,
         resource_id: ResourceId,
         base_id: BaseId,
         slot_id: PartId,
-    ) {
+    ) -> Result<RMRKReply, RMRKError> {
         assert!(
             self.multiresource
                 .active_resources
@@ -232,15 +369,39 @@ impl RMRKToken {
                 .contains(&resource_id),
             "Token has no resource with that ID"
         );
-        let resource = get_resource(&self.resource_id, resource_id).await;
-        if let Resource::Slot(slot_resource) = resource {
-            assert!(slot_resource.base == base_id, "Base contracts do not match");
-            assert!(slot_resource.slot == slot_id, "Slots ids do not match");
-        } else {
-            panic!("Resource must be Slot");
+
+        let tx = tx_manager.get_tx(msg);
+        let state = tx.state.clone();
+        let current_msg_id = msg::id();
+
+        match state {
+            TxState::Initial => {
+                let msg_id = get_resource_msg(&self.resource_id, resource_id);
+                tx.state = TxState::MsgGetResourceSent;
+                tx_manager.msg_sent_to_msg.insert(msg_id, current_msg_id);
+                exec::wait_for(5);
+            }
+            TxState::ReplyOnGetResourceReceived => {
+                let reply = tx.data.take().expect("Failed to get a reply");
+                let decoded_reply = ResourceEvent::decode(&mut &reply[..])
+                    .expect("Failed to decode `ResourceEvent`");
+                let resource = if let ResourceEvent::Resource(resource) = decoded_reply {
+                    resource
+                } else {
+                    panic!("Wrong received message from resource contract");
+                };
+                if let Resource::Slot(slot_resource) = resource {
+                    assert!(slot_resource.base == base_id, "Base contracts do not match");
+                    assert!(slot_resource.slot == slot_id, "Slots ids do not match");
+                } else {
+                    panic!("Resource must be Slot");
+                }
+                return Ok(RMRKReply::SlotResourceIsOk);
+            }
+            _ => {
+                unreachable!()
+            }
         }
-        msg::reply(RMRKEvent::SlotResourceIsOk, 0)
-            .expect("Error in reply `[RMRKEvent::SlotResourceIsOk]`");
     }
 
     fn add_pending_resource(&mut self, token_id: TokenId, resource_id: ResourceId) {
@@ -276,5 +437,73 @@ impl RMRKToken {
                 r.insert(resource_id, overwrite_id);
             })
             .or_insert_with(|| HashMap::from([(resource_id, overwrite_id)]));
+    }
+}
+
+pub fn add_resource_entry_reply(tx: &mut Tx, processing_msg_id: MessageId) {
+    let state = tx.state.clone();
+    match state {
+        TxState::MsgAddResourceSent => {
+            tx.state = TxState::ReplyOnAddResourceReceived;
+            exec::wake(processing_msg_id).expect("Failed to wake the message");
+        }
+        _ => {
+            unreachable!()
+        }
+    }
+}
+
+pub fn add_resource_reply(tx: &mut Tx, processing_msg_id: MessageId) {
+    let state = tx.state.clone();
+    match state {
+        TxState::MsgGetResourceSent => {
+            tx.state = TxState::ReplyOnGetResourceReceived;
+            exec::wake(processing_msg_id).expect("Failed to wake the message");
+        }
+        _ => {
+            unreachable!()
+        }
+    }
+}
+
+pub fn accept_resource_reply(tx: &mut Tx, processing_msg_id: MessageId) {
+    let state = tx.state.clone();
+    match state {
+        TxState::MsgGetRootOwnerSent => {
+            tx.state = TxState::ReplyRootOwnerReceived;
+            tx.data = Some(msg::load_bytes().expect("Failed to load the payload"));
+            exec::wake(processing_msg_id).expect("Failed to wake the message");
+        }
+        _ => {
+            unreachable!()
+        }
+    }
+}
+
+pub fn reject_resource_reply(tx: &mut Tx, processing_msg_id: MessageId) {
+    let state = tx.state.clone();
+    match state {
+        TxState::MsgGetRootOwnerSent => {
+            tx.state = TxState::ReplyRootOwnerReceived;
+            tx.data = Some(msg::load_bytes().expect("Failed to load the payload"));
+            exec::wake(processing_msg_id).expect("Failed to wake the message");
+        }
+        _ => {
+            unreachable!()
+        }
+    }
+}
+
+pub fn set_priority_reply(tx: &mut Tx, processing_msg_id: MessageId) {
+    let state = tx.state.clone();
+    match state {
+        TxState::MsgGetRootOwnerSent => {
+            tx.state = TxState::ReplyRootOwnerReceived;
+            tx.data = Some(msg::load_bytes().expect("Failed to load the payload"));
+            exec::wake(processing_msg_id).expect("Failed to wake the message");
+        }
+        _ => {
+            unreachable!()
+        }
     }
 }

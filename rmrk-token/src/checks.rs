@@ -23,7 +23,6 @@ impl RMRKToken {
 
     /// Checks that `msg::source()` is the owner of the token with indicated `token_id`
     pub fn assert_owner(&self, root_owner: &ActorId) {
-        debug!("OWNER {:?}", root_owner);
         if msg::source() != *root_owner {
             panic!("RMRK: Wrong owner");
         }

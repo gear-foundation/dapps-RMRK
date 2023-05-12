@@ -6,9 +6,9 @@ license = "GPL-3.0"
 authors = ["Gear Technologies"]
 
 [dependencies]
-gstd = { git = "https://github.com/gear-tech/gear.git" }
+gstd = { git = "https://github.com/gear-tech/gear.git", branch = "dn-reply-provision" }
 scale-info = { version = "2", default-features = false }
 parity-scale-codec = { version = "3", default-features = false }
 types = { path = "../../types/" }
 resource-io = { path = "../../resource/io/" }
-gmeta = { git = "https://github.com/gear-tech/gear.git" }
+gmeta = { git = "https://github.com/gear-tech/gear.git", branch = "dn-reply-provision" }

@@ -1,5 +1,5 @@
 [package]
-name = "rmrk"
+name = "rmrk-catalog"
 version = "0.1.0"
 edition = "2021"
 license = "GPL-3.0"
@@ -8,20 +8,13 @@ authors = ["Gear Technologies"]
 [dependencies]
 gstd = { git = "https://github.com/gear-tech/gear.git", features = ["debug"], branch = "dn-reply-provision" }
 parity-scale-codec = { version = "3", default-features = false }
-rmrk-io = { path = "io" }
-resource-io = { path = "../resource/io" }
-catalog-io = { path = "../catalog/io" }
+catalog-io = { path = "io" }
 types = { path = "../types/" }
 hashbrown = "0.13.1"
 
 [dev-dependencies]
 gtest = { git = "https://github.com/gear-tech/gear.git", branch = "dn-reply-provision" }
-rmrk-state = { path = "state" }
 
 [build-dependencies]
 gear-wasm-builder = { git = "https://github.com/gear-tech/gear.git", branch = "dn-reply-provision" }
-rmrk-io = { path = "io" }
-
-[features]
-default = ["binary-vendor"]
-binary-vendor = []
+catalog-io = { path = "io" }

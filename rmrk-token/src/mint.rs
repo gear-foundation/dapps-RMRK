@@ -1,5 +1,5 @@
 use crate::*;
-use gstd::{msg, ActorId};
+use gstd::{debug, msg, ActorId};
 
 impl RMRKToken {
     /// Mints token that will belong to another token in another RMRK contract.
@@ -15,31 +15,40 @@ impl RMRKToken {
     /// * `token_id`: is the tokenId of new RMRK token.
     ///
     /// On success replies [`RMRKEvent::MintToNft`].
-    pub async fn mint_to_nft(
+    pub fn mint_to_nft(
         &mut self,
-        parent_id: &ActorId,
-        parent_token_id: TokenId,
-        token_id: TokenId,
-    ) {
-        self.assert_token_exists(token_id);
+        state: TxState,
+        tx_data: Option<Vec<u8>>,
+        args: (ActorId, TokenId, TokenId),
+    ) -> Result<(TxState, MessageId), RMRKError> {
+        let (parent_id, parent_token_id, token_id) = args;
+        match state {
+            TxState::Initial => {
+                self.assert_token_exists(token_id);
+                let msg_id = add_child_msg(&parent_id, parent_token_id, token_id);
+                Ok((TxState::MsgAddChildSent, msg_id))
+            }
+            TxState::ReplyAddChildReceived => {
+                let msg_id = get_root_owner_msg(&parent_id, parent_token_id);
+                Ok((TxState::MsgGetRootOwnerSent, msg_id))
+            }
+            TxState::ReplyRootOwnerReceived => {
+                let reply = tx_data.expect("Failed to get a reply");
+                let decoded_reply =
+                    RMRKReply::decode(&mut &reply[..]).expect("Failed to decode a reply");
+                let root_owner = if let RMRKReply::RootOwner(root_owner) = decoded_reply {
+                    root_owner
+                } else {
+                    panic!("Wrong received reply");
+                };
 
-        // message to destination contract about adding child
-        add_child(parent_id, parent_token_id, token_id).await;
-
-        // find the root owner
-        let root_owner = get_root_owner(parent_id, parent_token_id).await;
-
-        self.internal_mint(&root_owner, token_id, parent_id, Some(parent_token_id));
-
-        msg::reply(
-            RMRKEvent::MintToNft {
-                parent_id: *parent_id,
-                parent_token_id,
-                token_id,
-            },
-            0,
-        )
-        .expect("Error in reply [RMRKEvent::MintToNft]");
+                self.internal_mint(&root_owner, token_id, &parent_id, Some(parent_token_id));
+                Ok((TxState::Completed, MessageId::zero()))
+            }
+            _ => {
+                unreachable!()
+            }
+        }
     }
 
     /// Mints token to the user.
@@ -61,7 +70,7 @@ impl RMRKToken {
         self.internal_mint(root_owner, token_id, root_owner, None);
 
         msg::reply(
-            RMRKEvent::MintToRootOwner {
+            RMRKReply::MintToRootOwner {
                 root_owner: *root_owner,
                 token_id,
             },
@@ -98,5 +107,23 @@ impl RMRKToken {
         self.balances
             .entry(*account)
             .and_modify(|balance| *balance -= 1.into());
+    }
+}
+
+pub fn mint_to_nft_reply(tx: &mut Tx, processing_msg_id: MessageId) {
+    let state = tx.state.clone();
+    match state {
+        TxState::MsgAddChildSent => {
+            tx.state = TxState::ReplyAddChildReceived;
+            exec::wake(processing_msg_id).expect("Failed to wake the message");
+        }
+        TxState::MsgGetRootOwnerSent => {
+            tx.state = TxState::ReplyRootOwnerReceived;
+            tx.data = Some(msg::load_bytes().expect("Failed to load the payload"));
+            exec::wake(processing_msg_id).expect("Failed to wake the message");
+        }
+        _ => {
+            unreachable!()
+        }
     }
 }
