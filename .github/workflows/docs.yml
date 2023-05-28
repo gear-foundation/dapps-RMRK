@@ -31,6 +31,7 @@ jobs:
         run: >
           RUSTDOCFLAGS="--enable-index-page -Zunstable-options"
           cargo doc --no-deps --workspace
+
       - name: Deploy
         if: github.event_name == 'push'
         uses: peaceiris/actions-gh-pages@v3
