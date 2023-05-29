@@ -1,6 +1,5 @@
 use base_io::{BaseAction, EquippableList, FixedPart, InitBase, Part, SlotPart};
-use codec::Encode;
-use gstd::BTreeMap;
+use gstd::{prelude::*, BTreeMap};
 use gtest::{Program, RunResult, System};
 use resource_io::Resource;
 use rmrk_io::*;
