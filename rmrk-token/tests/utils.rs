@@ -623,10 +623,7 @@ impl MultiResource for Program<'_> {
     // }
 }
 pub fn init_base(sys: &System) {
-    let base = Program::from_file(
-        sys,
-        "../target/wasm32-unknown-unknown/release/rmrk_base.wasm",
-    );
+    let base = Program::from_file(sys, "../target/wasm32-unknown-unknown/debug/rmrk_base.wasm");
     let res = base.send(
         USERS[0],
         InitBase {

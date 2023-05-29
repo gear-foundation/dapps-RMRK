@@ -27,4 +27,4 @@ test:
 
 full-test:
 	@echo ⚙️ Running all tests...
-	@cargo t -- --include-ignored
+	@cargo t -- --include-ignored --test-threads=1
