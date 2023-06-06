@@ -23,6 +23,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "allocator-api2"
+version = "0.2.14"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c4f263788a35611fba42eb41ff811c5d0360c58b97402570312a350736e2542e"
+
+[[package]]
 name = "anyhow"
 version = "1.0.70"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -552,6 +558,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "hashbrown"
+version = "0.14.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2c6201b9ff9fd90a5a3bac2e56a830d0caa509576f0e503818ee82c181b3437a"
+dependencies = [
+ "ahash",
+ "allocator-api2",
+]
+
+[[package]]
 name = "hermit-abi"
 version = "0.1.19"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -964,7 +980,7 @@ dependencies = [
  "gear-wasm-builder",
  "gstd",
  "gtest",
- "hashbrown 0.13.2",
+ "hashbrown 0.14.0",
  "parity-scale-codec",
  "resource-io",
  "rmrk-io",
@@ -979,7 +995,7 @@ dependencies = [
  "gear-wasm-builder",
  "gstd",
  "gtest",
- "hashbrown 0.13.2",
+ "hashbrown 0.14.0",
  "parity-scale-codec",
  "types",
 ]
@@ -1004,7 +1020,7 @@ dependencies = [
  "gear-wasm-builder",
  "gstd",
  "gtest",
- "hashbrown 0.13.2",
+ "hashbrown 0.14.0",
  "parity-scale-codec",
  "resource-io",
  "scale-info",

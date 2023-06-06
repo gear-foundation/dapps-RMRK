@@ -10,7 +10,7 @@ gstd = { git = "https://github.com/gear-tech/gear.git", features = ["debug"], re
 codec = { package = "parity-scale-codec", version = "3", default-features = false, features = ["derive", "full"] }
 base-io = { path = "io" }
 types = { path = "../types/" }
-hashbrown = "0.13"
+hashbrown = "0.14"
 
 [dev-dependencies]
 gtest = { git = "https://github.com/gear-tech/gear.git", rev = "5c685d0f15c412ab6ee019ceaf7ce084426dfb68" }
