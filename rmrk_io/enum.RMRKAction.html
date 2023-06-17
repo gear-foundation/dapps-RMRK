@@ -1,0 +1,434 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="API documentation for the Rust `RMRKAction` enum in crate `rmrk_io`."><title>RMRKAction in rmrk_io - Rust</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../static.files/rustdoc-ba5701c5741a7b69.css" id="mainThemeStyle"><div id="rustdoc-vars" data-root-path="../" data-static-root-path="../static.files/" data-current-crate="rmrk_io" data-themes="" data-resource-suffix="" data-rustdoc-version="1.71.0-nightly (f5559e338 2023-04-24)" data-search-js="search-618e954b235f6acc.js" data-settings-js="settings-de11bff964e9d4e5.js" data-settings-css="settings-6f6ffb5395b17c6e.css" data-theme-light-css="light-0f8c037637f9eb3e.css" data-theme-dark-css="dark-1097f8e92a01e3cf.css" data-theme-ayu-css="ayu-614652228113ac93.css" ></div><script src="../static.files/storage-62ce34ea385b278a.js"></script><script defer src="sidebar-items.js"></script><script defer src="../static.files/main-f0540c1d82cde29b.js"></script><noscript><link rel="stylesheet" media="(prefers-color-scheme:light)" href="../static.files/light-0f8c037637f9eb3e.css"><link rel="stylesheet" media="(prefers-color-scheme:dark)" href="../static.files/dark-1097f8e92a01e3cf.css"><link rel="stylesheet" href="../static.files/noscript-13285aec31fa243e.css"></noscript><link rel="alternate icon" type="image/png" href="../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc enum"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="logo-container" href="../rmrk_io/index.html"><img class="rust-logo" src="../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><h2></h2></nav><nav class="sidebar"><a class="logo-container" href="../rmrk_io/index.html"><img class="rust-logo" src="../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><h2 class="location"><a href="#">RMRKAction</a></h2><div class="sidebar-elems"><section><h3><a href="#variants">Variants</a></h3><ul class="block"><li><a href="#variant.AcceptChild">AcceptChild</a></li><li><a href="#variant.AcceptResource">AcceptResource</a></li><li><a href="#variant.AddAcceptedChild">AddAcceptedChild</a></li><li><a href="#variant.AddChild">AddChild</a></li><li><a href="#variant.AddResource">AddResource</a></li><li><a href="#variant.AddResourceEntry">AddResourceEntry</a></li><li><a href="#variant.Approve">Approve</a></li><li><a href="#variant.Burn">Burn</a></li><li><a href="#variant.BurnChild">BurnChild</a></li><li><a href="#variant.BurnFromParent">BurnFromParent</a></li><li><a href="#variant.CheckEquippable">CheckEquippable</a></li><li><a href="#variant.CheckSlotResource">CheckSlotResource</a></li><li><a href="#variant.Equip">Equip</a></li><li><a href="#variant.MintToNft">MintToNft</a></li><li><a href="#variant.MintToRootOwner">MintToRootOwner</a></li><li><a href="#variant.RejectChild">RejectChild</a></li><li><a href="#variant.RejectResource">RejectResource</a></li><li><a href="#variant.RemoveChild">RemoveChild</a></li><li><a href="#variant.RootOwner">RootOwner</a></li><li><a href="#variant.SetPriority">SetPriority</a></li><li><a href="#variant.Transfer">Transfer</a></li><li><a href="#variant.TransferChild">TransferChild</a></li><li><a href="#variant.TransferToNft">TransferToNft</a></li></ul><h3><a href="#trait-implementations">Trait Implementations</a></h3><ul class="block"><li><a href="#impl-Debug-for-RMRKAction">Debug</a></li><li><a href="#impl-Decode-for-RMRKAction">Decode</a></li><li><a href="#impl-Encode-for-RMRKAction">Encode</a></li><li><a href="#impl-EncodeLike%3CRMRKAction%3E-for-RMRKAction">EncodeLike&lt;RMRKAction&gt;</a></li><li><a href="#impl-TypeInfo-for-RMRKAction">TypeInfo</a></li></ul><h3><a href="#synthetic-implementations">Auto Trait Implementations</a></h3><ul class="block"><li><a href="#impl-RefUnwindSafe-for-RMRKAction">RefUnwindSafe</a></li><li><a href="#impl-Send-for-RMRKAction">Send</a></li><li><a href="#impl-Sync-for-RMRKAction">Sync</a></li><li><a href="#impl-Unpin-for-RMRKAction">Unpin</a></li><li><a href="#impl-UnwindSafe-for-RMRKAction">UnwindSafe</a></li></ul><h3><a href="#blanket-implementations">Blanket Implementations</a></h3><ul class="block"><li><a href="#impl-Any-for-RMRKAction">Any</a></li><li><a href="#impl-Borrow%3CT%3E-for-RMRKAction">Borrow&lt;T&gt;</a></li><li><a href="#impl-BorrowMut%3CT%3E-for-RMRKAction">BorrowMut&lt;T&gt;</a></li><li><a href="#impl-Codec-for-RMRKAction">Codec</a></li><li><a href="#impl-DecodeAll-for-RMRKAction">DecodeAll</a></li><li><a href="#impl-DecodeLimit-for-RMRKAction">DecodeLimit</a></li><li><a href="#impl-EncodeLike%3C%26%26T%3E-for-RMRKAction">EncodeLike&lt;&amp;&amp;T&gt;</a></li><li><a href="#impl-EncodeLike%3C%26T%3E-for-RMRKAction">EncodeLike&lt;&amp;T&gt;</a></li><li><a href="#impl-EncodeLike%3C%26mut+T%3E-for-RMRKAction">EncodeLike&lt;&amp;mut T&gt;</a></li><li><a href="#impl-EncodeLike%3CArc%3CT%3E%3E-for-RMRKAction">EncodeLike&lt;Arc&lt;T&gt;&gt;</a></li><li><a href="#impl-EncodeLike%3CBox%3CT,+Global%3E%3E-for-RMRKAction">EncodeLike&lt;Box&lt;T, Global&gt;&gt;</a></li><li><a href="#impl-EncodeLike%3CRc%3CT%3E%3E-for-RMRKAction">EncodeLike&lt;Rc&lt;T&gt;&gt;</a></li><li><a href="#impl-From%3CT%3E-for-RMRKAction">From&lt;T&gt;</a></li><li><a href="#impl-FullCodec-for-RMRKAction">FullCodec</a></li><li><a href="#impl-FullEncode-for-RMRKAction">FullEncode</a></li><li><a href="#impl-Into%3CU%3E-for-RMRKAction">Into&lt;U&gt;</a></li><li><a href="#impl-JsonSchemaMaybe-for-RMRKAction">JsonSchemaMaybe</a></li><li><a href="#impl-KeyedVec-for-RMRKAction">KeyedVec</a></li><li><a href="#impl-StaticTypeInfo-for-RMRKAction">StaticTypeInfo</a></li><li><a href="#impl-TryFrom%3CU%3E-for-RMRKAction">TryFrom&lt;U&gt;</a></li><li><a href="#impl-TryInto%3CU%3E-for-RMRKAction">TryInto&lt;U&gt;</a></li><li><a href="#impl-Type-for-RMRKAction">Type</a></li></ul></section><h2><a href="index.html">In rmrk_io</a></h2></div></nav><main><div class="width-limiter"><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="main-heading"><h1>Enum <a href="index.html">rmrk_io</a>::<wbr><a class="enum" href="#">RMRKAction</a><button id="copy-path" title="Copy item path to clipboard"><img src="../static.files/clipboard-7571035ce49a181d.svg" width="19" height="18" alt="Copy item path"></button></h1><span class="out-of-band"><a class="srclink" href="../src/rmrk_io/lib.rs.html#63-467">source</a> · <button id="toggle-all-docs" title="collapse all docs">[<span>&#x2212;</span>]</button></span></div><pre class="rust item-decl"><code>pub enum RMRKAction {
+<details class="toggle type-contents-toggle"><summary class="hideme"><span>Show 23 variants</span></summary>    MintToNft {
+        parent_id: ActorId,
+        parent_token_id: TokenId,
+        token_id: TokenId,
+    },
+    MintToRootOwner {
+        root_owner: ActorId,
+        token_id: TokenId,
+    },
+    AddChild {
+        parent_token_id: TokenId,
+        child_token_id: TokenId,
+    },
+    AcceptChild {
+        parent_token_id: TokenId,
+        child_contract_id: ActorId,
+        child_token_id: TokenId,
+    },
+    RejectChild {
+        parent_token_id: TokenId,
+        child_contract_id: ActorId,
+        child_token_id: TokenId,
+    },
+    RemoveChild {
+        parent_token_id: TokenId,
+        child_contract_id: ActorId,
+        child_token_id: TokenId,
+    },
+    Burn(TokenId),
+    BurnFromParent {
+        child_token_id: TokenId,
+        root_owner: ActorId,
+    },
+    BurnChild {
+        parent_token_id: TokenId,
+        child_token_id: TokenId,
+    },
+    Transfer {
+        to: ActorId,
+        token_id: TokenId,
+    },
+    TransferToNft {
+        to: ActorId,
+        token_id: TokenId,
+        destination_id: TokenId,
+    },
+    TransferChild {
+        from: TokenId,
+        to: TokenId,
+        child_token_id: TokenId,
+    },
+    RootOwner(TokenId),
+    Approve {
+        to: ActorId,
+        token_id: TokenId,
+    },
+    AddAcceptedChild {
+        parent_token_id: TokenId,
+        child_token_id: TokenId,
+    },
+    AddResourceEntry {
+        resource_id: ResourceId,
+        resource: Resource,
+    },
+    AddResource {
+        token_id: TokenId,
+        resource_id: <a class="primitive" href="https://doc.rust-lang.org/nightly/core/primitive.u8.html">u8</a>,
+        overwrite_id: <a class="primitive" href="https://doc.rust-lang.org/nightly/core/primitive.u8.html">u8</a>,
+    },
+    AcceptResource {
+        token_id: TokenId,
+        resource_id: <a class="primitive" href="https://doc.rust-lang.org/nightly/core/primitive.u8.html">u8</a>,
+    },
+    RejectResource {
+        token_id: TokenId,
+        resource_id: <a class="primitive" href="https://doc.rust-lang.org/nightly/core/primitive.u8.html">u8</a>,
+    },
+    SetPriority {
+        token_id: TokenId,
+        priorities: <a class="struct" href="https://doc.rust-lang.org/nightly/alloc/vec/struct.Vec.html" title="struct alloc::vec::Vec">Vec</a>&lt;<a class="primitive" href="https://doc.rust-lang.org/nightly/core/primitive.u8.html">u8</a>&gt;,
+    },
+    Equip {
+        token_id: TokenId,
+        resource_id: ResourceId,
+        equippable: CollectionAndToken,
+        equippable_resource_id: ResourceId,
+    },
+    CheckEquippable {
+        parent_token_id: TokenId,
+        child_token_id: TokenId,
+        resource_id: ResourceId,
+        slot_id: PartId,
+    },
+    CheckSlotResource {
+        token_id: TokenId,
+        resource_id: ResourceId,
+        base_id: BaseId,
+        slot_id: PartId,
+    },
+</details>}</code></pre><h2 id="variants" class="variants small-section-header">Variants<a href="#variants" class="anchor">§</a></h2><div class="variants"><section id="variant.MintToNft" class="variant"><a href="#variant.MintToNft" class="anchor">§</a><h3 class="code-header">MintToNft</h3></section><div class="sub-variant" id="variant.MintToNft.fields"><h4>Fields</h4><div class="sub-variant-field"><span id="variant.MintToNft.field.parent_id" class="small-section-header"><a href="#variant.MintToNft.field.parent_id" class="anchor field">§</a><code>parent_id: ActorId</code></span></div><div class="sub-variant-field"><span id="variant.MintToNft.field.parent_token_id" class="small-section-header"><a href="#variant.MintToNft.field.parent_token_id" class="anchor field">§</a><code>parent_token_id: TokenId</code></span></div><div class="sub-variant-field"><span id="variant.MintToNft.field.token_id" class="small-section-header"><a href="#variant.MintToNft.field.token_id" class="anchor field">§</a><code>token_id: TokenId</code></span></div></div><div class="docblock"><p>Mints token that will belong to another token in another RMRK contract.</p>
+<h4 id="requirements"><a href="#requirements">Requirements:</a></h4>
+<ul>
+<li>The <code>parent_id</code> must be a deployed RMRK contract.</li>
+<li>The token with id <code>parent_token_id</code> must exist in <code>parent_id</code> contract.</li>
+<li>The <code>token_id</code> must not exist.</li>
+</ul>
+<h4 id="arguments"><a href="#arguments">Arguments:</a></h4>
+<ul>
+<li><code>parent_id</code>: is the address of RMRK parent contract.</li>
+<li><code>parent_token_id</code>: is the parent RMRK token.</li>
+<li><code>token_id</code>: is the tokenId of new RMRK token.</li>
+</ul>
+<p>On success replies <a href="enum.RMRKEvent.html#variant.MintToNft" title="variant rmrk_io::RMRKEvent::MintToNft"><code>RMRKEvent::MintToNft</code></a>.</p>
+</div><section id="variant.MintToRootOwner" class="variant"><a href="#variant.MintToRootOwner" class="anchor">§</a><h3 class="code-header">MintToRootOwner</h3></section><div class="sub-variant" id="variant.MintToRootOwner.fields"><h4>Fields</h4><div class="sub-variant-field"><span id="variant.MintToRootOwner.field.root_owner" class="small-section-header"><a href="#variant.MintToRootOwner.field.root_owner" class="anchor field">§</a><code>root_owner: ActorId</code></span></div><div class="sub-variant-field"><span id="variant.MintToRootOwner.field.token_id" class="small-section-header"><a href="#variant.MintToRootOwner.field.token_id" class="anchor field">§</a><code>token_id: TokenId</code></span></div></div><div class="docblock"><p>Mints token to the user or program.</p>
+<h4 id="requirements-1"><a href="#requirements-1">Requirements:</a></h4>
+<ul>
+<li>The <code>token_id</code> must not exist.</li>
+<li>The <code>root_owner</code> address should be a non-zero address.</li>
+</ul>
+<h4 id="arguments-1"><a href="#arguments-1">Arguments:</a></h4>
+<ul>
+<li><code>root_owner</code>: is the address who will own the token.</li>
+<li><code>token_id</code>: is the tokenId of new RMRK token.</li>
+</ul>
+<p>On success replies <a href="enum.RMRKEvent.html#variant.MintToRootOwner" title="variant rmrk_io::RMRKEvent::MintToRootOwner"><code>RMRKEvent::MintToRootOwner</code></a>.</p>
+</div><section id="variant.AddChild" class="variant"><a href="#variant.AddChild" class="anchor">§</a><h3 class="code-header">AddChild</h3></section><div class="sub-variant" id="variant.AddChild.fields"><h4>Fields</h4><div class="sub-variant-field"><span id="variant.AddChild.field.parent_token_id" class="small-section-header"><a href="#variant.AddChild.field.parent_token_id" class="anchor field">§</a><code>parent_token_id: TokenId</code></span></div><div class="sub-variant-field"><span id="variant.AddChild.field.child_token_id" class="small-section-header"><a href="#variant.AddChild.field.child_token_id" class="anchor field">§</a><code>child_token_id: TokenId</code></span></div></div><div class="docblock"><p>That message is designed to be send from another RMRK contracts
+when minting an NFT(child_token_id) to another NFT(parent_token_id).
+It adds a child to the NFT with tokenId <code>parent_token_id</code>
+The status of added child is <code>Pending</code>.</p>
+<h4 id="requirements-2"><a href="#requirements-2">Requirements:</a></h4>
+<ul>
+<li>Token with TokenId <code>parent_token_id</code> must exist.</li>
+<li>There cannot be two identical children.</li>
+</ul>
+<h4 id="arguments-2"><a href="#arguments-2">Arguments:</a></h4>
+<ul>
+<li><code>parent_token_id</code>: is the tokenId of the parent NFT.</li>
+<li><code>child_token_id</code>: is the tokenId of the child instance.</li>
+</ul>
+<p>On success replies <a href="enum.RMRKEvent.html#variant.PendingChild" title="variant rmrk_io::RMRKEvent::PendingChild"><code>RMRKEvent::PendingChild</code></a>.</p>
+</div><section id="variant.AcceptChild" class="variant"><a href="#variant.AcceptChild" class="anchor">§</a><h3 class="code-header">AcceptChild</h3></section><div class="sub-variant" id="variant.AcceptChild.fields"><h4>Fields</h4><div class="sub-variant-field"><span id="variant.AcceptChild.field.parent_token_id" class="small-section-header"><a href="#variant.AcceptChild.field.parent_token_id" class="anchor field">§</a><code>parent_token_id: TokenId</code></span></div><div class="sub-variant-field"><span id="variant.AcceptChild.field.child_contract_id" class="small-section-header"><a href="#variant.AcceptChild.field.child_contract_id" class="anchor field">§</a><code>child_contract_id: ActorId</code></span></div><div class="sub-variant-field"><span id="variant.AcceptChild.field.child_token_id" class="small-section-header"><a href="#variant.AcceptChild.field.child_token_id" class="anchor field">§</a><code>child_token_id: TokenId</code></span></div></div><div class="docblock"><p>Accepts an RMRK child being in the <code>Pending</code> status.
+Removes RMRK child from <code>pending_children</code> and adds to <code>accepted_children</code>.</p>
+<h4 id="requirements-3"><a href="#requirements-3">Requirements:</a></h4>
+<ul>
+<li>The <code>msg::source()</code> must be an RMRK owner of NFT with tokenId <code>parent_token_id</code> or an approved account.</li>
+<li>The indicated NFT with tokenId <code>child_token_id</code> must exist in the pending array of <code>parent_token_id</code>.</li>
+</ul>
+<h4 id="arguments-3"><a href="#arguments-3">Arguments:</a></h4>
+<ul>
+<li><code>parent_token_id</code>: is the tokenId of the parent NFT</li>
+<li><code>child_token_id</code>: is the tokenId of the child instance</li>
+</ul>
+<p>On success replies <a href="enum.RMRKEvent.html#variant.AcceptedChild" title="variant rmrk_io::RMRKEvent::AcceptedChild"><code>RMRKEvent::AcceptedChild</code></a>.</p>
+</div><section id="variant.RejectChild" class="variant"><a href="#variant.RejectChild" class="anchor">§</a><h3 class="code-header">RejectChild</h3></section><div class="sub-variant" id="variant.RejectChild.fields"><h4>Fields</h4><div class="sub-variant-field"><span id="variant.RejectChild.field.parent_token_id" class="small-section-header"><a href="#variant.RejectChild.field.parent_token_id" class="anchor field">§</a><code>parent_token_id: TokenId</code></span></div><div class="sub-variant-field"><span id="variant.RejectChild.field.child_contract_id" class="small-section-header"><a href="#variant.RejectChild.field.child_contract_id" class="anchor field">§</a><code>child_contract_id: ActorId</code></span></div><div class="sub-variant-field"><span id="variant.RejectChild.field.child_token_id" class="small-section-header"><a href="#variant.RejectChild.field.child_token_id" class="anchor field">§</a><code>child_token_id: TokenId</code></span></div></div><div class="docblock"><p>Rejects an RMRK child being in the <code>Pending</code> status.
+It sends message to the child NFT contract to burn NFT token from it.</p>
+<h4 id="requirements-4"><a href="#requirements-4">Requirements:</a></h4>
+<ul>
+<li>The <code>msg::source()</code> must be an RMRK owner or an approved account.</li>
+<li>The indicated NFT with tokenId <code>child_token_id</code> must exist in the pending array of <code>parent_token_id</code>.</li>
+</ul>
+<p>Arguments:</p>
+<ul>
+<li><code>parent_token_id</code>: is the tokenId of the parent NFT.</li>
+<li><code>child_contract_id</code>: is the address of the child RMRK contract.</li>
+<li><code>child_token_id</code>: is the tokenId of the child instance.</li>
+</ul>
+<p>On success replies <a href="enum.RMRKEvent.html#variant.RejectedChild" title="variant rmrk_io::RMRKEvent::RejectedChild"><code>RMRKEvent::RejectedChild</code></a>.</p>
+</div><section id="variant.RemoveChild" class="variant"><a href="#variant.RemoveChild" class="anchor">§</a><h3 class="code-header">RemoveChild</h3></section><div class="sub-variant" id="variant.RemoveChild.fields"><h4>Fields</h4><div class="sub-variant-field"><span id="variant.RemoveChild.field.parent_token_id" class="small-section-header"><a href="#variant.RemoveChild.field.parent_token_id" class="anchor field">§</a><code>parent_token_id: TokenId</code></span></div><div class="sub-variant-field"><span id="variant.RemoveChild.field.child_contract_id" class="small-section-header"><a href="#variant.RemoveChild.field.child_contract_id" class="anchor field">§</a><code>child_contract_id: ActorId</code></span></div><div class="sub-variant-field"><span id="variant.RemoveChild.field.child_token_id" class="small-section-header"><a href="#variant.RemoveChild.field.child_token_id" class="anchor field">§</a><code>child_token_id: TokenId</code></span></div></div><div class="docblock"><p>Removes an RMRK child being in the <code>Accepted</code> status.
+It sends message to the child NFT contract to burn NFT token from it.</p>
+<h4 id="requirements-5"><a href="#requirements-5">Requirements:</a></h4>
+<ul>
+<li>The <code>msg::source()</code> must be an RMRK owner or an approved account.</li>
+</ul>
+<h4 id="arguments-4"><a href="#arguments-4">Arguments:</a></h4>
+<ul>
+<li><code>parent_token_id</code>: is the tokenId of the parent NFT.</li>
+<li><code>child_contract_id</code>: is the address of the child RMRK contract.</li>
+<li><code>child_token_id</code>: is the tokenId of the child instance.</li>
+</ul>
+<p>On success replies <a href="enum.RMRKEvent.html#variant.RemovedChild" title="variant rmrk_io::RMRKEvent::RemovedChild"><code>RMRKEvent::RemovedChild</code></a>.</p>
+</div><section id="variant.Burn" class="variant"><a href="#variant.Burn" class="anchor">§</a><h3 class="code-header">Burn(TokenId)</h3></section><div class="docblock"><p>Burns RMRK token.
+It recursively burn all the children NFTs.
+It checks whether the token is a child of another token.
+If so, it sends a message to the parent NFT  to remove the child.</p>
+<h4 id="requirements-6"><a href="#requirements-6">Requirements:</a></h4>
+<ul>
+<li>The <code>msg::source()</code> must be the root owner of the token.</li>
+</ul>
+<h4 id="arguments-5"><a href="#arguments-5">Arguments:</a></h4>
+<ul>
+<li><code>token_id</code>: is the tokenId of the burnt token.</li>
+</ul>
+<p>On success replies <a href="enum.RMRKEvent.html#variant.Transfer" title="variant rmrk_io::RMRKEvent::Transfer"><code>RMRKEvent::Transfer</code></a>.</p>
+</div><section id="variant.BurnFromParent" class="variant"><a href="#variant.BurnFromParent" class="anchor">§</a><h3 class="code-header">BurnFromParent</h3></section><div class="sub-variant" id="variant.BurnFromParent.fields"><h4>Fields</h4><div class="sub-variant-field"><span id="variant.BurnFromParent.field.child_token_id" class="small-section-header"><a href="#variant.BurnFromParent.field.child_token_id" class="anchor field">§</a><code>child_token_id: TokenId</code></span></div><div class="sub-variant-field"><span id="variant.BurnFromParent.field.root_owner" class="small-section-header"><a href="#variant.BurnFromParent.field.root_owner" class="anchor field">§</a><code>root_owner: ActorId</code></span></div></div><div class="docblock"><p>Burns RMRK tokens. It must be called from the RMRK parent contract when the root owner removes or rejects child NFTs.
+The input argument is an <code>BTreeSet&lt;TokenId&gt;</code> since a parent contract can have multiple children that must be burnt.
+It also recursively send messages <a href="enum.RMRKAction.html#variant.BurnFromParent" title="variant rmrk_io::RMRKAction::BurnFromParent"><code>RMRKAction::BurnFromParent</code></a> to children of burnt tokens if any.</p>
+<h4 id="requirements-7"><a href="#requirements-7">Requirements:</a></h4>
+<ul>
+<li>The <code>msg::source()</code> must be RMRK parent contract.</li>
+<li>All tokens in <code>BTreeSet&lt;TokenId&gt;</code> must exist.</li>
+</ul>
+<h4 id="arguments-6"><a href="#arguments-6">Arguments:</a></h4>
+<ul>
+<li><code>token_ids</code>: is the tokenIds of the burnt tokens.</li>
+</ul>
+<p>On success replies [<code>RMRKEvent::TokensBurnt</code>].</p>
+</div><section id="variant.BurnChild" class="variant"><a href="#variant.BurnChild" class="anchor">§</a><h3 class="code-header">BurnChild</h3></section><div class="sub-variant" id="variant.BurnChild.fields"><h4>Fields</h4><div class="sub-variant-field"><span id="variant.BurnChild.field.parent_token_id" class="small-section-header"><a href="#variant.BurnChild.field.parent_token_id" class="anchor field">§</a><code>parent_token_id: TokenId</code></span></div><div class="sub-variant-field"><span id="variant.BurnChild.field.child_token_id" class="small-section-header"><a href="#variant.BurnChild.field.child_token_id" class="anchor field">§</a><code>child_token_id: TokenId</code></span></div></div><div class="docblock"><p>Burns a child of NFT.
+That function must be called from the child RMRK contract during <code>transfer</code>, <code>transfer_to_nft</code> and <code>burn</code> functions.</p>
+<h4 id="requirements-8"><a href="#requirements-8">Requirements:</a></h4>
+<ul>
+<li>The <code>msg::source()</code> must be a child RMRK contract.</li>
+<li>The indicated child must exist the children list of <code>parent_token_id</code>.</li>
+</ul>
+<h4 id="arguments-7"><a href="#arguments-7">Arguments:</a></h4>
+<ul>
+<li><code>parent_token_id</code>: is the tokenId of the parent NFT.</li>
+<li><code>child_token_id</code>: is the tokenId of the child instance.</li>
+</ul>
+<p>On success replies <a href="enum.RMRKEvent.html#variant.ChildBurnt" title="variant rmrk_io::RMRKEvent::ChildBurnt"><code>RMRKEvent::ChildBurnt</code></a>.</p>
+</div><section id="variant.Transfer" class="variant"><a href="#variant.Transfer" class="anchor">§</a><h3 class="code-header">Transfer</h3></section><div class="sub-variant" id="variant.Transfer.fields"><h4>Fields</h4><div class="sub-variant-field"><span id="variant.Transfer.field.to" class="small-section-header"><a href="#variant.Transfer.field.to" class="anchor field">§</a><code>to: ActorId</code></span></div><div class="sub-variant-field"><span id="variant.Transfer.field.token_id" class="small-section-header"><a href="#variant.Transfer.field.token_id" class="anchor field">§</a><code>token_id: TokenId</code></span></div></div><div class="docblock"><p>Transfers NFT to another account.
+If the previous owner is another RMRK contract, it sends the message <a href="enum.RMRKAction.html#variant.BurnChild" title="variant rmrk_io::RMRKAction::BurnChild"><code>RMRKAction::BurnChild</code></a> to the parent conract.</p>
+<h4 id="requirements-9"><a href="#requirements-9">Requirements:</a></h4>
+<ul>
+<li>The <code>token_id</code> must exist.</li>
+<li>The <code>msg::source()</code> must be approved or owner of the token.</li>
+<li>The <code>to</code> address should be a non-zero address.</li>
+</ul>
+<h4 id="arguments-8"><a href="#arguments-8">Arguments:</a></h4>
+<ul>
+<li><code>to</code>: is the receiving address.</li>
+<li><code>token_id</code>: is the tokenId of the transfered token.</li>
+</ul>
+<p>On success replies <a href="enum.RMRKEvent.html#variant.ChildBurnt" title="variant rmrk_io::RMRKEvent::ChildBurnt"><code>RMRKEvent::ChildBurnt</code></a>.</p>
+</div><section id="variant.TransferToNft" class="variant"><a href="#variant.TransferToNft" class="anchor">§</a><h3 class="code-header">TransferToNft</h3></section><div class="sub-variant" id="variant.TransferToNft.fields"><h4>Fields</h4><div class="sub-variant-field"><span id="variant.TransferToNft.field.to" class="small-section-header"><a href="#variant.TransferToNft.field.to" class="anchor field">§</a><code>to: ActorId</code></span></div><div class="sub-variant-field"><span id="variant.TransferToNft.field.token_id" class="small-section-header"><a href="#variant.TransferToNft.field.token_id" class="anchor field">§</a><code>token_id: TokenId</code></span></div><div class="sub-variant-field"><span id="variant.TransferToNft.field.destination_id" class="small-section-header"><a href="#variant.TransferToNft.field.destination_id" class="anchor field">§</a><code>destination_id: TokenId</code></span></div></div><div class="docblock"><p>Transfers NFT to another NFT.</p>
+<h4 id="requirements-10"><a href="#requirements-10">Requirements:</a></h4>
+<ul>
+<li>The <code>token_id</code> must exist.</li>
+<li>The <code>msg::source()</code> must be approved or root owner of the token.</li>
+<li>The <code>to</code> address should be a non-zero address</li>
+</ul>
+<h4 id="arguments-9"><a href="#arguments-9">Arguments:</a></h4>
+<ul>
+<li><code>to</code>: is the address of new parent RMRK contract.</li>
+<li>`destination_id: is the tokenId of the parent RMRK token.</li>
+<li><code>token_id</code>: is the tokenId of the transfered token.</li>
+</ul>
+<p>On success replies <a href="enum.RMRKEvent.html#variant.TransferToNft" title="variant rmrk_io::RMRKEvent::TransferToNft"><code>RMRKEvent::TransferToNft</code></a>.</p>
+</div><section id="variant.TransferChild" class="variant"><a href="#variant.TransferChild" class="anchor">§</a><h3 class="code-header">TransferChild</h3></section><div class="sub-variant" id="variant.TransferChild.fields"><h4>Fields</h4><div class="sub-variant-field"><span id="variant.TransferChild.field.from" class="small-section-header"><a href="#variant.TransferChild.field.from" class="anchor field">§</a><code>from: TokenId</code></span></div><div class="sub-variant-field"><span id="variant.TransferChild.field.to" class="small-section-header"><a href="#variant.TransferChild.field.to" class="anchor field">§</a><code>to: TokenId</code></span></div><div class="sub-variant-field"><span id="variant.TransferChild.field.child_token_id" class="small-section-header"><a href="#variant.TransferChild.field.child_token_id" class="anchor field">§</a><code>child_token_id: TokenId</code></span></div></div><div class="docblock"><p>That message is designed to be sent from another RMRK contracts
+when root owner transfers his child to another parent token within one contract.
+If root owner transfers child token from NFT to another his NFT
+it adds a child to the NFT  with a status that child had before.
+If root owner transfers child token from NFT to another NFT that he does not own
+it adds a child to the NFT  with a status <code>Pending</code>.</p>
+<h4 id="requirements-11"><a href="#requirements-11">Requirements:</a></h4>
+<ul>
+<li>The <code>msg::source()</code> must be a child RMRK contract.</li>
+<li>The <code>to</code> must be an existing RMRK token</li>
+<li>The <code>root_owner</code> of <code>to</code> and <code>from</code> must be the same.</li>
+</ul>
+<h4 id="arguments-10"><a href="#arguments-10">Arguments:</a></h4>
+<ul>
+<li><code>from</code>: RMRK token from which the child token will be transferred.</li>
+<li><code>to</code>: RMRK token to which the child token will be transferred.</li>
+<li><code>child_token_id</code>: is the tokenId of the child in the RMRK child contract.</li>
+</ul>
+<p>On success replies <a href="enum.RMRKEvent.html#variant.ChildTransferred" title="variant rmrk_io::RMRKEvent::ChildTransferred"><code>RMRKEvent::ChildTransferred</code></a>.</p>
+</div><section id="variant.RootOwner" class="variant"><a href="#variant.RootOwner" class="anchor">§</a><h3 class="code-header">RootOwner(TokenId)</h3></section><section id="variant.Approve" class="variant"><a href="#variant.Approve" class="anchor">§</a><h3 class="code-header">Approve</h3></section><div class="sub-variant" id="variant.Approve.fields"><h4>Fields</h4><div class="sub-variant-field"><span id="variant.Approve.field.to" class="small-section-header"><a href="#variant.Approve.field.to" class="anchor field">§</a><code>to: ActorId</code></span></div><div class="sub-variant-field"><span id="variant.Approve.field.token_id" class="small-section-header"><a href="#variant.Approve.field.token_id" class="anchor field">§</a><code>token_id: TokenId</code></span></div></div><div class="docblock"><p>Approves an account to transfer NFT.</p>
+<h4 id="requirements-12"><a href="#requirements-12">Requirements:</a></h4>
+<ul>
+<li>The <code>token_id</code> must exist.</li>
+<li>The <code>msg::source()</code> must be approved or root owner of the token.</li>
+<li>The <code>to</code> address must be a non-zero address</li>
+</ul>
+<h4 id="arguments-11"><a href="#arguments-11">Arguments:</a></h4>
+<ul>
+<li><code>to</code>: is the address of approved account.</li>
+<li><code>token_id</code>: is the tokenId of the token.</li>
+</ul>
+<p>On success replies <a href="enum.RMRKEvent.html#variant.Approval" title="variant rmrk_io::RMRKEvent::Approval"><code>RMRKEvent::Approval</code></a>.</p>
+</div><section id="variant.AddAcceptedChild" class="variant"><a href="#variant.AddAcceptedChild" class="anchor">§</a><h3 class="code-header">AddAcceptedChild</h3></section><div class="sub-variant" id="variant.AddAcceptedChild.fields"><h4>Fields</h4><div class="sub-variant-field"><span id="variant.AddAcceptedChild.field.parent_token_id" class="small-section-header"><a href="#variant.AddAcceptedChild.field.parent_token_id" class="anchor field">§</a><code>parent_token_id: TokenId</code></span></div><div class="sub-variant-field"><span id="variant.AddAcceptedChild.field.child_token_id" class="small-section-header"><a href="#variant.AddAcceptedChild.field.child_token_id" class="anchor field">§</a><code>child_token_id: TokenId</code></span></div></div><div class="docblock"><p>That function is designed to be called from another RMRK contracts
+when root owner transfers his child NFT to another his NFT in another contract.
+It adds a child to the RMRK token with tokenId <code>parent_token_id</code> with status <code>Accepted</code>.</p>
+<h4 id="requirements-13"><a href="#requirements-13">Requirements:</a></h4>
+<ul>
+<li>The <code>msg::source()</code> must be a child RMRK contract.</li>
+<li>The <code>parent_token_id</code> must be an existing RMRK token that must have <code>child_token_id</code> in its <code>accepted_children</code>.</li>
+</ul>
+<h4 id="arguments-12"><a href="#arguments-12">Arguments:</a></h4>
+<ul>
+<li><code>parent_token_id</code>: RMRK token to which the child token will be transferred.</li>
+<li><code>child_token_id</code>: is the tokenId of the child of the RMRK child contract.</li>
+</ul>
+<p>On success replies <a href="enum.RMRKEvent.html#variant.AcceptedChild" title="variant rmrk_io::RMRKEvent::AcceptedChild"><code>RMRKEvent::AcceptedChild</code></a>.</p>
+</div><section id="variant.AddResourceEntry" class="variant"><a href="#variant.AddResourceEntry" class="anchor">§</a><h3 class="code-header">AddResourceEntry</h3></section><div class="sub-variant" id="variant.AddResourceEntry.fields"><h4>Fields</h4><div class="sub-variant-field"><span id="variant.AddResourceEntry.field.resource_id" class="small-section-header"><a href="#variant.AddResourceEntry.field.resource_id" class="anchor field">§</a><code>resource_id: ResourceId</code></span></div><div class="sub-variant-field"><span id="variant.AddResourceEntry.field.resource" class="small-section-header"><a href="#variant.AddResourceEntry.field.resource" class="anchor field">§</a><code>resource: Resource</code></span></div></div><div class="docblock"><p>Adds resource entry on resource storage contract.
+It sends a message to resource storage contract with information about new resource.</p>
+<h4 id="requirements-14"><a href="#requirements-14">Requirements:</a></h4>
+<ul>
+<li>The <code>msg::source()</code> must be the contract admin.</li>
+</ul>
+<p>Arguments:</p>
+<ul>
+<li><code>resource_id</code>: is a resource identifier</li>
+<li><code>resource</code>: Resource (Basic, Slot or Composable)</li>
+</ul>
+<p>On success reply <code>[RMRKEvent::ResourceEntryAdded]</code>.</p>
+</div><section id="variant.AddResource" class="variant"><a href="#variant.AddResource" class="anchor">§</a><h3 class="code-header">AddResource</h3></section><div class="sub-variant" id="variant.AddResource.fields"><h4>Fields</h4><div class="sub-variant-field"><span id="variant.AddResource.field.token_id" class="small-section-header"><a href="#variant.AddResource.field.token_id" class="anchor field">§</a><code>token_id: TokenId</code></span></div><div class="sub-variant-field"><span id="variant.AddResource.field.resource_id" class="small-section-header"><a href="#variant.AddResource.field.resource_id" class="anchor field">§</a><code>resource_id: <a class="primitive" href="https://doc.rust-lang.org/nightly/core/primitive.u8.html">u8</a></code></span></div><div class="sub-variant-field"><span id="variant.AddResource.field.overwrite_id" class="small-section-header"><a href="#variant.AddResource.field.overwrite_id" class="anchor field">§</a><code>overwrite_id: <a class="primitive" href="https://doc.rust-lang.org/nightly/core/primitive.u8.html">u8</a></code></span></div></div><div class="docblock"><p>Adds resource to an existing token.
+Checks that the resource with indicated id exists in the resource storage contract.
+Proposed resource is placed in the “Pending” array.
+A pending resource can be also proposed to overwrite an existing resource.</p>
+<h4 id="requirements-15"><a href="#requirements-15">Requirements</a></h4>
+<p>Token with indicated <code>token_id</code> must exist.
+The proposed resource must not already exist for the token.
+The resource that is proposed to be overwritten must exist for the token.
+The length of resources in pending status must be less or equal to <code>MAX_RESOURCE_LEN</code>.</p>
+<h4 id="arguments-13"><a href="#arguments-13">Arguments:</a></h4>
+<ul>
+<li><code>token_id</code>: an id of the token.</li>
+<li><code>resource_id</code>: a proposed resource.</li>
+<li><code>overwrite_id</code>: a resource to be overwritten.</li>
+</ul>
+<p>On success reply <code>[RMRKEvent::ResourceAdded]</code>.</p>
+</div><section id="variant.AcceptResource" class="variant"><a href="#variant.AcceptResource" class="anchor">§</a><h3 class="code-header">AcceptResource</h3></section><div class="sub-variant" id="variant.AcceptResource.fields"><h4>Fields</h4><div class="sub-variant-field"><span id="variant.AcceptResource.field.token_id" class="small-section-header"><a href="#variant.AcceptResource.field.token_id" class="anchor field">§</a><code>token_id: TokenId</code></span></div><div class="sub-variant-field"><span id="variant.AcceptResource.field.resource_id" class="small-section-header"><a href="#variant.AcceptResource.field.resource_id" class="anchor field">§</a><code>resource_id: <a class="primitive" href="https://doc.rust-lang.org/nightly/core/primitive.u8.html">u8</a></code></span></div></div><div class="docblock"><p>Accepts resource from pending list.
+Moves the resource from the pending array to the accepted array.</p>
+<h4 id="requirements-16"><a href="#requirements-16">Requirements</a></h4>
+<p>Only root owner or approved account can accept a resource.
+<code>resource_id</code> must exist for the token in the pending array.</p>
+<h4 id="arguments-14"><a href="#arguments-14">Arguments:</a></h4>
+<ul>
+<li><code>token_id</code>: an id of the token.</li>
+<li><code>resource_id</code>: a resource to be accepted.</li>
+</ul>
+<p>On success reply <code>[RMRKEvent::ResourceAccepted]</code>.</p>
+</div><section id="variant.RejectResource" class="variant"><a href="#variant.RejectResource" class="anchor">§</a><h3 class="code-header">RejectResource</h3></section><div class="sub-variant" id="variant.RejectResource.fields"><h4>Fields</h4><div class="sub-variant-field"><span id="variant.RejectResource.field.token_id" class="small-section-header"><a href="#variant.RejectResource.field.token_id" class="anchor field">§</a><code>token_id: TokenId</code></span></div><div class="sub-variant-field"><span id="variant.RejectResource.field.resource_id" class="small-section-header"><a href="#variant.RejectResource.field.resource_id" class="anchor field">§</a><code>resource_id: <a class="primitive" href="https://doc.rust-lang.org/nightly/core/primitive.u8.html">u8</a></code></span></div></div><div class="docblock"><p>Rejects a resource, dropping it from the pending array.</p>
+<h4 id="requirements-17"><a href="#requirements-17">Requirements</a></h4>
+<p>Only root owner or approved account can reject a resource.
+<code>resource_id</code> must exist for the token in the pending array.</p>
+<h4 id="arguments-15"><a href="#arguments-15">Arguments:</a></h4>
+<ul>
+<li><code>token_id</code>: an id of the token.</li>
+<li><code>resource_id</code>: a resource to be rejected.</li>
+</ul>
+<p>On success reply <code>[RMRKEvent::ResourceRejected]</code>.</p>
+</div><section id="variant.SetPriority" class="variant"><a href="#variant.SetPriority" class="anchor">§</a><h3 class="code-header">SetPriority</h3></section><div class="sub-variant" id="variant.SetPriority.fields"><h4>Fields</h4><div class="sub-variant-field"><span id="variant.SetPriority.field.token_id" class="small-section-header"><a href="#variant.SetPriority.field.token_id" class="anchor field">§</a><code>token_id: TokenId</code></span></div><div class="sub-variant-field"><span id="variant.SetPriority.field.priorities" class="small-section-header"><a href="#variant.SetPriority.field.priorities" class="anchor field">§</a><code>priorities: <a class="struct" href="https://doc.rust-lang.org/nightly/alloc/vec/struct.Vec.html" title="struct alloc::vec::Vec">Vec</a>&lt;<a class="primitive" href="https://doc.rust-lang.org/nightly/core/primitive.u8.html">u8</a>&gt;</code></span></div></div><div class="docblock"><p>Sets the priority of the active resources array
+Priorities have a 1:1 relationship with their corresponding index in
+the active resources array. E.G, a priority array of [1, 3, 2] indicates
+that the the active resource at index 1 of the active resource array
+has a priority of 1, index 2 has a priority of 3, and index 3 has a priority
+of 2. There is no validation on priority value input; out of order indexes
+must be handled by the frontend.</p>
+<h4 id="requirements-18"><a href="#requirements-18">Requirements</a></h4>
+<p>Only root owner or approved account can set priority
+The length of the priorities array must be equal to the present length of the active resources array</p>
+<h4 id="arguments-16"><a href="#arguments-16">Arguments:</a></h4>
+<ul>
+<li><code>token_id</code>: an id of the token.</li>
+<li><code>priorities</code>: An array of priorities to set.</li>
+</ul>
+<p>On success reply <code>[RMRKEvent::PrioritySet]</code>.</p>
+</div><section id="variant.Equip" class="variant"><a href="#variant.Equip" class="anchor">§</a><h3 class="code-header">Equip</h3></section><div class="sub-variant" id="variant.Equip.fields"><h4>Fields</h4><div class="sub-variant-field"><span id="variant.Equip.field.token_id" class="small-section-header"><a href="#variant.Equip.field.token_id" class="anchor field">§</a><code>token_id: TokenId</code></span></div><div class="sub-variant-field"><span id="variant.Equip.field.resource_id" class="small-section-header"><a href="#variant.Equip.field.resource_id" class="anchor field">§</a><code>resource_id: ResourceId</code></span></div><div class="sub-variant-field"><span id="variant.Equip.field.equippable" class="small-section-header"><a href="#variant.Equip.field.equippable" class="anchor field">§</a><code>equippable: CollectionAndToken</code></span></div><div class="sub-variant-field"><span id="variant.Equip.field.equippable_resource_id" class="small-section-header"><a href="#variant.Equip.field.equippable_resource_id" class="anchor field">§</a><code>equippable_resource_id: ResourceId</code></span></div></div><div class="docblock"><p>Equips a child NFT’s resource to a parent’s slot.
+It sends message to the parent contract checking the child status.
+and the parent’s resource.
+to check whether the child token has the indicated slot resource.</p>
+<h4 id="requirements-19"><a href="#requirements-19">Requirements:</a></h4>
+<ul>
+<li>The <code>msg::source()</code> must be the root owner.</li>
+<li>The child token must have the slot resource with indicated <code>base_id</code> and <code>slot_id</code>.</li>
+<li>The parent token must have composed resource with indicated <code>base_id</code>.</li>
+</ul>
+<h4 id="arguments-17"><a href="#arguments-17">Arguments:</a></h4>
+<ul>
+<li><code>token_id</code>: the tokenId of the NFT to be equipped.</li>
+<li><code>resource_id</code>: the id of the slot resource.</li>
+<li><code>equippable</code>: parent’s contract and token.</li>
+<li><code>equippable_resource_id</code>: the id of the composed resource.</li>
+</ul>
+<p>On success replies <a href="enum.RMRKEvent.html#variant.TokenEquipped" title="variant rmrk_io::RMRKEvent::TokenEquipped"><code>RMRKEvent::TokenEquipped</code></a>.</p>
+</div><section id="variant.CheckEquippable" class="variant"><a href="#variant.CheckEquippable" class="anchor">§</a><h3 class="code-header">CheckEquippable</h3></section><div class="sub-variant" id="variant.CheckEquippable.fields"><h4>Fields</h4><div class="sub-variant-field"><span id="variant.CheckEquippable.field.parent_token_id" class="small-section-header"><a href="#variant.CheckEquippable.field.parent_token_id" class="anchor field">§</a><code>parent_token_id: TokenId</code></span></div><div class="sub-variant-field"><span id="variant.CheckEquippable.field.child_token_id" class="small-section-header"><a href="#variant.CheckEquippable.field.child_token_id" class="anchor field">§</a><code>child_token_id: TokenId</code></span></div><div class="sub-variant-field"><span id="variant.CheckEquippable.field.resource_id" class="small-section-header"><a href="#variant.CheckEquippable.field.resource_id" class="anchor field">§</a><code>resource_id: ResourceId</code></span></div><div class="sub-variant-field"><span id="variant.CheckEquippable.field.slot_id" class="small-section-header"><a href="#variant.CheckEquippable.field.slot_id" class="anchor field">§</a><code>slot_id: PartId</code></span></div></div><div class="docblock"><p>That message is designed to be sent from another RMRK contracts
+when equipping  <code>child_token_id</code> to <code>parent_token_id</code>.
+It checks that <code>parent_token_id</code> has the child with <code>child_token_id</code> in its accepted children.
+It checks that <code>parent_token_id</code> has composed resource.
+It sends a message to base contract to check whether the <code>parent_token_id</code> is in equippable list.
+It sends a message to resource contract to add part id to composed resource.</p>
+<h4 id="requirements-20"><a href="#requirements-20">Requirements:</a></h4>
+<ul>
+<li><code>msg::source()</code> must be the child contract.</li>
+<li>The resource with indicated id must exist in the token resources and must be Composed.</li>
+<li>The <code>parent_token_id</code> must be in the equippable list.</li>
+</ul>
+<h4 id="arguments-18"><a href="#arguments-18">Arguments:</a></h4>
+<ul>
+<li><code>parent_token_id</code>: the id of the equippable token.</li>
+<li><code>child_token_id</code>: the id of the token to be equipped.</li>
+<li><code>resource_id</code>: the id of the composed resource.</li>
+<li><code>slot_id</code>: the id of the slot part.</li>
+</ul>
+<p>On success replies <a href="enum.RMRKEvent.html#variant.EquippableIsOk" title="variant rmrk_io::RMRKEvent::EquippableIsOk"><code>RMRKEvent::EquippableIsOk</code></a>.</p>
+</div><section id="variant.CheckSlotResource" class="variant"><a href="#variant.CheckSlotResource" class="anchor">§</a><h3 class="code-header">CheckSlotResource</h3></section><div class="sub-variant" id="variant.CheckSlotResource.fields"><h4>Fields</h4><div class="sub-variant-field"><span id="variant.CheckSlotResource.field.token_id" class="small-section-header"><a href="#variant.CheckSlotResource.field.token_id" class="anchor field">§</a><code>token_id: TokenId</code></span></div><div class="sub-variant-field"><span id="variant.CheckSlotResource.field.resource_id" class="small-section-header"><a href="#variant.CheckSlotResource.field.resource_id" class="anchor field">§</a><code>resource_id: ResourceId</code></span></div><div class="sub-variant-field"><span id="variant.CheckSlotResource.field.base_id" class="small-section-header"><a href="#variant.CheckSlotResource.field.base_id" class="anchor field">§</a><code>base_id: BaseId</code></span></div><div class="sub-variant-field"><span id="variant.CheckSlotResource.field.slot_id" class="small-section-header"><a href="#variant.CheckSlotResource.field.slot_id" class="anchor field">§</a><code>slot_id: PartId</code></span></div></div></div><h2 id="trait-implementations" class="small-section-header">Trait Implementations<a href="#trait-implementations" class="anchor">§</a></h2><div id="trait-implementations-list"><details class="toggle implementors-toggle" open><summary><section id="impl-Debug-for-RMRKAction" class="impl"><a class="srclink rightside" href="../src/rmrk_io/lib.rs.html#62">source</a><a href="#impl-Debug-for-RMRKAction" class="anchor">§</a><h3 class="code-header">impl <a class="trait" href="https://doc.rust-lang.org/nightly/core/fmt/trait.Debug.html" title="trait core::fmt::Debug">Debug</a> for <a class="enum" href="enum.RMRKAction.html" title="enum rmrk_io::RMRKAction">RMRKAction</a></h3></section></summary><div class="impl-items"><details class="toggle method-toggle" open><summary><section id="method.fmt" class="method trait-impl"><a class="srclink rightside" href="../src/rmrk_io/lib.rs.html#62">source</a><a href="#method.fmt" class="anchor">§</a><h4 class="code-header">fn <a href="https://doc.rust-lang.org/nightly/core/fmt/trait.Debug.html#tymethod.fmt" class="fn">fmt</a>(&amp;self, f: &amp;mut <a class="struct" href="https://doc.rust-lang.org/nightly/core/fmt/struct.Formatter.html" title="struct core::fmt::Formatter">Formatter</a>&lt;'_&gt;) -&gt; <a class="type" href="https://doc.rust-lang.org/nightly/core/fmt/type.Result.html" title="type core::fmt::Result">Result</a></h4></section></summary><div class='docblock'>Formats the value using the given formatter. <a href="https://doc.rust-lang.org/nightly/core/fmt/trait.Debug.html#tymethod.fmt">Read more</a></div></details></div></details><details class="toggle implementors-toggle" open><summary><section id="impl-Decode-for-RMRKAction" class="impl"><a class="srclink rightside" href="../src/rmrk_io/lib.rs.html#62">source</a><a href="#impl-Decode-for-RMRKAction" class="anchor">§</a><h3 class="code-header">impl Decode for <a class="enum" href="enum.RMRKAction.html" title="enum rmrk_io::RMRKAction">RMRKAction</a></h3></section></summary><div class="impl-items"><details class="toggle method-toggle" open><summary><section id="method.decode" class="method trait-impl"><a class="srclink rightside" href="../src/rmrk_io/lib.rs.html#62">source</a><a href="#method.decode" class="anchor">§</a><h4 class="code-header">fn <a class="fn">decode</a>&lt;__CodecInputEdqy: Input&gt;(
+    __codec_input_edqy: <a class="primitive" href="https://doc.rust-lang.org/nightly/core/primitive.reference.html">&amp;mut __CodecInputEdqy</a>
+) -&gt; <a class="enum" href="https://doc.rust-lang.org/nightly/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;Self, Error&gt;</h4></section></summary><div class='docblock'>Attempt to deserialise the value from input.</div></details><details class="toggle method-toggle" open><summary><section id="method.skip" class="method trait-impl"><a href="#method.skip" class="anchor">§</a><h4 class="code-header">fn <a class="fn">skip</a>&lt;I&gt;(input: <a class="primitive" href="https://doc.rust-lang.org/nightly/core/primitive.reference.html">&amp;mut I</a>) -&gt; <a class="enum" href="https://doc.rust-lang.org/nightly/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;<a class="primitive" href="https://doc.rust-lang.org/nightly/core/primitive.unit.html">()</a>, Error&gt;<span class="where fmt-newline">where
+    I: Input,</span></h4></section></summary><div class='docblock'>Attempt to skip the encoded value from input. <a>Read more</a></div></details><details class="toggle method-toggle" open><summary><section id="method.encoded_fixed_size" class="method trait-impl"><a href="#method.encoded_fixed_size" class="anchor">§</a><h4 class="code-header">fn <a class="fn">encoded_fixed_size</a>() -&gt; <a class="enum" href="https://doc.rust-lang.org/nightly/core/option/enum.Option.html" title="enum core::option::Option">Option</a>&lt;<a class="primitive" href="https://doc.rust-lang.org/nightly/core/primitive.usize.html">usize</a>&gt;</h4></section></summary><div class='docblock'>Returns the fixed encoded size of the type. <a>Read more</a></div></details></div></details><details class="toggle implementors-toggle" open><summary><section id="impl-Encode-for-RMRKAction" class="impl"><a class="srclink rightside" href="../src/rmrk_io/lib.rs.html#62">source</a><a href="#impl-Encode-for-RMRKAction" class="anchor">§</a><h3 class="code-header">impl Encode for <a class="enum" href="enum.RMRKAction.html" title="enum rmrk_io::RMRKAction">RMRKAction</a></h3></section></summary><div class="impl-items"><details class="toggle method-toggle" open><summary><section id="method.encode_to" class="method trait-impl"><a class="srclink rightside" href="../src/rmrk_io/lib.rs.html#62">source</a><a href="#method.encode_to" class="anchor">§</a><h4 class="code-header">fn <a class="fn">encode_to</a>&lt;__CodecOutputEdqy: Output + ?<a class="trait" href="https://doc.rust-lang.org/nightly/core/marker/trait.Sized.html" title="trait core::marker::Sized">Sized</a>&gt;(
+    &amp;self,
+    __codec_dest_edqy: <a class="primitive" href="https://doc.rust-lang.org/nightly/core/primitive.reference.html">&amp;mut __CodecOutputEdqy</a>
+)</h4></section></summary><div class='docblock'>Convert self to a slice and append it to the destination.</div></details><details class="toggle method-toggle" open><summary><section id="method.size_hint" class="method trait-impl"><a href="#method.size_hint" class="anchor">§</a><h4 class="code-header">fn <a class="fn">size_hint</a>(&amp;self) -&gt; <a class="primitive" href="https://doc.rust-lang.org/nightly/core/primitive.usize.html">usize</a></h4></section></summary><div class='docblock'>If possible give a hint of expected size of the encoding. <a>Read more</a></div></details><details class="toggle method-toggle" open><summary><section id="method.encode" class="method trait-impl"><a href="#method.encode" class="anchor">§</a><h4 class="code-header">fn <a class="fn">encode</a>(&amp;self) -&gt; <a class="struct" href="https://doc.rust-lang.org/nightly/alloc/vec/struct.Vec.html" title="struct alloc::vec::Vec">Vec</a>&lt;<a class="primitive" href="https://doc.rust-lang.org/nightly/core/primitive.u8.html">u8</a>, <a class="struct" href="https://doc.rust-lang.org/nightly/alloc/alloc/struct.Global.html" title="struct alloc::alloc::Global">Global</a>&gt;</h4></section></summary><div class='docblock'>Convert self to an owned vector.</div></details><details class="toggle method-toggle" open><summary><section id="method.using_encoded" class="method trait-impl"><a href="#method.using_encoded" class="anchor">§</a><h4 class="code-header">fn <a class="fn">using_encoded</a>&lt;R, F&gt;(&amp;self, f: F) -&gt; R<span class="where fmt-newline">where
+    F: <a class="trait" href="https://doc.rust-lang.org/nightly/core/ops/function/trait.FnOnce.html" title="trait core::ops::function::FnOnce">FnOnce</a>(&amp;[<a class="primitive" href="https://doc.rust-lang.org/nightly/core/primitive.u8.html">u8</a>]) -&gt; R,</span></h4></section></summary><div class='docblock'>Convert self to a slice and then invoke the given closure with it.</div></details><details class="toggle method-toggle" open><summary><section id="method.encoded_size" class="method trait-impl"><a href="#method.encoded_size" class="anchor">§</a><h4 class="code-header">fn <a class="fn">encoded_size</a>(&amp;self) -&gt; <a class="primitive" href="https://doc.rust-lang.org/nightly/core/primitive.usize.html">usize</a></h4></section></summary><div class='docblock'>Calculates the encoded size. <a>Read more</a></div></details></div></details><details class="toggle implementors-toggle" open><summary><section id="impl-TypeInfo-for-RMRKAction" class="impl"><a class="srclink rightside" href="../src/rmrk_io/lib.rs.html#62">source</a><a href="#impl-TypeInfo-for-RMRKAction" class="anchor">§</a><h3 class="code-header">impl TypeInfo for <a class="enum" href="enum.RMRKAction.html" title="enum rmrk_io::RMRKAction">RMRKAction</a></h3></section></summary><div class="impl-items"><details class="toggle" open><summary><section id="associatedtype.Identity" class="associatedtype trait-impl"><a href="#associatedtype.Identity" class="anchor">§</a><h4 class="code-header">type <a class="associatedtype">Identity</a> = <a class="enum" href="enum.RMRKAction.html" title="enum rmrk_io::RMRKAction">RMRKAction</a></h4></section></summary><div class='docblock'>The type identifying for which type info is provided. <a>Read more</a></div></details><details class="toggle method-toggle" open><summary><section id="method.type_info" class="method trait-impl"><a class="srclink rightside" href="../src/rmrk_io/lib.rs.html#62">source</a><a href="#method.type_info" class="anchor">§</a><h4 class="code-header">fn <a class="fn">type_info</a>() -&gt; Type</h4></section></summary><div class='docblock'>Returns the static type identifier for <code>Self</code>.</div></details></div></details><section id="impl-EncodeLike%3CRMRKAction%3E-for-RMRKAction" class="impl"><a class="srclink rightside" href="../src/rmrk_io/lib.rs.html#62">source</a><a href="#impl-EncodeLike%3CRMRKAction%3E-for-RMRKAction" class="anchor">§</a><h3 class="code-header">impl EncodeLike&lt;<a class="enum" href="enum.RMRKAction.html" title="enum rmrk_io::RMRKAction">RMRKAction</a>&gt; for <a class="enum" href="enum.RMRKAction.html" title="enum rmrk_io::RMRKAction">RMRKAction</a></h3></section></div><h2 id="synthetic-implementations" class="small-section-header">Auto Trait Implementations<a href="#synthetic-implementations" class="anchor">§</a></h2><div id="synthetic-implementations-list"><section id="impl-RefUnwindSafe-for-RMRKAction" class="impl"><a href="#impl-RefUnwindSafe-for-RMRKAction" class="anchor">§</a><h3 class="code-header">impl <a class="trait" href="https://doc.rust-lang.org/nightly/core/panic/unwind_safe/trait.RefUnwindSafe.html" title="trait core::panic::unwind_safe::RefUnwindSafe">RefUnwindSafe</a> for <a class="enum" href="enum.RMRKAction.html" title="enum rmrk_io::RMRKAction">RMRKAction</a></h3></section><section id="impl-Send-for-RMRKAction" class="impl"><a href="#impl-Send-for-RMRKAction" class="anchor">§</a><h3 class="code-header">impl <a class="trait" href="https://doc.rust-lang.org/nightly/core/marker/trait.Send.html" title="trait core::marker::Send">Send</a> for <a class="enum" href="enum.RMRKAction.html" title="enum rmrk_io::RMRKAction">RMRKAction</a></h3></section><section id="impl-Sync-for-RMRKAction" class="impl"><a href="#impl-Sync-for-RMRKAction" class="anchor">§</a><h3 class="code-header">impl <a class="trait" href="https://doc.rust-lang.org/nightly/core/marker/trait.Sync.html" title="trait core::marker::Sync">Sync</a> for <a class="enum" href="enum.RMRKAction.html" title="enum rmrk_io::RMRKAction">RMRKAction</a></h3></section><section id="impl-Unpin-for-RMRKAction" class="impl"><a href="#impl-Unpin-for-RMRKAction" class="anchor">§</a><h3 class="code-header">impl <a class="trait" href="https://doc.rust-lang.org/nightly/core/marker/trait.Unpin.html" title="trait core::marker::Unpin">Unpin</a> for <a class="enum" href="enum.RMRKAction.html" title="enum rmrk_io::RMRKAction">RMRKAction</a></h3></section><section id="impl-UnwindSafe-for-RMRKAction" class="impl"><a href="#impl-UnwindSafe-for-RMRKAction" class="anchor">§</a><h3 class="code-header">impl <a class="trait" href="https://doc.rust-lang.org/nightly/core/panic/unwind_safe/trait.UnwindSafe.html" title="trait core::panic::unwind_safe::UnwindSafe">UnwindSafe</a> for <a class="enum" href="enum.RMRKAction.html" title="enum rmrk_io::RMRKAction">RMRKAction</a></h3></section></div><h2 id="blanket-implementations" class="small-section-header">Blanket Implementations<a href="#blanket-implementations" class="anchor">§</a></h2><div id="blanket-implementations-list"><details class="toggle implementors-toggle"><summary><section id="impl-Any-for-RMRKAction" class="impl"><a class="srclink rightside" href="https://doc.rust-lang.org/nightly/src/core/any.rs.html#200">source</a><a href="#impl-Any-for-RMRKAction" class="anchor">§</a><h3 class="code-header">impl&lt;T&gt; <a class="trait" href="https://doc.rust-lang.org/nightly/core/any/trait.Any.html" title="trait core::any::Any">Any</a> for T<span class="where fmt-newline">where
+    T: 'static + ?<a class="trait" href="https://doc.rust-lang.org/nightly/core/marker/trait.Sized.html" title="trait core::marker::Sized">Sized</a>,</span></h3></section></summary><div class="impl-items"><details class="toggle method-toggle" open><summary><section id="method.type_id" class="method trait-impl"><a class="srclink rightside" href="https://doc.rust-lang.org/nightly/src/core/any.rs.html#201">source</a><a href="#method.type_id" class="anchor">§</a><h4 class="code-header">fn <a href="https://doc.rust-lang.org/nightly/core/any/trait.Any.html#tymethod.type_id" class="fn">type_id</a>(&amp;self) -&gt; <a class="struct" href="https://doc.rust-lang.org/nightly/core/any/struct.TypeId.html" title="struct core::any::TypeId">TypeId</a></h4></section></summary><div class='docblock'>Gets the <code>TypeId</code> of <code>self</code>. <a href="https://doc.rust-lang.org/nightly/core/any/trait.Any.html#tymethod.type_id">Read more</a></div></details></div></details><details class="toggle implementors-toggle"><summary><section id="impl-Borrow%3CT%3E-for-RMRKAction" class="impl"><a class="srclink rightside" href="https://doc.rust-lang.org/nightly/src/core/borrow.rs.html#208">source</a><a href="#impl-Borrow%3CT%3E-for-RMRKAction" class="anchor">§</a><h3 class="code-header">impl&lt;T&gt; <a class="trait" href="https://doc.rust-lang.org/nightly/core/borrow/trait.Borrow.html" title="trait core::borrow::Borrow">Borrow</a>&lt;T&gt; for T<span class="where fmt-newline">where
+    T: ?<a class="trait" href="https://doc.rust-lang.org/nightly/core/marker/trait.Sized.html" title="trait core::marker::Sized">Sized</a>,</span></h3></section></summary><div class="impl-items"><details class="toggle method-toggle" open><summary><section id="method.borrow" class="method trait-impl"><a class="srclink rightside" href="https://doc.rust-lang.org/nightly/src/core/borrow.rs.html#210">source</a><a href="#method.borrow" class="anchor">§</a><h4 class="code-header">fn <a href="https://doc.rust-lang.org/nightly/core/borrow/trait.Borrow.html#tymethod.borrow" class="fn">borrow</a>(&amp;self) -&gt; <a class="primitive" href="https://doc.rust-lang.org/nightly/core/primitive.reference.html">&amp;T</a></h4></section></summary><div class='docblock'>Immutably borrows from an owned value. <a href="https://doc.rust-lang.org/nightly/core/borrow/trait.Borrow.html#tymethod.borrow">Read more</a></div></details></div></details><details class="toggle implementors-toggle"><summary><section id="impl-BorrowMut%3CT%3E-for-RMRKAction" class="impl"><a class="srclink rightside" href="https://doc.rust-lang.org/nightly/src/core/borrow.rs.html#216">source</a><a href="#impl-BorrowMut%3CT%3E-for-RMRKAction" class="anchor">§</a><h3 class="code-header">impl&lt;T&gt; <a class="trait" href="https://doc.rust-lang.org/nightly/core/borrow/trait.BorrowMut.html" title="trait core::borrow::BorrowMut">BorrowMut</a>&lt;T&gt; for T<span class="where fmt-newline">where
+    T: ?<a class="trait" href="https://doc.rust-lang.org/nightly/core/marker/trait.Sized.html" title="trait core::marker::Sized">Sized</a>,</span></h3></section></summary><div class="impl-items"><details class="toggle method-toggle" open><summary><section id="method.borrow_mut" class="method trait-impl"><a class="srclink rightside" href="https://doc.rust-lang.org/nightly/src/core/borrow.rs.html#217">source</a><a href="#method.borrow_mut" class="anchor">§</a><h4 class="code-header">fn <a href="https://doc.rust-lang.org/nightly/core/borrow/trait.BorrowMut.html#tymethod.borrow_mut" class="fn">borrow_mut</a>(&amp;mut self) -&gt; <a class="primitive" href="https://doc.rust-lang.org/nightly/core/primitive.reference.html">&amp;mut T</a></h4></section></summary><div class='docblock'>Mutably borrows from an owned value. <a href="https://doc.rust-lang.org/nightly/core/borrow/trait.BorrowMut.html#tymethod.borrow_mut">Read more</a></div></details></div></details><details class="toggle implementors-toggle"><summary><section id="impl-DecodeAll-for-RMRKAction" class="impl"><a href="#impl-DecodeAll-for-RMRKAction" class="anchor">§</a><h3 class="code-header">impl&lt;T&gt; DecodeAll for T<span class="where fmt-newline">where
+    T: Decode,</span></h3></section></summary><div class="impl-items"><details class="toggle method-toggle" open><summary><section id="method.decode_all" class="method trait-impl"><a href="#method.decode_all" class="anchor">§</a><h4 class="code-header">fn <a class="fn">decode_all</a>(input: &amp;mut &amp;[<a class="primitive" href="https://doc.rust-lang.org/nightly/core/primitive.u8.html">u8</a>]) -&gt; <a class="enum" href="https://doc.rust-lang.org/nightly/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;T, Error&gt;</h4></section></summary><div class='docblock'>Decode <code>Self</code> and consume all of the given input data. <a>Read more</a></div></details></div></details><details class="toggle implementors-toggle"><summary><section id="impl-DecodeLimit-for-RMRKAction" class="impl"><a href="#impl-DecodeLimit-for-RMRKAction" class="anchor">§</a><h3 class="code-header">impl&lt;T&gt; DecodeLimit for T<span class="where fmt-newline">where
+    T: Decode,</span></h3></section></summary><div class="impl-items"><details class="toggle method-toggle" open><summary><section id="method.decode_all_with_depth_limit" class="method trait-impl"><a href="#method.decode_all_with_depth_limit" class="anchor">§</a><h4 class="code-header">fn <a class="fn">decode_all_with_depth_limit</a>(
+    limit: <a class="primitive" href="https://doc.rust-lang.org/nightly/core/primitive.u32.html">u32</a>,
+    input: &amp;mut &amp;[<a class="primitive" href="https://doc.rust-lang.org/nightly/core/primitive.u8.html">u8</a>]
+) -&gt; <a class="enum" href="https://doc.rust-lang.org/nightly/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;T, Error&gt;</h4></section></summary><div class='docblock'>Decode <code>Self</code> and consume all of the given input data. <a>Read more</a></div></details><details class="toggle method-toggle" open><summary><section id="method.decode_with_depth_limit" class="method trait-impl"><a href="#method.decode_with_depth_limit" class="anchor">§</a><h4 class="code-header">fn <a class="fn">decode_with_depth_limit</a>&lt;I&gt;(limit: <a class="primitive" href="https://doc.rust-lang.org/nightly/core/primitive.u32.html">u32</a>, input: <a class="primitive" href="https://doc.rust-lang.org/nightly/core/primitive.reference.html">&amp;mut I</a>) -&gt; <a class="enum" href="https://doc.rust-lang.org/nightly/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;T, Error&gt;<span class="where fmt-newline">where
+    I: Input,</span></h4></section></summary><div class='docblock'>Decode <code>Self</code> with the given maximum recursion depth and advance <code>input</code> by the number of
+bytes consumed. <a>Read more</a></div></details></div></details><details class="toggle implementors-toggle"><summary><section id="impl-From%3CT%3E-for-RMRKAction" class="impl"><a class="srclink rightside" href="https://doc.rust-lang.org/nightly/src/core/convert/mod.rs.html#723">source</a><a href="#impl-From%3CT%3E-for-RMRKAction" class="anchor">§</a><h3 class="code-header">impl&lt;T&gt; <a class="trait" href="https://doc.rust-lang.org/nightly/core/convert/trait.From.html" title="trait core::convert::From">From</a>&lt;T&gt; for T</h3></section></summary><div class="impl-items"><details class="toggle method-toggle" open><summary><section id="method.from" class="method trait-impl"><a class="srclink rightside" href="https://doc.rust-lang.org/nightly/src/core/convert/mod.rs.html#726">source</a><a href="#method.from" class="anchor">§</a><h4 class="code-header">fn <a href="https://doc.rust-lang.org/nightly/core/convert/trait.From.html#tymethod.from" class="fn">from</a>(t: T) -&gt; T</h4></section></summary><div class="docblock"><p>Returns the argument unchanged.</p>
+</div></details></div></details><details class="toggle implementors-toggle"><summary><section id="impl-Into%3CU%3E-for-RMRKAction" class="impl"><a class="srclink rightside" href="https://doc.rust-lang.org/nightly/src/core/convert/mod.rs.html#707">source</a><a href="#impl-Into%3CU%3E-for-RMRKAction" class="anchor">§</a><h3 class="code-header">impl&lt;T, U&gt; <a class="trait" href="https://doc.rust-lang.org/nightly/core/convert/trait.Into.html" title="trait core::convert::Into">Into</a>&lt;U&gt; for T<span class="where fmt-newline">where
+    U: <a class="trait" href="https://doc.rust-lang.org/nightly/core/convert/trait.From.html" title="trait core::convert::From">From</a>&lt;T&gt;,</span></h3></section></summary><div class="impl-items"><details class="toggle method-toggle" open><summary><section id="method.into" class="method trait-impl"><a class="srclink rightside" href="https://doc.rust-lang.org/nightly/src/core/convert/mod.rs.html#716">source</a><a href="#method.into" class="anchor">§</a><h4 class="code-header">fn <a href="https://doc.rust-lang.org/nightly/core/convert/trait.Into.html#tymethod.into" class="fn">into</a>(self) -&gt; U</h4></section></summary><div class="docblock"><p>Calls <code>U::from(self)</code>.</p>
+<p>That is, this conversion is whatever the implementation of
+<code><a href="https://doc.rust-lang.org/nightly/core/convert/trait.From.html" title="trait core::convert::From">From</a>&lt;T&gt; for U</code> chooses to do.</p>
+</div></details></div></details><details class="toggle implementors-toggle"><summary><section id="impl-KeyedVec-for-RMRKAction" class="impl"><a href="#impl-KeyedVec-for-RMRKAction" class="anchor">§</a><h3 class="code-header">impl&lt;T&gt; KeyedVec for T<span class="where fmt-newline">where
+    T: Codec,</span></h3></section></summary><div class="impl-items"><details class="toggle method-toggle" open><summary><section id="method.to_keyed_vec" class="method trait-impl"><a href="#method.to_keyed_vec" class="anchor">§</a><h4 class="code-header">fn <a class="fn">to_keyed_vec</a>(&amp;self, prepend_key: &amp;[<a class="primitive" href="https://doc.rust-lang.org/nightly/core/primitive.u8.html">u8</a>]) -&gt; <a class="struct" href="https://doc.rust-lang.org/nightly/alloc/vec/struct.Vec.html" title="struct alloc::vec::Vec">Vec</a>&lt;<a class="primitive" href="https://doc.rust-lang.org/nightly/core/primitive.u8.html">u8</a>, <a class="struct" href="https://doc.rust-lang.org/nightly/alloc/alloc/struct.Global.html" title="struct alloc::alloc::Global">Global</a>&gt;</h4></section></summary><div class='docblock'>Return an encoding of <code>Self</code> prepended by given slice.</div></details></div></details><details class="toggle implementors-toggle"><summary><section id="impl-TryFrom%3CU%3E-for-RMRKAction" class="impl"><a class="srclink rightside" href="https://doc.rust-lang.org/nightly/src/core/convert/mod.rs.html#763">source</a><a href="#impl-TryFrom%3CU%3E-for-RMRKAction" class="anchor">§</a><h3 class="code-header">impl&lt;T, U&gt; <a class="trait" href="https://doc.rust-lang.org/nightly/core/convert/trait.TryFrom.html" title="trait core::convert::TryFrom">TryFrom</a>&lt;U&gt; for T<span class="where fmt-newline">where
+    U: <a class="trait" href="https://doc.rust-lang.org/nightly/core/convert/trait.Into.html" title="trait core::convert::Into">Into</a>&lt;T&gt;,</span></h3></section></summary><div class="impl-items"><details class="toggle" open><summary><section id="associatedtype.Error" class="associatedtype trait-impl"><a href="#associatedtype.Error" class="anchor">§</a><h4 class="code-header">type <a href="https://doc.rust-lang.org/nightly/core/convert/trait.TryFrom.html#associatedtype.Error" class="associatedtype">Error</a> = <a class="enum" href="https://doc.rust-lang.org/nightly/core/convert/enum.Infallible.html" title="enum core::convert::Infallible">Infallible</a></h4></section></summary><div class='docblock'>The type returned in the event of a conversion error.</div></details><details class="toggle method-toggle" open><summary><section id="method.try_from" class="method trait-impl"><a class="srclink rightside" href="https://doc.rust-lang.org/nightly/src/core/convert/mod.rs.html#770">source</a><a href="#method.try_from" class="anchor">§</a><h4 class="code-header">fn <a href="https://doc.rust-lang.org/nightly/core/convert/trait.TryFrom.html#tymethod.try_from" class="fn">try_from</a>(value: U) -&gt; <a class="enum" href="https://doc.rust-lang.org/nightly/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;T, &lt;T as <a class="trait" href="https://doc.rust-lang.org/nightly/core/convert/trait.TryFrom.html" title="trait core::convert::TryFrom">TryFrom</a>&lt;U&gt;&gt;::<a class="associatedtype" href="https://doc.rust-lang.org/nightly/core/convert/trait.TryFrom.html#associatedtype.Error" title="type core::convert::TryFrom::Error">Error</a>&gt;</h4></section></summary><div class='docblock'>Performs the conversion.</div></details></div></details><details class="toggle implementors-toggle"><summary><section id="impl-TryInto%3CU%3E-for-RMRKAction" class="impl"><a class="srclink rightside" href="https://doc.rust-lang.org/nightly/src/core/convert/mod.rs.html#748">source</a><a href="#impl-TryInto%3CU%3E-for-RMRKAction" class="anchor">§</a><h3 class="code-header">impl&lt;T, U&gt; <a class="trait" href="https://doc.rust-lang.org/nightly/core/convert/trait.TryInto.html" title="trait core::convert::TryInto">TryInto</a>&lt;U&gt; for T<span class="where fmt-newline">where
+    U: <a class="trait" href="https://doc.rust-lang.org/nightly/core/convert/trait.TryFrom.html" title="trait core::convert::TryFrom">TryFrom</a>&lt;T&gt;,</span></h3></section></summary><div class="impl-items"><details class="toggle" open><summary><section id="associatedtype.Error-1" class="associatedtype trait-impl"><a href="#associatedtype.Error-1" class="anchor">§</a><h4 class="code-header">type <a href="https://doc.rust-lang.org/nightly/core/convert/trait.TryInto.html#associatedtype.Error" class="associatedtype">Error</a> = &lt;U as <a class="trait" href="https://doc.rust-lang.org/nightly/core/convert/trait.TryFrom.html" title="trait core::convert::TryFrom">TryFrom</a>&lt;T&gt;&gt;::<a class="associatedtype" href="https://doc.rust-lang.org/nightly/core/convert/trait.TryFrom.html#associatedtype.Error" title="type core::convert::TryFrom::Error">Error</a></h4></section></summary><div class='docblock'>The type returned in the event of a conversion error.</div></details><details class="toggle method-toggle" open><summary><section id="method.try_into" class="method trait-impl"><a class="srclink rightside" href="https://doc.rust-lang.org/nightly/src/core/convert/mod.rs.html#755">source</a><a href="#method.try_into" class="anchor">§</a><h4 class="code-header">fn <a href="https://doc.rust-lang.org/nightly/core/convert/trait.TryInto.html#tymethod.try_into" class="fn">try_into</a>(self) -&gt; <a class="enum" href="https://doc.rust-lang.org/nightly/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;U, &lt;U as <a class="trait" href="https://doc.rust-lang.org/nightly/core/convert/trait.TryFrom.html" title="trait core::convert::TryFrom">TryFrom</a>&lt;T&gt;&gt;::<a class="associatedtype" href="https://doc.rust-lang.org/nightly/core/convert/trait.TryFrom.html#associatedtype.Error" title="type core::convert::TryFrom::Error">Error</a>&gt;</h4></section></summary><div class='docblock'>Performs the conversion.</div></details></div></details><details class="toggle implementors-toggle"><summary><section id="impl-Type-for-RMRKAction" class="impl"><a href="#impl-Type-for-RMRKAction" class="anchor">§</a><h3 class="code-header">impl&lt;T&gt; Type for T<span class="where fmt-newline">where
+    T: TypeInfo + 'static,</span></h3></section></summary><div class="impl-items"><section id="method.is_unit" class="method trait-impl"><a href="#method.is_unit" class="anchor">§</a><h4 class="code-header">fn <a class="fn">is_unit</a>() -&gt; <a class="primitive" href="https://doc.rust-lang.org/nightly/core/primitive.bool.html">bool</a></h4></section><section id="method.meta_type" class="method trait-impl"><a href="#method.meta_type" class="anchor">§</a><h4 class="code-header">fn <a class="fn">meta_type</a>() -&gt; MetaType</h4></section><section id="method.register" class="method trait-impl"><a href="#method.register" class="anchor">§</a><h4 class="code-header">fn <a class="fn">register</a>(registry: &amp;mut Registry) -&gt; <a class="enum" href="https://doc.rust-lang.org/nightly/core/option/enum.Option.html" title="enum core::option::Option">Option</a>&lt;<a class="primitive" href="https://doc.rust-lang.org/nightly/core/primitive.u32.html">u32</a>&gt;</h4></section></div></details><section id="impl-Codec-for-RMRKAction" class="impl"><a href="#impl-Codec-for-RMRKAction" class="anchor">§</a><h3 class="code-header">impl&lt;S&gt; Codec for S<span class="where fmt-newline">where
+    S: Decode + Encode,</span></h3></section><section id="impl-EncodeLike%3C%26%26T%3E-for-RMRKAction" class="impl"><a href="#impl-EncodeLike%3C%26%26T%3E-for-RMRKAction" class="anchor">§</a><h3 class="code-header">impl&lt;T&gt; EncodeLike&lt;&amp;<a class="primitive" href="https://doc.rust-lang.org/nightly/core/primitive.reference.html">&amp;T</a>&gt; for T<span class="where fmt-newline">where
+    T: Encode,</span></h3></section><section id="impl-EncodeLike%3C%26T%3E-for-RMRKAction" class="impl"><a href="#impl-EncodeLike%3C%26T%3E-for-RMRKAction" class="anchor">§</a><h3 class="code-header">impl&lt;T&gt; EncodeLike&lt;<a class="primitive" href="https://doc.rust-lang.org/nightly/core/primitive.reference.html">&amp;T</a>&gt; for T<span class="where fmt-newline">where
+    T: Encode,</span></h3></section><section id="impl-EncodeLike%3C%26mut+T%3E-for-RMRKAction" class="impl"><a href="#impl-EncodeLike%3C%26mut+T%3E-for-RMRKAction" class="anchor">§</a><h3 class="code-header">impl&lt;T&gt; EncodeLike&lt;<a class="primitive" href="https://doc.rust-lang.org/nightly/core/primitive.reference.html">&amp;mut T</a>&gt; for T<span class="where fmt-newline">where
+    T: Encode,</span></h3></section><section id="impl-EncodeLike%3CArc%3CT%3E%3E-for-RMRKAction" class="impl"><a href="#impl-EncodeLike%3CArc%3CT%3E%3E-for-RMRKAction" class="anchor">§</a><h3 class="code-header">impl&lt;T&gt; EncodeLike&lt;<a class="struct" href="https://doc.rust-lang.org/nightly/alloc/sync/struct.Arc.html" title="struct alloc::sync::Arc">Arc</a>&lt;T&gt;&gt; for T<span class="where fmt-newline">where
+    T: Encode,</span></h3></section><section id="impl-EncodeLike%3CBox%3CT,+Global%3E%3E-for-RMRKAction" class="impl"><a href="#impl-EncodeLike%3CBox%3CT,+Global%3E%3E-for-RMRKAction" class="anchor">§</a><h3 class="code-header">impl&lt;T&gt; EncodeLike&lt;<a class="struct" href="https://doc.rust-lang.org/nightly/alloc/boxed/struct.Box.html" title="struct alloc::boxed::Box">Box</a>&lt;T, <a class="struct" href="https://doc.rust-lang.org/nightly/alloc/alloc/struct.Global.html" title="struct alloc::alloc::Global">Global</a>&gt;&gt; for T<span class="where fmt-newline">where
+    T: Encode,</span></h3></section><section id="impl-EncodeLike%3CRc%3CT%3E%3E-for-RMRKAction" class="impl"><a href="#impl-EncodeLike%3CRc%3CT%3E%3E-for-RMRKAction" class="anchor">§</a><h3 class="code-header">impl&lt;T&gt; EncodeLike&lt;<a class="struct" href="https://doc.rust-lang.org/nightly/alloc/rc/struct.Rc.html" title="struct alloc::rc::Rc">Rc</a>&lt;T&gt;&gt; for T<span class="where fmt-newline">where
+    T: Encode,</span></h3></section><section id="impl-FullCodec-for-RMRKAction" class="impl"><a href="#impl-FullCodec-for-RMRKAction" class="anchor">§</a><h3 class="code-header">impl&lt;S&gt; FullCodec for S<span class="where fmt-newline">where
+    S: Decode + FullEncode,</span></h3></section><section id="impl-FullEncode-for-RMRKAction" class="impl"><a href="#impl-FullEncode-for-RMRKAction" class="anchor">§</a><h3 class="code-header">impl&lt;S&gt; FullEncode for S<span class="where fmt-newline">where
+    S: Encode + EncodeLike&lt;S&gt;,</span></h3></section><section id="impl-JsonSchemaMaybe-for-RMRKAction" class="impl"><a href="#impl-JsonSchemaMaybe-for-RMRKAction" class="anchor">§</a><h3 class="code-header">impl&lt;T&gt; JsonSchemaMaybe for T</h3></section><section id="impl-StaticTypeInfo-for-RMRKAction" class="impl"><a href="#impl-StaticTypeInfo-for-RMRKAction" class="anchor">§</a><h3 class="code-header">impl&lt;T&gt; StaticTypeInfo for T<span class="where fmt-newline">where
+    T: TypeInfo + 'static,</span></h3></section></div></section></div></main></body></html>

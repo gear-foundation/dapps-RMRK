@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["ChildStatus","RMRKAction","RMRKEvent"],"struct":["InitRMRK","MultiResourceState","RMRKMetadata","RMRKOwner","RMRKState"]};

@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["BaseAction","BaseEvent","EquippableList","Part"],"struct":["BaseMetadata","BaseState","FixedPart","InitBase","SlotPart"]};

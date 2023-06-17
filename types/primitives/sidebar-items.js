@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"type":["BaseId","CollectionAndToken","CollectionId","PartId","Parts","ResourceId","TokenId","ZIndex"]};
