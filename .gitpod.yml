@@ -6,10 +6,12 @@ tasks:
       source $HOME/.cargo/env
       echo 'export CARGO_HOME="$HOME/.cargo"' >> ~/.bashrc
       source ~/.bashrc
-      sudo wget -c https://github.com/WebAssembly/binaryen/releases/download/version_105/binaryen-version_105-x86_64-linux.tar.gz -O - | sudo tar -xz -C .
-      sudo cp binaryen-version_105/bin/wasm-opt /usr/bin/
+      export TEMP_DIR=$(mktemp -d)
+      curl -L https://github.com/WebAssembly/binaryen/releases/download/version_113/binaryen-version_113-x86_64-linux.tar.gz | tar -xzC $TEMP_DIR
+      sudo cp -vf $TEMP_DIR/binaryen-version_113/bin/wasm-opt /usr/bin/
+
     init: |
-      gp open src/lib.rs
+      gp open rmrk-token/src/lib.rs
       clear && printf '\e[3J' && history -c
 
 vscode:
