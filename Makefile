@@ -17,7 +17,7 @@ init:
 
 lint:
 	@echo ⚙️ Running the linter...
-	@cargo clippy --workspace --all-targets -- -D warnings
+	@__GEAR_WASM_BUILDER_NO_BUILD=1 cargo clippy --workspace --all-targets -- -D warnings
 
 pre-commit: fmt lint full-test
 

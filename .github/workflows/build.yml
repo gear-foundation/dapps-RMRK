@@ -10,7 +10,6 @@ on:
 
 env:
   CARGO_TERM_COLOR: always
-  NIGHTLY_TOOLCHAIN_VERSION: ${{ secrets.NIGHTLY_TOOLCHAIN_VERSION }}
 
 jobs:
   build:
@@ -26,13 +25,6 @@ jobs:
 
       - name: Remove binaries from cache
         run: rm -vfr target/wasm32-unknown-unknown/*
-
-      - name: Show specific nightly version
-        if: ${{ env.NIGHTLY_TOOLCHAIN_VERSION != '' }}
-        run: echo $NIGHTLY_TOOLCHAIN_VERSION | sed 's/-/ - /g'
-
-      - name: Install specific nightly toolchain
-        run: make init
 
       - name: Check fmt
         run: make fmt
@@ -68,7 +60,7 @@ jobs:
         uses: actions/download-artifact@v3
 
       - name: Delete previous release
-        uses: dev-drprasad/delete-tag-and-release@v0.2.1
+        uses: dev-drprasad/delete-tag-and-release@v1.0.1
         with:
           delete_release: true
           tag_name: build

@@ -31,19 +31,6 @@ Raw, optimized, and meta WASM binaries can be found in the [Releases section](ht
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 ```
 
-### ⚒️ Add specific toolchains
-
-```shell
-rustup toolchain add nightly
-rustup target add wasm32-unknown-unknown --toolchain nightly
-```
-
-... or ...
-
-```shell
-make init
-```
-
 ### 🏗️ Build
 
 ```shell
