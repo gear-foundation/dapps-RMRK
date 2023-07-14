@@ -27,7 +27,7 @@ rmrk-state = { path = "rmrk-token/state" }
 resource = { path = "resource" }
 resource-io = { path = "resource/io" }
 types = { path = "types" }
-hashbrown = "0.13"
+hashbrown = "0.14"
 gmeta = { git = "https://github.com/gear-tech/gear", rev = "946ac47" }
 gtest = { git = "https://github.com/gear-tech/gear", rev = "946ac47" }
 gclient = { git = "https://github.com/gear-tech/gear", rev = "946ac47" }
